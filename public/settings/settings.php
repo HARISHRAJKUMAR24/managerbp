@@ -335,10 +335,10 @@ renderTemplate('header');
                                 </div>
                                 <!--end::Icon-->
                                 <!--begin::Title-->
-                                <h3 class="fw-bold text-gray-800 mb-2">Discount Timer</h3>
+                                <h3 class="fw-bold text-gray-800 mb-2">Discount Timer Doopak Mama </h3>
                                 <!--end::Title-->
                                 <!--begin::Description-->
-                                <p class="text-gray-600 fs-6">Manage seller discount timers</p>
+                                <p class="text-gray-600 fs-6">Manage seller discount timers Doopak maman</p>
                                 <!--end::Description-->
                             </div>
                             <!--end::Header-->

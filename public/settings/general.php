@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $image = $uploadResult['file_name'];
             // Delete old image if it exists and is not the default
             if (!empty($_POST['existing_image']) && $_POST['existing_image'] !== 'static/user.png') {
-                @unlink(UPLOADS_PATH . $_POST['existing_image']);
+                @unlink(UPLOADS_URL . $_POST['existing_image']);
             }
         }
     }

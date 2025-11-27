@@ -52,3 +52,39 @@ function uuid()
         bin2hex(random_bytes(6))
     );
 }
+
+function isAdmin() {
+    return isset($_SESSION['SESSION_ROLE']) && $_SESSION['SESSION_ROLE'] === 'admin';
+}
+
+function uploadImage($file, $folder = 'uploads') {
+    $uploadPath = UPLOADS_URL . $folder . '/';
+    
+    // Create directory if it doesn't exist
+    if (!is_dir($uploadPath)) {
+        mkdir($uploadPath, 0755, true);
+    }
+    
+    // Generate unique filename
+    $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $fileName = uniqid() . '.' . $fileExtension;
+    $filePath = $uploadPath . $fileName;
+    
+    // Check file type
+    $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
+    if (!in_array(strtolower($fileExtension), $allowedTypes)) {
+        return ['success' => false, 'error' => 'Invalid file type'];
+    }
+    
+    // Check file size (max 5MB)
+    if ($file['size'] > 5 * 1024 * 1024) {
+        return ['success' => false, 'error' => 'File too large'];
+    }
+    
+    // Move uploaded file
+    if (move_uploaded_file($file['tmp_name'], $filePath)) {
+        return ['success' => true, 'file_name' => $folder . '/' . $fileName];
+    }
+    
+    return ['success' => false, 'error' => 'Upload failed'];
+}
