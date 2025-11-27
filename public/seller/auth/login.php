@@ -1,5 +1,5 @@
 <?php
-file_put_contents("php-error-debug.txt", "Reached login.php\n", FILE_APPEND);
+
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
@@ -15,7 +15,7 @@ if (!$input) {
     $input = $_POST;
 }
 
-file_put_contents("php-error-debug.txt", json_encode($input) . "\n", FILE_APPEND);
+
 
 $phone = trim($input['phone'] ?? "");
 $password = trim($input['password'] ?? "");
