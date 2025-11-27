@@ -1,7 +1,7 @@
 <?php
 
 define('BASE_URL', 'http://localhost/managerbp/');
-define('UPLOADS_URL', 'http://localhost/api.manager.bookpannu.com/uploads/');
+define('UPLOADS_URL', 'uploads/');
 define('USER_PORTAL_URL', 'http://localhost/app.bookpannu.com/');
 
 define('DB_HOST', 'localhost');

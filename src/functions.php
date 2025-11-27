@@ -52,13 +52,9 @@ function uuid()
         bin2hex(random_bytes(6))
     );
 }
-
-function isAdmin() {
-    return isset($_SESSION['SESSION_ROLE']) && $_SESSION['SESSION_ROLE'] === 'admin';
-}
-
 function uploadImage($file, $folder = 'uploads') {
-    $uploadPath = UPLOADS_URL . $folder . '/';
+    // Get the absolute path to uploads folder
+    $uploadPath = __DIR__ . '/../uploads/' . $folder . '/';
     
     // Create directory if it doesn't exist
     if (!is_dir($uploadPath)) {
