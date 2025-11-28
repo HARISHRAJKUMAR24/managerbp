@@ -10,6 +10,14 @@ if (!isAdmin()) exit(header("Location: " . BASE_URL));
 // Get database connection
 $pdo = getDbConnection();
 
+// Get current settings
+$settings = $pdo->query("SELECT * FROM settings LIMIT 1")->fetch(PDO::FETCH_OBJ);
+if (!$settings) {
+    // Insert default settings if not exists
+    $pdo->query("INSERT INTO settings (app_name, currency) VALUES ('Book Pannu', 'INR')");
+    $settings = $pdo->query("SELECT * FROM settings LIMIT 1")->fetch(PDO::FETCH_OBJ);
+}
+
 // Get current admin data
 $admin = $pdo->query("SELECT * FROM managers WHERE role = 'admin' LIMIT 1")->fetch(PDO::FETCH_OBJ);
 
@@ -82,77 +90,172 @@ renderTemplate('header');
                     <!--begin::Card header-->
                     <div class="card-header border-0 pt-6">
                         <h3 class="card-title align-items-start flex-column">
-                            <span class="card-label fw-bold fs-3 mb-1">Admin Profile Settings</span>
-                            <span class="text-muted mt-1 fw-semibold fs-7">Update your admin profile information</span>
+                            <span class="card-label fw-bold fs-3 mb-1">General Settings</span>
+                            <span class="text-muted mt-1 fw-semibold fs-7">Update application general settings</span>
                         </h3>
                     </div>
                     <!--end::Card header-->
 
                     <!--begin::Card body-->
                     <div class="card-body pt-0">
-                        <!--begin::Input group-->
-                        <div class="row mb-6">
-                            <!--begin::Label-->
-                            <label class="col-lg-4 col-form-label required fw-semibold fs-6">Profile Image</label>
-                            <!--end::Label-->
-                            <!--begin::Col-->
-                            <div class="col-lg-8">
-                                <!--begin::Image input-->
-                                <div class="image-input image-input-outline" data-kt-image-input="true" style="background-image: url('<?= BASE_URL ?>assets/media/avatars/blank.png')">
-                                    <!--begin::Preview existing avatar-->
-                                    <div class="image-input-wrapper w-125px h-125px" style="background-image: url('<?= $adminImage ?>')"></div>
-                                    <!--end::Preview existing avatar-->
-                                    <!--begin::Label - Change button (Green)-->
-                                    <label class="btn btn-icon btn-circle btn-active-color-success w-25px h-25px bg-body shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip" title="Change avatar" style="bottom: 0; right: 0;">
-                                        <i class="ki-duotone ki-pencil fs-7 text-success">
-                                            <span class="path1"></span>
-                                            <span class="path2"></span>
-                                        </i>
-                                        <!--begin::Inputs-->
-                                        <input type="file" name="image" accept=".png, .jpg, .jpeg" />
-                                        <input type="hidden" name="existing_image" value="<?= $admin->image ?>" />
-                                        <!--end::Inputs-->
-                                    </label>
-                                    <!--end::Label-->
-                                    <!--begin::Cancel-->
-                                    <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="cancel" data-bs-toggle="tooltip" title="Cancel avatar" style="top: 0; right: 0;">
-                                        <i class="ki-duotone ki-cross fs-2">
-                                            <span class="path1"></span>
-                                            <span class="path2"></span>
-                                        </i>
-                                    </span>
-                                    <!--end::Cancel-->
-                                    <!--begin::Remove - Remove button (Red)-->
-                                    <span class="btn btn-icon btn-circle btn-active-color-danger w-25px h-25px bg-body shadow" data-kt-image-input-action="remove" data-bs-toggle="tooltip" title="Remove avatar" style="top: 0; left: 0;">
-                                        <i class="ki-duotone ki-cross fs-2 text-danger">
-                                            <span class="path1"></span>
-                                            <span class="path2"></span>
-                                        </i>
-                                    </span>
-                                    <!--end::Remove-->
+                        <!--begin::Admin Profile Section-->
+                        <div class="mb-12">
+                            <h4 class="fw-bold text-gray-800 mb-6">Admin Profile</h4>
+                            
+                            <!--begin::Input group-->
+                            <div class="row mb-6">
+                                <!--begin::Label-->
+                                <label class="col-lg-4 col-form-label required fw-semibold fs-6">Profile Image</label>
+                                <!--end::Label-->
+                                <!--begin::Col-->
+                                <div class="col-lg-8">
+                                    <!--begin::Image input-->
+                                    <div class="image-input image-input-outline" data-kt-image-input="true" style="background-image: url('<?= BASE_URL ?>assets/media/avatars/blank.png')">
+                                        <!--begin::Preview existing avatar-->
+                                        <div class="image-input-wrapper w-125px h-125px" style="background-image: url('<?= $adminImage ?>')"></div>
+                                        <!--end::Preview existing avatar-->
+                                        <!--begin::Label - Change button (Green)-->
+                                        <label class="btn btn-icon btn-circle btn-active-color-success w-25px h-25px bg-body shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip" title="Change avatar" style="bottom: 0; right: 0;">
+                                            <i class="ki-duotone ki-pencil fs-7 text-success">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                            </i>
+                                            <!--begin::Inputs-->
+                                            <input type="file" name="image" accept=".png, .jpg, .jpeg" />
+                                            <input type="hidden" name="existing_image" value="<?= $admin->image ?>" />
+                                            <!--end::Inputs-->
+                                        </label>
+                                        <!--end::Label-->
+                                        <!--begin::Cancel-->
+                                        <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="cancel" data-bs-toggle="tooltip" title="Cancel avatar" style="top: 0; right: 0;">
+                                            <i class="ki-duotone ki-cross fs-2">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                            </i>
+                                        </span>
+                                        <!--end::Cancel-->
+                                        <!--begin::Remove - Remove button (Red)-->
+                                        <span class="btn btn-icon btn-circle btn-active-color-danger w-25px h-25px bg-body shadow" data-kt-image-input-action="remove" data-bs-toggle="tooltip" title="Remove avatar" style="top: 0; left: 0;">
+                                            <i class="ki-duotone ki-cross fs-2 text-danger">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                            </i>
+                                        </span>
+                                        <!--end::Remove-->
+                                    </div>
+                                    <!--end::Image input-->
+                                    <!--begin::Hint-->
+                                    <div class="form-text">Allowed file types: png, jpg, jpeg.</div>
+                                    <!--end::Hint-->
                                 </div>
-                                <!--end::Image input-->
-                                <!--begin::Hint-->
-                                <div class="form-text">Allowed file types: png, jpg, jpeg.</div>
-                                <!--end::Hint-->
+                                <!--end::Col-->
                             </div>
-                            <!--end::Col-->
-                        </div>
-                        <!--end::Input group-->
+                            <!--end::Input group-->
 
-                        <!--begin::Input group-->
-                        <div class="row mb-6">
-                            <!--begin::Label-->
-                            <label class="col-lg-4 col-form-label required fw-semibold fs-6">Full Name</label>
-                            <!--end::Label-->
-                            <!--begin::Col-->
-                            <div class="col-lg-8 fv-row">
-                                <input type="text" name="name" class="form-control form-control-lg form-control-solid" placeholder="Enter full name" value="<?= htmlspecialchars($admin->name) ?>" required />
-                                <input type="hidden" name="old_name" value="<?= htmlspecialchars($admin->name) ?>" />
+                            <!--begin::Input group-->
+                            <div class="row mb-6">
+                                <!--begin::Label-->
+                                <label class="col-lg-4 col-form-label required fw-semibold fs-6">Full Name</label>
+                                <!--end::Label-->
+                                <!--begin::Col-->
+                                <div class="col-lg-8 fv-row">
+                                    <input type="text" name="name" class="form-control form-control-lg border-gray-300 bg-body" placeholder="Enter full name" value="<?= htmlspecialchars($admin->name) ?>" required style="background-color: #f8f9fa; border-color: #d1d3e0;" />
+                                    <input type="hidden" name="old_name" value="<?= htmlspecialchars($admin->name) ?>" />
+                                </div>
+                                <!--end::Col-->
                             </div>
-                            <!--end::Col-->
+                            <!--end::Input group-->
                         </div>
-                        <!--end::Input group-->
+                        <!--end::Admin Profile Section-->
+
+                        <!--begin::Application Settings Section-->
+                        <div class="mb-12">
+                            <h4 class="fw-bold text-gray-800 mb-6">Application Settings</h4>
+                            
+                            <!--begin::Input group-->
+                            <div class="row mb-6">
+                                <!--begin::Label-->
+                                <label class="col-lg-4 col-form-label required fw-semibold fs-6">App Name</label>
+                                <!--end::Label-->
+                                <!--begin::Col-->
+                                <div class="col-lg-8 fv-row">
+                                    <input type="text" name="app_name" class="form-control form-control-lg border-gray-300 bg-body" placeholder="Enter application name" value="<?= htmlspecialchars($settings->app_name) ?>" required style="background-color: #f8f9fa; border-color: #d1d3e0;" />
+                                </div>
+                                <!--end::Col-->
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <!--end::Application Settings Section-->
+
+                        <!--begin::Brand Assets Section-->
+                        <div class="mb-0">
+                            <h4 class="fw-bold text-gray-800 mb-6">Brand Assets</h4>
+                            
+                            <!--begin::Input group-->
+                            <div class="row mb-6">
+                                <!--begin::Label-->
+                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Logo</label>
+                                <!--end::Label-->
+                                <!--begin::Col-->
+                                <div class="col-lg-8 fv-row">
+                                    <input type="file" name="logo" class="form-control form-control-lg border-gray-300 bg-body" accept=".png, .jpg, .jpeg" style="background-color: #f8f9fa; border-color: #d1d3e0;" />
+                                    <?php if (!empty($settings->logo)): ?>
+                                    <div class="mt-3">
+                                        <img src="<?= UPLOADS_URL . $settings->logo ?>" alt="Logo" class="img-thumbnail" style="max-width: 200px; height: auto;">
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="form-text text-gray-600 mt-2">Upload your company logo (Recommended: 200x60px)</div>
+                                </div>
+                                <!--end::Col-->
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Input group-->
+                            <div class="row mb-6">
+                                <!--begin::Label-->
+                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Favicon</label>
+                                <!--end::Label-->
+                                <!--begin::Col-->
+                                <div class="col-lg-8 fv-row">
+                                    <input type="file" name="favicon" class="form-control form-control-lg border-gray-300 bg-body" accept=".png, .jpg, .jpeg, .ico" style="background-color: #f8f9fa; border-color: #d1d3e0;" />
+                                    <?php if (!empty($settings->favicon)): ?>
+                                    <div class="mt-3">
+                                        <img src="<?= UPLOADS_URL . $settings->favicon ?>" alt="Favicon" class="img-thumbnail" style="max-width: 32px; height: auto;">
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="form-text text-gray-600 mt-2">Upload your website favicon (Recommended: 32x32px)</div>
+                                </div>
+                                <!--end::Col-->
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Input group-->
+                            <div class="row mb-6">
+                                <!--begin::Label-->
+                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Address</label>
+                                <!--end::Label-->
+                                <!--begin::Col-->
+                                <div class="col-lg-8 fv-row">
+                                    <textarea name="address" class="form-control form-control-lg border-gray-300 bg-body" placeholder="Enter company address" rows="3" style="background-color: #f8f9fa; border-color: #d1d3e0;"><?= htmlspecialchars($settings->address ?? '') ?></textarea>
+                                </div>
+                                <!--end::Col-->
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Input group-->
+                            <div class="row mb-6">
+                                <!--begin::Label-->
+                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Disclaimer</label>
+                                <!--end::Label-->
+                                <!--begin::Col-->
+                                <div class="col-lg-8 fv-row">
+                                    <textarea name="disclaimer" class="form-control form-control-lg border-gray-300 bg-body" placeholder="Enter disclaimer text" rows="3" style="background-color: #f8f9fa; border-color: #d1d3e0;"><?= htmlspecialchars($settings->disclaimer ?? '') ?></textarea>
+                                </div>
+                                <!--end::Col-->
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <!--end::Brand Assets Section-->
                     </div>
                     <!--end::Card body-->
 

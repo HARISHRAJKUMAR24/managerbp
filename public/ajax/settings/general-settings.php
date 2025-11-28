@@ -14,16 +14,22 @@ if (!isAdmin()) {
 $pdo = getDbConnection();
 
 $name = $_POST['name'] ?? '';
+$app_name = $_POST['app_name'] ?? '';
 $existing_image = $_POST['existing_image'] ?? '';
 $old_name = $_POST['old_name'] ?? '';
+$address = $_POST['address'] ?? '';
+$disclaimer = $_POST['disclaimer'] ?? '';
 
 // Get current admin data to compare changes
 $current_admin = $pdo->query("SELECT * FROM managers WHERE role = 'admin' LIMIT 1")->fetch(PDO::FETCH_OBJ);
 
+// Get current settings
+$current_settings = $pdo->query("SELECT * FROM settings LIMIT 1")->fetch(PDO::FETCH_OBJ);
+
 // Track changes
 $changes = [];
 
-// Handle image upload
+// Handle admin image upload
 $image = $existing_image;
 $image_changed = false;
 if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
@@ -41,34 +47,67 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
     }
 }
 
+// Handle logo upload
+$logo = $current_settings->logo ?? '';
+if (isset($_FILES['logo']) && $_FILES['logo']['error'] === 0) {
+    $uploadResult = uploadImage($_FILES['logo'], 'settings');
+    if ($uploadResult['success']) {
+        $logo = $uploadResult['file_name'];
+        // Delete old logo if it exists
+        if (!empty($current_settings->logo)) {
+            $oldLogoPath = __DIR__ . '/../../../uploads/' . $current_settings->logo;
+            @unlink($oldLogoPath);
+        }
+    } else {
+        exit(json_encode(["type" => "error", "msg" => $uploadResult['error'] ?? "Logo upload failed"]));
+    }
+}
+
+// Handle favicon upload
+$favicon = $current_settings->favicon ?? '';
+if (isset($_FILES['favicon']) && $_FILES['favicon']['error'] === 0) {
+    $uploadResult = uploadImage($_FILES['favicon'], 'settings');
+    if ($uploadResult['success']) {
+        $favicon = $uploadResult['file_name'];
+        // Delete old favicon if it exists
+        if (!empty($current_settings->favicon)) {
+            $oldFaviconPath = __DIR__ . '/../../../uploads/' . $current_settings->favicon;
+            @unlink($oldFaviconPath);
+        }
+    } else {
+        exit(json_encode(["type" => "error", "msg" => $uploadResult['error'] ?? "Favicon upload failed"]));
+    }
+}
+
 // Check if name changed
 $name_changed = ($name !== $old_name);
 
-// Validate name
+// Check if app settings changed
+$app_name_changed = ($app_name !== $current_settings->app_name);
+$address_changed = ($address !== ($current_settings->address ?? ''));
+$disclaimer_changed = ($disclaimer !== ($current_settings->disclaimer ?? ''));
+
+// Validate required fields
 if (empty($name)) {
     exit(json_encode(["type" => "error", "msg" => "Name is required"]));
 }
-
-// Prepare success message based on changes
-if ($image_changed && $name_changed) {
-    $success_msg = "Profile image and name updated successfully!";
-} elseif ($image_changed) {
-    $success_msg = "Profile image updated successfully!";
-} elseif ($name_changed) {
-    $success_msg = "Name updated successfully!";
-} else {
-    $success_msg = "No changes were made.";
+if (empty($app_name)) {
+    exit(json_encode(["type" => "error", "msg" => "App name is required"]));
 }
 
 // Update manager data only if there are changes
 if ($image_changed || $name_changed) {
     $stmt = $pdo->prepare("UPDATE managers SET name = ?, image = ? WHERE role = 'admin'");
-    if ($stmt->execute([$name, $image])) {
-        exit(json_encode(["type" => "success", "msg" => $success_msg]));
-    } else {
-        exit(json_encode(["type" => "error", "msg" => "Failed to update settings"]));
+    if (!$stmt->execute([$name, $image])) {
+        exit(json_encode(["type" => "error", "msg" => "Failed to update admin profile"]));
     }
+}
+
+// Update settings data
+$stmt = $pdo->prepare("UPDATE settings SET app_name = ?, logo = ?, favicon = ?, address = ?, disclaimer = ? WHERE id = 1");
+if ($stmt->execute([$app_name, $logo, $favicon, $address, $disclaimer])) {
+    exit(json_encode(["type" => "success", "msg" => "Settings updated successfully!"]));
 } else {
-    exit(json_encode(["type" => "info", "msg" => $success_msg]));
+    exit(json_encode(["type" => "error", "msg" => "Failed to update settings"]));
 }
 ?>

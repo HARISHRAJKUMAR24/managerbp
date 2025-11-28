@@ -23,14 +23,18 @@ $(document).ready(function () {
             processData: false,
             contentType: false,
             success: function (data) {
-                const response = JSON.parse(data);
-                toastr[response.type](response.msg);
+                try {
+                    const response = JSON.parse(data);
+                    toastr[response.type](response.msg);
 
-                if (response.type === "success") {
-                    // Refresh page after 2 seconds to show updated data
-                    setTimeout(function () {
-                        window.location.reload();
-                    }, 2000);
+                    if (response.type === "success") {
+                        // Refresh page after 2 seconds to show updated data
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 2000);
+                    }
+                } catch (e) {
+                    toastr.error('Invalid response from server');
                 }
             },
             error: function (xhr, status, error) {
@@ -45,7 +49,7 @@ $(document).ready(function () {
         });
     });
 
-    // Rest of the image preview code remains the same...
+    // Image preview functionality
     const imageInput = document.querySelector('input[name="image"]');
     const imagePreview = document.querySelector('.image-input-wrapper');
 

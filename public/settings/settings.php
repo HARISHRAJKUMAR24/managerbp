@@ -128,7 +128,7 @@ renderTemplate('header');
                             <!--end::Header-->
                             <!--begin::Footer-->
                             <div class="pt-4 border-top">
-                                <a href="currencies" class="btn btn-light-success w-100">
+                                <a href="settings/currency" class="btn btn-light-success w-100">
                                     Click to Manage
                                     <i class="ki-duotone ki-arrow-right fs-3 ms-1">
                                         <span class="path1"></span>
@@ -144,14 +144,14 @@ renderTemplate('header');
                 <!--end::Currencies-->
 
                 <!--begin::Languages-->
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card card-flush h-100 bg-light-warning">
-                        <!--begin::Card body-->
-                        <div class="card-body d-flex flex-column justify-content-between">
-                            <!--begin::Header-->
-                            <div class="mb-5">
-                                <!--begin::Icon-->
-                                <div class="symbol symbol-60px symbol-circle mb-4">
+                <!-- <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card card-flush h-100 bg-light-warning"> -->
+                <!--begin::Card body-->
+                <!-- <div class="card-body d-flex flex-column justify-content-between"> -->
+                <!--begin::Header-->
+                <!-- <div class="mb-5"> -->
+                <!--begin::Icon-->
+                <!-- <div class="symbol symbol-60px symbol-circle mb-4">
                                     <span class="symbol-label bg-light-warning">
                                         <i class="ki-duotone ki-message-text-2 fs-2x text-warning">
                                             <span class="path1"></span>
@@ -159,18 +159,18 @@ renderTemplate('header');
                                             <span class="path3"></span>
                                         </i>
                                     </span>
-                                </div>
-                                <!--end::Icon-->
-                                <!--begin::Title-->
-                                <h3 class="fw-bold text-gray-800 mb-2">Languages</h3>
-                                <!--end::Title-->
-                                <!--begin::Description-->
-                                <p class="text-gray-600 fs-6">Manage sellers store languages</p>
-                                <!--end::Description-->
-                            </div>
-                            <!--end::Header-->
-                            <!--begin::Footer-->
-                            <div class="pt-4 border-top">
+                                </div> -->
+                <!--end::Icon-->
+                <!--begin::Title-->
+                <!-- <h3 class="fw-bold text-gray-800 mb-2">Languages</h3> -->
+                <!--end::Title-->
+                <!--begin::Description-->
+                <!-- <p class="text-gray-600 fs-6">Manage sellers store languages</p> -->
+                <!--end::Description-->
+                <!-- </div> -->
+                <!--end::Header-->
+                <!--begin::Footer-->
+                <!-- <div class="pt-4 border-top">
                                 <a href="languages" class="btn btn-light-warning w-100">
                                     Click to Manage
                                     <i class="ki-duotone ki-arrow-right fs-3 ms-1">
@@ -178,12 +178,12 @@ renderTemplate('header');
                                         <span class="path2"></span>
                                     </i>
                                 </a>
-                            </div>
-                            <!--end::Footer-->
-                        </div>
-                        <!--end::Card body-->
-                    </div>
-                </div>
+                            </div> -->
+                <!--end::Footer-->
+                <!-- </div> -->
+                <!--end::Card body-->
+                <!-- </div> -->
+                <!-- </div> -->
                 <!--end::Languages-->
 
                 <!--begin::Taxes-->
@@ -313,51 +313,6 @@ renderTemplate('header');
                     </div>
                 </div>
                 <!--end::Limits-->
-
-                <!--begin::Discount Timer-->
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card card-flush h-100 bg-light-primary">
-                        <!--begin::Card body-->
-                        <div class="card-body d-flex flex-column justify-content-between">
-                            <!--begin::Header-->
-                            <div class="mb-5">
-                                <!--begin::Icon-->
-                                <div class="symbol symbol-60px symbol-circle mb-4">
-                                    <span class="symbol-label bg-light-primary">
-                                        <i class="ki-duotone ki-discount fs-2x text-primary">
-                                            <span class="path1"></span>
-                                            <span class="path2"></span>
-                                            <span class="path3"></span>
-                                            <span class="path4"></span>
-                                            <span class="path5"></span>
-                                        </i>
-                                    </span>
-                                </div>
-                                <!--end::Icon-->
-                                <!--begin::Title-->
-                                <h3 class="fw-bold text-gray-800 mb-2">Discount Timer Doopak Mama </h3>
-                                <!--end::Title-->
-                                <!--begin::Description-->
-                                <p class="text-gray-600 fs-6">Manage seller discount timers Doopak maman</p>
-                                <!--end::Description-->
-                            </div>
-                            <!--end::Header-->
-                            <!--begin::Footer-->
-                            <div class="pt-4 border-top">
-                                <a href="settings/discount-timer" class="btn btn-light-primary w-100">
-                                    Click to Manage
-                                    <i class="ki-duotone ki-arrow-right fs-3 ms-1">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                    </i>
-                                </a>
-                            </div>
-                            <!--end::Footer-->
-                        </div>
-                        <!--end::Card body-->
-                    </div>
-                </div>
-                <!--end::Discount Timer-->
             </div>
             <!--end::Row-->
         </div>

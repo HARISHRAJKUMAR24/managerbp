@@ -41,9 +41,18 @@ RewriteRule ^users/([0-9a-zA-Z_-]+)$ public/users/profile.php?id=$1 [L,QSA]
 
 # Redirect /settings to public/settings/settings.php
 RewriteRule ^settings$ public/settings/settings.php [L]
-\
+
 # Redirect /settings/general to public/settings/general.php
 RewriteRule ^settings/general$ public/settings/general.php [L]
+
+# Redirect /settings/currencyto public/settings/currency.php
+RewriteRule ^settings/currency$ public/settings/currency.php [L]
+
+# Redirect /settings/taxesto public/settings/taxes.php
+RewriteRule ^settings/taxes$ public/settings/taxes.php [L]
+
+# Redirect /settings/paymentsto public/settings/payments.php
+RewriteRule ^settings/payments$ public/settings/payments.php [L]
 
 # Remove .php extension from URLs
 RewriteCond %{REQUEST_FILENAME} !-f

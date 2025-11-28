@@ -34,13 +34,14 @@ function convertDays($totalDays)
 
 function getCurrencySymbol($currency)
 {
-    if ($currency === 'INR') {
+    if ($currency == 'USD') {
+        return '$';
+    } elseif ($currency == 'INR') {
         return '₹';
     } else {
-        return '$';
+        return $currency;
     }
 }
-
 function uuid()
 {
     return sprintf(
@@ -84,3 +85,5 @@ function uploadImage($file, $folder = 'uploads') {
     
     return ['success' => false, 'error' => 'Upload failed'];
 }
+
+

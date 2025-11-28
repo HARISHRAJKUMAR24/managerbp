@@ -1,0 +1,17 @@
+28/11/2025
+This tabel query paste in settings 
+
+ALTER TABLE `settings`
+ADD COLUMN `gst_tax_type` varchar(255) DEFAULT NULL AFTER `currency`,
+ADD COLUMN `gst_number` varchar(255) DEFAULT NULL AFTER `gst_tax_type`,
+ADD COLUMN `gst_percentage` int(11) NOT NULL DEFAULT 0 AFTER `gst_number`,
+ADD COLUMN `favicon` varchar(255) NOT NULL AFTER `gst_percentage`,
+ADD COLUMN `address` text DEFAULT NULL AFTER `favicon`,
+ADD COLUMN `logo` varchar(255) NOT NULL AFTER `address`,
+ADD COLUMN `disclaimer` text DEFAULT NULL AFTER `logo`,
+ADD COLUMN `razorpay_key_id` varchar(255) DEFAULT NULL AFTER `disclaimer`,
+ADD COLUMN `razorpay_key_secret` varchar(255) DEFAULT NULL AFTER `razorpay_key_id`,
+ADD COLUMN `ippopay_public_key` varchar(255) DEFAULT NULL AFTER `razorpay_key_secret`,
+ADD COLUMN `phonepe_key_merchant_id` varchar(255) DEFAULT NULL AFTER `ippopay_public_key`,
+ADD COLUMN `phonepe_key_index` varchar(255) DEFAULT NULL AFTER `phonepe_key_merchant_id`,
+ADD COLUMN `phonepe_key` varchar(255) DEFAULT NULL AFTER `phonepe_key_index`;

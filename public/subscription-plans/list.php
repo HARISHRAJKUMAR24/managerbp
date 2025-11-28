@@ -70,7 +70,7 @@ $settings = fetchSettings();
                                 <div class="text-center position-relative mb-2 pb-1">
                                     <div class="mb-2 d-flex">
 
-                                        <h1 class="price-toggle text-primary price-yearly mb-0 d-flex"><?= getCurrencySymbol($settings->currency) . $row['amount'] ?></h1>
+                                        <h1 class="price-toggle text-primary price-yearly mb-0 d-flex"><?= getCurrencySymbol($settings->currency) . ' '.$row['amount'] ?></h1>
                                         <sub class="h5 text-muted pricing-duration mt-auto mb-2">/<?= convertDays($row['duration']) ?></sub>
                                     </div>
                                 </div>
