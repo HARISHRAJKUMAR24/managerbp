@@ -1,21 +1,25 @@
 <?php
-
-
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: *");
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Content-Type: application/json");
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200); 
+    exit;
+}
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
 
-// FIXED: always read JSON input
+// Read JSON input
 $raw = file_get_contents("php://input");
 $input = json_decode($raw, true);
 if (!$input) {
     $input = $_POST;
 }
-
-
 
 $phone = trim($input['phone'] ?? "");
 $password = trim($input['password'] ?? "");
@@ -30,8 +34,6 @@ $stmt = $pdo->prepare("SELECT * FROM users WHERE phone = ? LIMIT 1");
 $stmt->execute([$phone]);
 $user = $stmt->fetchObject();
 
-file_put_contents("php-error-debug.txt", json_encode($user) . "\n", FILE_APPEND);
-
 if (!$user) {
     echo json_encode(["success" => false, "message" => "User not found"]);
     exit;
@@ -42,6 +44,24 @@ if (!password_verify($password, $user->password)) {
     exit;
 }
 
+// Generate token
+$token = bin2hex(random_bytes(32));
+
+// Save token to DB
+$update = $pdo->prepare("UPDATE users SET api_token = ? WHERE id = ?");
+$update->execute([$token, $user->id]);
+
+setcookie(
+    "token",
+    $token,
+    time() + (86400 * 30),
+    "/",
+    "localhost",
+    false,
+    true
+);
+
+
 echo json_encode([
     "success" => true,
     "message" => "Login successful",
@@ -49,5 +69,6 @@ echo json_encode([
         "id" => $user->id,
         "name" => $user->name,
         "phone" => $user->phone,
+        "token" => $token
     ]
 ]);
