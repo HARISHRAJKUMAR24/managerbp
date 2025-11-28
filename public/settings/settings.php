@@ -271,48 +271,6 @@ renderTemplate('header');
                     </div>
                 </div>
                 <!--end::Payments-->
-
-                <!--begin::Limits-->
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card card-flush h-100 bg-light-dark">
-                        <!--begin::Card body-->
-                        <div class="card-body d-flex flex-column justify-content-between">
-                            <!--begin::Header-->
-                            <div class="mb-5">
-                                <!--begin::Icon-->
-                                <div class="symbol symbol-60px symbol-circle mb-4">
-                                    <span class="symbol-label bg-light-dark">
-                                        <i class="ki-duotone ki-shield-tick fs-2x text-dark">
-                                            <span class="path1"></span>
-                                            <span class="path2"></span>
-                                        </i>
-                                    </span>
-                                </div>
-                                <!--end::Icon-->
-                                <!--begin::Title-->
-                                <h3 class="fw-bold text-gray-800 mb-2">Limits</h3>
-                                <!--end::Title-->
-                                <!--begin::Description-->
-                                <p class="text-gray-600 fs-6">Manage stock limits, login days, order limits</p>
-                                <!--end::Description-->
-                            </div>
-                            <!--end::Header-->
-                            <!--begin::Footer-->
-                            <div class="pt-4 border-top">
-                                <a href="settings/limits" class="btn btn-light-dark w-100">
-                                    Click to Manage
-                                    <i class="ki-duotone ki-arrow-right fs-3 ms-1">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                    </i>
-                                </a>
-                            </div>
-                            <!--end::Footer-->
-                        </div>
-                        <!--end::Card body-->
-                    </div>
-                </div>
-                <!--end::Limits-->
             </div>
             <!--end::Row-->
         </div>

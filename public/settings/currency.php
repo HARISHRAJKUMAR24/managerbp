@@ -93,16 +93,19 @@ renderTemplate('header');
                     <!--begin::Card body-->
                     <div class="card-body pt-0">
                         <!--begin::Input group-->
+                        <!--begin::Input group-->
                         <div class="row mb-6">
                             <!--begin::Label-->
-                            <label class="col-lg-4 col-form-label required fw-semibold fs-6">App Name</label>
+                            <label class="col-lg-4 col-form-label fw-semibold fs-6">App Name</label>
                             <!--end::Label-->
                             <!--begin::Col-->
                             <div class="col-lg-8 fv-row">
-                                <input type="text" name="app_name" class="form-control form-control-lg form-control-solid" placeholder="Enter application name" value="<?= htmlspecialchars($settings->app_name) ?>" required />
+                                <input type="text" name="app_name" class="form-control form-control-lg form-control-solid" value="<?= htmlspecialchars($settings->app_name) ?>" readonly style="background-color: #f8f9fa; border-color: #e4e6ef; color: #7e8299;" />
+                                <div class="form-text text-gray-600 mt-2">Application name is displayed for reference and cannot be edited here</div>
                             </div>
                             <!--end::Col-->
                         </div>
+                        <!--end::Input group-->
                         <!--end::Input group-->
 
                         <!--begin::Input group-->

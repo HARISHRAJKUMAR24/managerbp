@@ -13,20 +13,16 @@ if (!isAdmin()) {
 // Get database connection
 $pdo = getDbConnection();
 
-$app_name = $_POST['app_name'] ?? '';
 $currency = $_POST['currency'] ?? '';
 
 // Validate inputs
-if (empty($app_name)) {
-    exit(json_encode(["type" => "error", "msg" => "App name is required"]));
-}
 if (empty($currency)) {
     exit(json_encode(["type" => "error", "msg" => "Currency is required"]));
 }
 
-// Update settings
-$stmt = $pdo->prepare("UPDATE settings SET app_name = ?, currency = ? WHERE id = 1");
-if ($stmt->execute([$app_name, $currency])) {
+// Update settings - only update currency, not app_name
+$stmt = $pdo->prepare("UPDATE settings SET currency = ? WHERE id = 1");
+if ($stmt->execute([$currency])) {
     exit(json_encode(["type" => "success", "msg" => "Currency settings updated successfully!"]));
 } else {
     exit(json_encode(["type" => "error", "msg" => "Failed to update settings"]));
