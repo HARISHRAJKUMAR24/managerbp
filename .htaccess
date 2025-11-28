@@ -9,6 +9,10 @@ RewriteRule ^auth/sign-in$ public/authentication/sign-in.php [L]
 # Redirect /auth/sign-out to public/authentication/sign-out.php
 RewriteRule ^auth/sign-out$ public/authentication/sign-out.php [L]
 
+
+# Redirect /dashboard_message/add to public/staffs/add.php
+RewriteRule ^dashboard-message/add$ public/dashboard-message/add.php [L]
+
 # Redirect /users to public/users/list.php
 RewriteRule ^users$ public/users/list.php [L]
 
@@ -17,6 +21,8 @@ RewriteRule ^staffs$ public/staffs/list.php [L]
 
 # Redirect /staffs/add to public/staffs/add.php
 RewriteRule ^staffs/add$ public/staffs/add.php [L]
+
+
 
 # Redirect /discounts to public/discounts/list.php
 RewriteRule ^discounts$ public/discounts/list.php [L]

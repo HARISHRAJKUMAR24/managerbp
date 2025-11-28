@@ -10,7 +10,7 @@ $settings = fetchSettings();
     <title><?= $settings->app_name ?> Portal</title>
     <meta charset="utf-8" />
     <meta name="robots" content="noindex, nofollow">
-    <link rel="shortcut icon" href="assets/media/logos/favicon.ico" />
+   <link rel="icon" type="image/x-icon" href="<?= BASE_URL . UPLOADS_URL . getData("favicon", "settings") ?>" />
     <!--begin::Fonts(mandatory for all pages)-->
     <link
         rel="stylesheet"

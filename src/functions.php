@@ -87,3 +87,29 @@ function uploadImage($file, $folder = 'uploads') {
 }
 
 
+// get data from database
+function getData($column, $table, $condition = "")
+{
+    $pdo = getDbConnection();
+
+    if (empty($condition)) {
+        $sql = "SELECT $column FROM $table LIMIT 1";
+    } else {
+        $sql = "SELECT $column FROM $table WHERE $condition LIMIT 1";
+    }
+
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute();
+
+        if ($stmt->rowCount()) {
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
+            return $row->$column;
+        }
+        
+        return null;
+    } catch (PDOException $e) {
+        error_log("Database error in getData(): " . $e->getMessage());
+        return null;
+    }
+}

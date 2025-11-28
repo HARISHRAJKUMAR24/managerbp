@@ -84,13 +84,18 @@ if (!isAdmin() && (str_contains($page, 'staffs') || str_contains($page, 'setting
                         <!--end::Sidebar mobile toggle-->
                         <!--begin::Logo-->
                         <a href="<?= BASE_URL ?>" class="app-sidebar-logo">
+                            <?php
+                            $logo = getData("logo", "settings");
+                            $logoUrl = $logo ? BASE_URL . UPLOADS_URL . $logo : BASE_URL . 'assets/media/logos/default.svg';
+                            $logoDarkUrl = $logo ? BASE_URL . UPLOADS_URL . $logo : BASE_URL . 'assets/media/logos/default-dark.svg';
+                            ?>
                             <img
                                 alt="Logo"
-                                src="<?= BASE_URL ?>assets/media/logos/default.svg"
+                                src="<?= $logoUrl ?>"
                                 class="h-30px theme-light-show" />
                             <img
                                 alt="Logo"
-                                src="<?= BASE_URL ?>assets/media/logos/default-dark.svg"
+                                src="<?= $logoDarkUrl ?>"
                                 class="h-30px theme-dark-show" />
                         </a>
                         <!--end::Logo-->
@@ -2032,6 +2037,26 @@ if (!isAdmin() && (str_contains($page, 'staffs') || str_contains($page, 'setting
                                 </a>
                                 <!--end:Menu item-->
                             <?php endif; ?>
+
+                            <?php if (isAdmin()): ?>
+                                <!--begin:Menu item-->
+                                <a href="dashboard-message/add" class="menu-item">
+                                    <!--begin:Menu link-->
+                                    <span class="menu-link">
+                                        <span class="menu-icon">
+                                            <i class="ki-duotone ki-notification fs-1">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                                <span class="path3"></span>
+                                            </i>
+                                        </span>
+                                        <span class="menu-title">DashBoard Message</span>
+                                    </span>
+                                    <!--end:Menu link-->
+                                </a>
+                                <!--end:Menu item-->
+                            <?php endif; ?>
+
 
                             <!--begin:Menu item-->
                             <a href="users" class="menu-item">
