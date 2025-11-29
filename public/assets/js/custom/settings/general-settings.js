@@ -1,5 +1,92 @@
 // General Settings Form Submission
 $(document).ready(function () {
+    // Timezone clock functionality
+    const timezoneSelect = document.getElementById('timezone');
+    const clockDisplay = document.getElementById('clock-display');
+
+    function updateClock() {
+        if (!timezoneSelect || !clockDisplay) return;
+
+        const selectedTimezone = timezoneSelect.value;
+        const now = new Date();
+
+        try {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: selectedTimezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+
+            // Format the date in day/month/year format
+            const parts = formatter.formatToParts(now);
+            const day = parts.find(part => part.type === 'day').value;
+            const month = parts.find(part => part.type === 'month').value;
+            const year = parts.find(part => part.type === 'year').value;
+            const hour = parts.find(part => part.type === 'hour').value;
+            const minute = parts.find(part => part.type === 'minute').value;
+            const second = parts.find(part => part.type === 'second').value;
+            const dayPeriod = parts.find(part => part.type === 'dayPeriod').value;
+
+            // Create the formatted string in day/month/year format
+            const formattedTime = `${day}/${month}/${year} ${hour}:${minute}:${second} ${dayPeriod}`;
+            clockDisplay.textContent = `${formattedTime} (${selectedTimezone})`;
+        } catch (error) {
+            clockDisplay.textContent = 'Invalid timezone';
+        }
+    }
+
+    // Alternative simpler method using manual formatting
+    function updateClockSimple() {
+        if (!timezoneSelect || !clockDisplay) return;
+
+        const selectedTimezone = timezoneSelect.value;
+        const now = new Date();
+
+        try {
+            // Create formatter for the specific timezone
+            const timeFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: selectedTimezone,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+
+            const dateFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: selectedTimezone,
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            // Format date and time separately
+            const timeString = timeFormatter.format(now);
+            const dateString = dateFormatter.format(now);
+
+            // Convert date from MM/DD/YYYY to DD/MM/YYYY
+            const [month, day, year] = dateString.split('/');
+            const formattedDate = `${day}/${month}/${year}`;
+
+            clockDisplay.textContent = `${formattedDate} ${timeString} (${selectedTimezone})`;
+        } catch (error) {
+            clockDisplay.textContent = 'Invalid timezone';
+        }
+    }
+
+    // Update clock when timezone changes
+    if (timezoneSelect) {
+        timezoneSelect.addEventListener('change', updateClockSimple);
+    }
+
+    // Update clock every second
+    setInterval(updateClockSimple, 1000);
+    updateClockSimple(); // Initial call
+
     $("form").on("submit", function (e) {
         e.preventDefault();
 

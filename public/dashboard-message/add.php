@@ -10,8 +10,8 @@ if (!isAdmin()) exit(header("Location: " . BASE_URL));
 // Get database connection
 $pdo = getDbConnection();
 
-// Get ALL subscription plans for dropdown (remove the is_disabled filter)
-$plans = $pdo->query("SELECT id, name, is_disabled FROM subscription_plans ORDER BY name")->fetchAll(PDO::FETCH_OBJ);
+// Get ONLY ACTIVE subscription plans for dropdown (filter out disabled)
+$plans = $pdo->query("SELECT id, name FROM subscription_plans WHERE is_disabled = 1 ORDER BY name")->fetchAll(PDO::FETCH_OBJ);
 
 renderTemplate('header');
 ?>
@@ -62,40 +62,52 @@ renderTemplate('header');
     <div id="kt_app_content" class="app-content flex-column-fluid">
         <!--begin::Content container-->
         <div id="kt_app_content_container" class="app-container container-fluid">
-            <div class="row">
+            <div class="row g-6">
                 <!--begin::Table Section-->
-                <div class="col-md-7">
+                <div class="col-xxl-8 col-xl-7 col-lg-12">
                     <!--begin::Card-->
                     <div class="card">
                         <!--begin::Card header-->
                         <div class="card-header border-0 pt-6">
                             <h3 class="card-title align-items-start flex-column">
-                                <span class="card-label fw-bold fs-3 mb-1">Messages</span>
-                                <span class="text-muted mt-1 fw-semibold fs-7">Manage dashboard messages</span>
+                                <span class="card-label fw-bold fs-3 mb-1">Active Messages</span>
+                                <span class="text-muted mt-1 fw-semibold fs-7">Manage dashboard messages for sellers</span>
                             </h3>
+                            <div class="card-toolbar">
+                                <div class="d-flex align-items-center position-relative me-4">
+                                    <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-3">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                    <input type="text" id="searchMessages" class="form-control form-control-solid w-250px ps-10" placeholder="Search messages..." />
+                                </div>
+                            </div>
                         </div>
                         <!--end::Card header-->
 
                         <!--begin::Card body-->
                         <div class="card-body pt-0">
-                            <!--begin::Table-->
-                            <table id="messagesTable" class="table align-middle table-row-dashed fs-6 gy-5">
-                                <thead>
-                                    <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
-                                        <th class="w-10px pe-2">#</th>
-                                        <th class="min-w-150px">Title</th>
-                                        <th class="min-w-200px">Description</th>
-                                        <th class="min-w-100px">Expiry</th>
-                                        <th class="min-w-150px">Seller Type</th>
-                                        <th class="min-w-100px">Status</th>
-                                        <th class="min-w-70px text-end">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="fw-semibold text-gray-600">
-                                    <!-- Data will be loaded via AJAX -->
-                                </tbody>
-                            </table>
-                            <!--end::Table-->
+                            <!--begin::Table container-->
+                            <div class="table-responsive">
+                                <!--begin::Table-->
+                                <table id="messagesTable" class="table table-hover align-middle table-row-dashed fs-6 gy-5">
+                                    <thead>
+                                        <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                                            <th class="w-50px ps-4">#</th>
+                                            <th class="min-w-250px">Message Details</th>
+                                            <th class="min-w-150px">Target Audience</th>
+                                            <th class="min-w-150px">Expiry</th>
+                                            <th class="min-w-100px">Status</th>
+                                            <th class="min-w-80px text-end pe-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="fw-semibold text-gray-600">
+                                        <!-- Data will be loaded via AJAX -->
+                                    </tbody>
+                                </table>
+                                <!--end::Table-->
+                            </div>
+                            <!--end::Table container-->
                         </div>
                         <!--end::Card body-->
                     </div>
@@ -104,14 +116,14 @@ renderTemplate('header');
                 <!--end::Table Section-->
 
                 <!--begin::Form Section-->
-                <div class="col-md-5">
+                <div class="col-xxl-4 col-xl-5 col-lg-12">
                     <!--begin::Card-->
                     <div class="card">
                         <!--begin::Card header-->
                         <div class="card-header border-0 pt-6">
                             <h3 class="card-title align-items-start flex-column">
-                                <span class="card-label fw-bold fs-3 mb-1">Send Message</span>
-                                <span class="text-muted mt-1 fw-semibold fs-7">Create new dashboard message</span>
+                                <span class="card-label fw-bold fs-3 mb-1">Create New Message</span>
+                                <span class="text-muted mt-1 fw-semibold fs-7">Send message to seller dashboards</span>
                             </h3>
                         </div>
                         <!--end::Card header-->
@@ -128,6 +140,7 @@ renderTemplate('header');
                                     <!--begin::Col-->
                                     <div class="col-lg-8 fv-row">
                                         <input type="text" name="title" class="form-control form-control-lg form-control-solid" placeholder="Enter message title" required />
+                                        <div class="form-text">Short and descriptive title</div>
                                     </div>
                                     <!--end::Col-->
                                 </div>
@@ -140,7 +153,8 @@ renderTemplate('header');
                                     <!--end::Label-->
                                     <!--begin::Col-->
                                     <div class="col-lg-8 fv-row">
-                                        <textarea name="description" class="form-control form-control-lg form-control-solid" placeholder="Enter message description" rows="4" required></textarea>
+                                        <textarea name="description" class="form-control form-control-lg form-control-solid" placeholder="Enter detailed message description..." rows="4" required></textarea>
+                                        <div class="form-text">Full message content that sellers will see</div>
                                     </div>
                                     <!--end::Col-->
                                 </div>
@@ -149,13 +163,14 @@ renderTemplate('header');
                                 <!--begin::Input group-->
                                 <div class="row mb-6">
                                     <!--begin::Label-->
-                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">Expiry Time</label>
+                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">Message Duration</label>
                                     <!--end::Label-->
                                     <!--begin::Col-->
                                     <div class="col-lg-8">
-                                        <div class="row">
+                                        <div class="row g-3">
                                             <div class="col-6">
-                                                <input type="number" name="expiry_value" class="form-control form-control-lg form-control-solid" placeholder="Value" min="1" required />
+                                                <input type="number" name="expiry_value" class="form-control form-control-lg form-control-solid" placeholder="Value" min="1" max="365" required />
+                                                <div class="form-text">Duration value</div>
                                             </div>
                                             <div class="col-6">
                                                 <select name="expiry_type" class="form-select form-select-lg form-select-solid" required>
@@ -164,7 +179,15 @@ renderTemplate('header');
                                                     <option value="weeks">Weeks</option>
                                                     <option value="months">Months</option>
                                                 </select>
+                                                <div class="form-text">Time unit</div>
                                             </div>
+                                        </div>
+                                        <div class="form-text text-info mt-2">
+                                            <i class="ki-duotone ki-clock fs-4 me-1">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                            </i>
+                                            Message will automatically expire after this duration
                                         </div>
                                     </div>
                                     <!--end::Col-->
@@ -181,13 +204,12 @@ renderTemplate('header');
                                         <select name="seller_type[]" class="form-select form-select-lg form-select-solid" multiple="multiple" data-control="select2" data-placeholder="Select seller types">
                                             <option value="all">All Sellers</option>
                                             <?php foreach ($plans as $plan): ?>
-                                                <option value="<?= $plan->id ?>" <?= $plan->is_disabled ? 'style="color: #999; font-style: italic;"' : '' ?>>
+                                                <option value="<?= $plan->id ?>">
                                                     <?= htmlspecialchars($plan->name) ?>
-                                                    <?= $plan->is_disabled ? ' (Disabled)' : '' ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <div class="form-text">Hold Ctrl to select multiple options. Disabled plans are shown in gray.</div>
+                                        <div class="form-text">Select specific seller types or "All Sellers" for everyone</div>
                                     </div>
                                     <!--end::Col-->
                                 </div>
@@ -200,13 +222,20 @@ renderTemplate('header');
                                     <!--end::Label-->
                                     <!--begin::Col-->
                                     <div class="col-lg-8 fv-row">
-                                        <div class="form-check form-check-custom form-check-solid">
+                                        <div class="form-check form-check-custom form-check-solid mb-3">
                                             <input class="form-check-input" type="checkbox" name="just_created_seller" id="just_created_seller" value="1" />
-                                            <label class="form-check-label" for="just_created_seller">
+                                            <label class="form-check-label fw-semibold" for="just_created_seller">
                                                 Show to newly created sellers only
                                             </label>
                                         </div>
-                                        <div class="form-text">If checked, message will only appear to sellers who joined after this message was created</div>
+                                        <div class="form-text text-warning">
+                                            <i class="ki-duotone ki-information fs-4 me-1">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                                <span class="path3"></span>
+                                            </i>
+                                            If enabled, only sellers who joined after this message creation will see it
+                                        </div>
                                     </div>
                                     <!--end::Col-->
                                 </div>
@@ -214,6 +243,7 @@ renderTemplate('header');
 
                                 <!--begin::Card footer-->
                                 <div class="card-footer d-flex justify-content-end py-6 px-9">
+                                    <button type="reset" class="btn btn-light btn-active-light-primary me-3">Cancel</button>
                                     <button type="submit" class="btn btn-primary">
                                         <span class="indicator-label">Send Message</span>
                                         <span class="indicator-progress">Please wait...
@@ -242,5 +272,5 @@ renderTemplate('header');
 <!--end:Footer-->
 
 <!--begin::Script-->
-<script src="assets/js/custom/dashboard-messages/dashboard-messages.js"></script>
+<script src="assets/js/custom/dashboard-messages.js"></script>
 <!--end::Script-->

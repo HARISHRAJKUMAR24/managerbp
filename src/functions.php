@@ -53,36 +53,37 @@ function uuid()
         bin2hex(random_bytes(6))
     );
 }
-function uploadImage($file, $folder = 'uploads') {
+function uploadImage($file, $folder = 'uploads')
+{
     // Get the absolute path to uploads folder
     $uploadPath = __DIR__ . '/../uploads/' . $folder . '/';
-    
+
     // Create directory if it doesn't exist
     if (!is_dir($uploadPath)) {
         mkdir($uploadPath, 0755, true);
     }
-    
+
     // Generate unique filename
     $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
     $fileName = uniqid() . '.' . $fileExtension;
     $filePath = $uploadPath . $fileName;
-    
+
     // Check file type
     $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
     if (!in_array(strtolower($fileExtension), $allowedTypes)) {
         return ['success' => false, 'error' => 'Invalid file type'];
     }
-    
+
     // Check file size (max 5MB)
     if ($file['size'] > 5 * 1024 * 1024) {
         return ['success' => false, 'error' => 'File too large'];
     }
-    
+
     // Move uploaded file
     if (move_uploaded_file($file['tmp_name'], $filePath)) {
         return ['success' => true, 'file_name' => $folder . '/' . $fileName];
     }
-    
+
     return ['success' => false, 'error' => 'Upload failed'];
 }
 
@@ -106,10 +107,93 @@ function getData($column, $table, $condition = "")
             $row = $stmt->fetch(PDO::FETCH_OBJ);
             return $row->$column;
         }
-        
+
         return null;
     } catch (PDOException $e) {
         error_log("Database error in getData(): " . $e->getMessage());
         return null;
     }
+}
+// Get timezone from settings
+function getAppTimezone() {
+    global $pdo;
+    try {
+        $stmt = $pdo->query("SELECT timezone FROM settings LIMIT 1");
+        $settings = $stmt->fetch(PDO::FETCH_OBJ);
+        return $settings->timezone ?? 'Asia/Kolkata';
+    } catch (Exception $e) {
+        return 'Asia/Kolkata';
+    }
+}
+
+// Get current time in app timezone
+function getCurrentAppTime($format = 'Y-m-d H:i:s') {
+    $timezone = getAppTimezone();
+    try {
+        $date = new DateTime('now', new DateTimeZone($timezone));
+        return $date->format($format);
+    } catch (Exception $e) {
+        $date = new DateTime('now');
+        return $date->format($format);
+    }
+}
+
+// Convert any datetime to app timezone
+function convertToAppTimezone($datetime, $format = 'Y-m-d H:i:s') {
+    $timezone = getAppTimezone();
+    try {
+        $date = new DateTime($datetime);
+        $date->setTimezone(new DateTimeZone($timezone));
+        return $date->format($format);
+    } catch (Exception $e) {
+        return $datetime;
+    }
+}
+
+// Calculate expiry date using app timezone - CORRECTED VERSION
+function calculateExpiryDate($value, $type) {
+    $timezone = getAppTimezone();
+    
+    try {
+        // Create current time in app timezone
+        $currentTime = new DateTime('now', new DateTimeZone($timezone));
+        
+        // Add the interval based on type
+        switch ($type) {
+            case 'hours':
+                $interval = new DateInterval("PT{$value}H");
+                break;
+            case 'days':
+                $interval = new DateInterval("P{$value}D");
+                break;
+            case 'weeks':
+                $interval = new DateInterval("P{$value}W");
+                break;
+            case 'months':
+                $interval = new DateInterval("P{$value}M");
+                break;
+            default:
+                $interval = new DateInterval("PT1H"); // Default 1 hour
+        }
+        
+        $currentTime->add($interval);
+        return $currentTime->format('Y-m-d H:i:s');
+        
+    } catch (Exception $e) {
+        // Fallback
+        $currentAppTime = getCurrentAppTime('Y-m-d H:i:s');
+        $expiry = strtotime($currentAppTime . " +{$value} {$type}");
+        return date('Y-m-d H:i:s', $expiry);
+    }
+}
+
+// Check if message is expired considering timezone
+function isMessageExpired($expiryDate) {
+    $currentTime = getCurrentAppTime();
+    return strtotime($currentTime) > strtotime($expiryDate);
+}
+
+// Check if seller is newly created (for just_created_seller feature)
+function isNewlyCreatedSeller($sellerCreatedAt, $messageCreatedAt) {
+    return strtotime($sellerCreatedAt) > strtotime($messageCreatedAt);
 }

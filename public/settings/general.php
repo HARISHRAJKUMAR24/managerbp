@@ -101,7 +101,7 @@ renderTemplate('header');
                         <!--begin::Admin Profile Section-->
                         <div class="mb-12">
                             <h4 class="fw-bold text-gray-800 mb-6">Admin Profile</h4>
-                            
+
                             <!--begin::Input group-->
                             <div class="row mb-6">
                                 <!--begin::Label-->
@@ -171,7 +171,7 @@ renderTemplate('header');
                         <!--begin::Application Settings Section-->
                         <div class="mb-12">
                             <h4 class="fw-bold text-gray-800 mb-6">Application Settings</h4>
-                            
+
                             <!--begin::Input group-->
                             <div class="row mb-6">
                                 <!--begin::Label-->
@@ -187,10 +187,47 @@ renderTemplate('header');
                         </div>
                         <!--end::Application Settings Section-->
 
+                        <!--begin::Input group For Time Zone-->
+                        <div class="row mb-6">
+                            <!--begin::Label-->
+                            <label class="col-lg-4 col-form-label required fw-semibold fs-6">Timezone</label>
+                            <!--end::Label-->
+                            <!--begin::Col-->
+                            <div class="col-lg-8 fv-row">
+                                <select name="timezone" id="timezone" class="form-select form-select-lg border-gray-300 bg-body" style="background-color: #f8f9fa; border-color: #d1d3e0;" required>
+                                    <option value="Asia/Kolkata" <?= ($settings->timezone ?? 'Asia/Kolkata') == "Asia/Kolkata" ? "selected" : "" ?>>India (Asia/Kolkata) GMT+5:30</option>
+                                    <option value="America/New_York" <?= ($settings->timezone ?? 'Asia/Kolkata') == "America/New_York" ? "selected" : "" ?>>USA – New York GMT-5:00</option>
+                                    <option value="Europe/London" <?= ($settings->timezone ?? 'Asia/Kolkata') == "Europe/London" ? "selected" : "" ?>>UK – London GMT+0:00</option>
+                                    <option value="Asia/Dubai" <?= ($settings->timezone ?? 'Asia/Kolkata') == "Asia/Dubai" ? "selected" : "" ?>>UAE – Dubai GMT+4:00</option>
+                                    <option value="Australia/Sydney" <?= ($settings->timezone ?? 'Asia/Kolkata') == "Australia/Sydney" ? "selected" : "" ?>>Australia – Sydney GMT+10:00</option>
+                                    <!-- Add more popular timezones as needed -->
+                                </select>
+                            </div>
+                            <!--end::Col-->
+                        </div>
+                        <!--end::Input group-->
+
+                        <!-- Add this live clock display section -->
+                        <!--begin::Input group-->
+                        <div class="row mb-6">
+                            <!--begin::Label-->
+                            <label class="col-lg-4 col-form-label fw-semibold fs-6">Current Time</label>
+                            <!--end::Label-->
+                            <!--begin::Col-->
+                            <div class="col-lg-8 fv-row">
+                                <div id="current-time" class="form-control form-control-lg border-gray-300 bg-body" style="background-color: #f8f9fa; border-color: #d1d3e0; height: auto; min-height: 48px; display: flex; align-items: center; padding: 0.5rem 1rem;">
+                                    <span id="clock-display">Loading time...</span>
+                                </div>
+                                <div class="form-text text-gray-600 mt-2">Live display of current time in selected timezone</div>
+                            </div>
+                            <!--end::Col-->
+                        </div>
+                        <!--end::Input group-->
+                        
                         <!--begin::Brand Assets Section-->
                         <div class="mb-0">
                             <h4 class="fw-bold text-gray-800 mb-6">Brand Assets</h4>
-                            
+
                             <!--begin::Input group-->
                             <div class="row mb-6">
                                 <!--begin::Label-->
@@ -200,9 +237,9 @@ renderTemplate('header');
                                 <div class="col-lg-8 fv-row">
                                     <input type="file" name="logo" class="form-control form-control-lg border-gray-300 bg-body" accept=".png, .jpg, .jpeg" style="background-color: #f8f9fa; border-color: #d1d3e0;" />
                                     <?php if (!empty($settings->logo)): ?>
-                                    <div class="mt-3">
-                                        <img src="<?= UPLOADS_URL . $settings->logo ?>" alt="Logo" class="img-thumbnail" style="max-width: 200px; height: auto;">
-                                    </div>
+                                        <div class="mt-3">
+                                            <img src="<?= UPLOADS_URL . $settings->logo ?>" alt="Logo" class="img-thumbnail" style="max-width: 200px; height: auto;">
+                                        </div>
                                     <?php endif; ?>
                                     <div class="form-text text-gray-600 mt-2">Upload your company logo (Recommended: 200x60px)</div>
                                 </div>
@@ -219,9 +256,9 @@ renderTemplate('header');
                                 <div class="col-lg-8 fv-row">
                                     <input type="file" name="favicon" class="form-control form-control-lg border-gray-300 bg-body" accept=".png, .jpg, .jpeg, .ico" style="background-color: #f8f9fa; border-color: #d1d3e0;" />
                                     <?php if (!empty($settings->favicon)): ?>
-                                    <div class="mt-3">
-                                        <img src="<?= UPLOADS_URL . $settings->favicon ?>" alt="Favicon" class="img-thumbnail" style="max-width: 32px; height: auto;">
-                                    </div>
+                                        <div class="mt-3">
+                                            <img src="<?= UPLOADS_URL . $settings->favicon ?>" alt="Favicon" class="img-thumbnail" style="max-width: 32px; height: auto;">
+                                        </div>
                                     <?php endif; ?>
                                     <div class="form-text text-gray-600 mt-2">Upload your website favicon (Recommended: 32x32px)</div>
                                 </div>

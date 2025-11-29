@@ -19,6 +19,7 @@ $existing_image = $_POST['existing_image'] ?? '';
 $old_name = $_POST['old_name'] ?? '';
 $address = $_POST['address'] ?? '';
 $disclaimer = $_POST['disclaimer'] ?? '';
+$timezone = $_POST['timezone'] ?? 'Asia/Kolkata'; // Add this line
 
 // Get current admin data to compare changes
 $current_admin = $pdo->query("SELECT * FROM managers WHERE role = 'admin' LIMIT 1")->fetch(PDO::FETCH_OBJ);
@@ -79,6 +80,9 @@ if (isset($_FILES['favicon']) && $_FILES['favicon']['error'] === 0) {
     }
 }
 
+// Check if timezone changed
+$timezone_changed = ($timezone !== ($current_settings->timezone ?? 'Asia/Kolkata'));
+
 // Check if name changed
 $name_changed = ($name !== $old_name);
 
@@ -103,9 +107,9 @@ if ($image_changed || $name_changed) {
     }
 }
 
-// Update settings data
-$stmt = $pdo->prepare("UPDATE settings SET app_name = ?, logo = ?, favicon = ?, address = ?, disclaimer = ? WHERE id = 1");
-if ($stmt->execute([$app_name, $logo, $favicon, $address, $disclaimer])) {
+// Update settings data - ADD timezone to the query
+$stmt = $pdo->prepare("UPDATE settings SET app_name = ?, logo = ?, favicon = ?, address = ?, disclaimer = ?, timezone = ? WHERE id = 1");
+if ($stmt->execute([$app_name, $logo, $favicon, $address, $disclaimer, $timezone])) {
     exit(json_encode(["type" => "success", "msg" => "Settings updated successfully!"]));
 } else {
     exit(json_encode(["type" => "error", "msg" => "Failed to update settings"]));
