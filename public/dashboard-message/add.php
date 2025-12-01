@@ -108,7 +108,7 @@ renderTemplate('header');
                                 <!--end::Table-->
                             </div>
                             <!--end::Table container-->
-                            
+
                             <!--begin::Table info-->
                             <div class="text-muted fw-semibold fs-7 mt-4 pt-3 border-top">
                                 <i class="ki-duotone ki-information fs-4 me-1">
