@@ -5,21 +5,16 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-W
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Content-Type: application/json");
 
-// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200); 
+    http_response_code(200);
     exit;
 }
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
 
-// Read JSON input
 $raw = file_get_contents("php://input");
-$input = json_decode($raw, true);
-if (!$input) {
-    $input = $_POST;
-}
+$input = json_decode($raw, true) ?? $_POST;
 
 $phone = trim($input['phone'] ?? "");
 $password = trim($input['password'] ?? "");
@@ -44,23 +39,18 @@ if (!password_verify($password, $user->password)) {
     exit;
 }
 
-// Generate token
 $token = bin2hex(random_bytes(32));
 
-// Save token to DB
 $update = $pdo->prepare("UPDATE users SET api_token = ? WHERE id = ?");
 $update->execute([$token, $user->id]);
 
-setcookie(
-    "token",
-    $token,
-    time() + (86400 * 30),
-    "/",
-    "localhost",
-    false,
-    true
-);
-
+setcookie("token", $token, [
+    "expires" => time() + (86400 * 30),
+    "path" => "/",
+    "secure" => false,
+    "httponly" => true,
+    "samesite" => "Lax"
+]);
 
 echo json_encode([
     "success" => true,

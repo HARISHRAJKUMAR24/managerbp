@@ -17,7 +17,10 @@ $name       = trim($input['name'] ?? "");
 $email      = trim($input['email'] ?? "");
 $phone      = trim($input['phone'] ?? "");
 $country    = trim($input['country'] ?? "IN");
-$siteName   = trim($input['siteName'] ?? "");
+$siteName = trim($input['siteName'] ?? "");
+if (!$siteName) {
+    $siteName = $name . "'s Site";   // default value
+}
 $password   = trim($input['password'] ?? "");
 $otp        = trim($input['otp'] ?? "");
 
@@ -78,9 +81,10 @@ $ok = $stmt->execute([
     $phone,
     $hashed,
     $country ?: "IN",
-    $siteName ?: null,
+    $siteName,     // this must NEVER be null
     $siteSlug
 ]);
+
 
 if (!$ok) {
     echo json_encode([
