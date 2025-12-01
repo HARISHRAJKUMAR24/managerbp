@@ -261,22 +261,36 @@ $(document).ready(function () {
         });
     });
 
-    // Initialize Select2
+    // Initialize Select2 with better "All Sellers" handling
     $('select[name="seller_type[]"]').select2({
         placeholder: "Select seller types",
         allowClear: true,
         width: '100%',
-        closeOnSelect: false
+        closeOnSelect: false,
+        templateSelection: function (data) {
+            // Show "All Sellers" when selected
+            if (data.id === 'all') {
+                return $('<span class="text-primary fw-bold">' + data.text + '</span>');
+            }
+            return data.text;
+        }
     });
 
-    // Handle Select2 change event for "All Sellers"
+    // Handle Select2 change event for "All Sellers" - IMPROVED VERSION
     $('select[name="seller_type[]"]').on('change', function () {
         const selectedValues = $(this).val();
-        if (selectedValues && selectedValues.includes('all')) {
+
+        // If "all" is selected and there are other values
+        if (selectedValues && selectedValues.includes('all') && selectedValues.length > 1) {
+            // Keep only "all" and remove others
             $(this).val(['all']).trigger('change');
-        } else if (selectedValues && selectedValues.length > 1 && selectedValues.includes('all')) {
-            const filteredValues = selectedValues.filter(val => val !== 'all');
-            $(this).val(filteredValues).trigger('change');
+        }
+
+        // If nothing is selected, show placeholder
+        if (!selectedValues || selectedValues.length === 0) {
+            // Reset placeholder text
+            $(this).next('.select2-container').find('.select2-selection__placeholder')
+                .text('Select seller types');
         }
     });
 
@@ -295,5 +309,32 @@ $(document).ready(function () {
         });
     });
 
-    console.log('Dashboard Messages initialized (Simple Button Version)');
+    // Add CSS for better Select2 display
+    if (!$('#select2-custom-styles').length) {
+        $('head').append(`
+            <style id="select2-custom-styles">
+                .select2-selection--multiple .select2-selection__choice {
+                    background-color: #f8f9fa !important;
+                    border-color: #e4e6ef !important;
+                    color: #5e6278 !important;
+                    font-weight: 500 !important;
+                }
+                
+                .select2-selection--multiple .select2-selection__choice[title="All Sellers"] {
+                    background-color: #e8fff3 !important;
+                    border-color: #1bc5bd !important;
+                    color: #1bc5bd !important;
+                    font-weight: 700 !important;
+                }
+                
+                .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+                    color: #a1a5b7 !important;
+                }
+                
+                .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+                    color: #f1416c !important;
+                }
+            </style>
+        `);
+    }
 });
