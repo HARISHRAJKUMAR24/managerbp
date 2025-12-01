@@ -32,7 +32,7 @@ if ($request == 'create') {
         exit(json_encode(["type" => "error", "msg" => "All required fields must be filled"]));
     }
 
-    // Calculate expiry date - USING CORRECTED FUNCTION
+    // Calculate expiry date
     $expiry_date = calculateExpiryDate($expiry_value, $expiry_type);
 
     // Prepare seller type as JSON
@@ -51,7 +51,7 @@ if ($request == 'create') {
     }
 }
 
-// Get all messages for display
+// Get all messages for display - FIXED RESPONSE FORMAT
 if ($request == 'display') {
     try {
         $stmt = $pdo->query("SELECT * FROM dashboard_messages ORDER BY id DESC");
@@ -61,6 +61,7 @@ if ($request == 'display') {
         foreach ($messages as $key => $message) {
             // Calculate status
             $is_expired = isMessageExpired($message->expiry_date);
+            $status = $is_expired ? 'Expired' : 'Active';
 
             // Format seller types
             $seller_types = "All Sellers";
@@ -75,27 +76,16 @@ if ($request == 'display') {
                 }
             }
 
-            // Format expiry time with timezone awareness
-            $formatted_expiry = convertToAppTimezone($message->expiry_date, 'd/m/Y g:i A');
-            
-            // Calculate time remaining for active messages
+            // Format expiry date
+            $formatted_expiry = convertToAppTimezone($message->expiry_date, 'd/m/Y');
+            $formatted_time = convertToAppTimezone($message->expiry_date, 'g:i A');
+            $combined_expiry = $formatted_expiry . '<br>' . $formatted_time;
+
+            // Set expiry text
             if (!$is_expired) {
-                $currentTime = new DateTime('now', new DateTimeZone(getAppTimezone()));
-                $expiryTime = new DateTime($message->expiry_date, new DateTimeZone(getAppTimezone()));
-                $timeRemaining = $currentTime->diff($expiryTime);
-                
-                $remaining_text = '';
-                if ($timeRemaining->d > 0) {
-                    $remaining_text = ' (' . $timeRemaining->d . ' days ' . $timeRemaining->h . ' hrs)';
-                } else if ($timeRemaining->h > 0) {
-                    $remaining_text = ' (' . $timeRemaining->h . ' hours ' . $timeRemaining->i . ' mins)';
-                } else {
-                    $remaining_text = ' (' . $timeRemaining->i . ' minutes)';
-                }
-                
-                $expiry_text = '<span class="text-success">Expires: ' . $formatted_expiry . $remaining_text . '</span>';
+                $expiry_text = '<span class="text-success">Expires: ' . $combined_expiry . '</span>';
             } else {
-                $expiry_text = '<span class="text-danger">Expired: ' . $formatted_expiry . '</span>';
+                $expiry_text = '<span class="text-danger">Expired: ' . $combined_expiry . '</span>';
             }
 
             // Add just created seller badge
@@ -104,28 +94,32 @@ if ($request == 'display') {
                 $target_badge = '<span class="badge badge-light-primary ms-2">New Sellers Only</span>';
             }
 
+            // CRITICAL: Make sure ALL fields that JavaScript expects are included
             $data[] = [
                 "id" => $message->id,
                 "title" => htmlspecialchars($message->title),
                 "description" => htmlspecialchars($message->description),
                 "expiry" => $expiry_text,
                 "seller_type" => $seller_types,
-                "status" => $is_expired ? 'Expired' : 'Active',
+                "status" => $status, // This must match exactly "Active" or "Expired"
                 "just_created_seller" => $message->just_created_seller,
                 "target_badge" => $target_badge
             ];
         }
 
+        // FIXED: Return proper JSON structure
         echo json_encode([
             "success" => true,
             "data" => $data
         ]);
         exit;
+        
     } catch (PDOException $e) {
-        exit(json_encode([
+        echo json_encode([
             "success" => false,
-            "error" => "Database error: " . $e->getMessage()
-        ]));
+            "error" => "Database error"
+        ]);
+        exit;
     }
 }
 

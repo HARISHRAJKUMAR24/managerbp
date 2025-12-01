@@ -115,7 +115,8 @@ function getData($column, $table, $condition = "")
     }
 }
 // Get timezone from settings
-function getAppTimezone() {
+function getAppTimezone()
+{
     global $pdo;
     try {
         $stmt = $pdo->query("SELECT timezone FROM settings LIMIT 1");
@@ -127,7 +128,8 @@ function getAppTimezone() {
 }
 
 // Get current time in app timezone
-function getCurrentAppTime($format = 'Y-m-d H:i:s') {
+function getCurrentAppTime($format = 'Y-m-d H:i:s')
+{
     $timezone = getAppTimezone();
     try {
         $date = new DateTime('now', new DateTimeZone($timezone));
@@ -139,25 +141,34 @@ function getCurrentAppTime($format = 'Y-m-d H:i:s') {
 }
 
 // Convert any datetime to app timezone
-function convertToAppTimezone($datetime, $format = 'Y-m-d H:i:s') {
+function convertToAppTimezone($datetime, $format = 'Y-m-d H:i:s')
+{
     $timezone = getAppTimezone();
     try {
-        $date = new DateTime($datetime);
+        $date = new DateTime($datetime, new DateTimeZone('UTC')); // Assuming datetime is stored as UTC
         $date->setTimezone(new DateTimeZone($timezone));
         return $date->format($format);
     } catch (Exception $e) {
-        return $datetime;
+        // If conversion fails, try without assuming UTC
+        try {
+            $date = new DateTime($datetime);
+            $date->setTimezone(new DateTimeZone($timezone));
+            return $date->format($format);
+        } catch (Exception $e2) {
+            return $datetime;
+        }
     }
 }
 
-// Calculate expiry date using app timezone - CORRECTED VERSION
-function calculateExpiryDate($value, $type) {
+// Calculate expiry date using app timezone - FIXED VERSION
+function calculateExpiryDate($value, $type)
+{
     $timezone = getAppTimezone();
-    
+
     try {
         // Create current time in app timezone
         $currentTime = new DateTime('now', new DateTimeZone($timezone));
-        
+
         // Add the interval based on type
         switch ($type) {
             case 'hours':
@@ -175,25 +186,55 @@ function calculateExpiryDate($value, $type) {
             default:
                 $interval = new DateInterval("PT1H"); // Default 1 hour
         }
-        
+
         $currentTime->add($interval);
+
+        // Convert to UTC before storing in database
+        $currentTime->setTimezone(new DateTimeZone('UTC'));
         return $currentTime->format('Y-m-d H:i:s');
-        
     } catch (Exception $e) {
-        // Fallback
-        $currentAppTime = getCurrentAppTime('Y-m-d H:i:s');
-        $expiry = strtotime($currentAppTime . " +{$value} {$type}");
-        return date('Y-m-d H:i:s', $expiry);
+        // Fallback - use UTC directly
+        $utcNow = new DateTime('now', new DateTimeZone('UTC'));
+        $utcNow->add(new DateInterval("PT{$value}H")); // Default to hours
+        return $utcNow->format('Y-m-d H:i:s');
     }
 }
 
-// Check if message is expired considering timezone
-function isMessageExpired($expiryDate) {
-    $currentTime = getCurrentAppTime();
-    return strtotime($currentTime) > strtotime($expiryDate);
+// Check if message is expired considering timezone - FIXED
+function isMessageExpired($expiryDate)
+{
+    try {
+        $timezone = getAppTimezone();
+
+        // Expiry date is stored as UTC in database
+        $expiryTime = new DateTime($expiryDate, new DateTimeZone('UTC'));
+        $expiryTime->setTimezone(new DateTimeZone($timezone));
+
+        // Current time in app timezone
+        $currentTime = new DateTime('now', new DateTimeZone($timezone));
+
+        return $currentTime > $expiryTime;
+    } catch (Exception $e) {
+        // Fallback string comparison
+        $currentAppTime = getCurrentAppTime('Y-m-d H:i:s');
+        return strtotime($currentAppTime) > strtotime($expiryDate);
+    }
 }
 
 // Check if seller is newly created (for just_created_seller feature)
-function isNewlyCreatedSeller($sellerCreatedAt, $messageCreatedAt) {
-    return strtotime($sellerCreatedAt) > strtotime($messageCreatedAt);
+function isNewlyCreatedSeller($sellerCreatedAt, $messageCreatedAt)
+{
+    try {
+        $timezone = getAppTimezone();
+
+        $sellerTime = new DateTime($sellerCreatedAt, new DateTimeZone('UTC'));
+        $sellerTime->setTimezone(new DateTimeZone($timezone));
+
+        $messageTime = new DateTime($messageCreatedAt, new DateTimeZone('UTC'));
+        $messageTime->setTimezone(new DateTimeZone($timezone));
+
+        return $sellerTime > $messageTime;
+    } catch (Exception $e) {
+        return strtotime($sellerCreatedAt) > strtotime($messageCreatedAt);
+    }
 }

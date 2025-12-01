@@ -83,35 +83,35 @@ $(document).ready(function () {
                 try {
                     if (typeof data === 'string' && data.trim().startsWith('<')) {
                         console.error('Server returned HTML instead of JSON:', data.substring(0, 200));
-                        $('#messagesTable tbody').html('<tr><td colspan="6" class="text-center text-danger py-4">Server Error - Check Console</td></tr>');
+                        $('#messages_Table tbody').html('<tr><td colspan="6" class="text-center text-danger py-4">Server Error - Check Console</td></tr>');
                         return;
                     }
 
                     const response = typeof data === 'object' ? data : JSON.parse(data);
-                    
+
                     if (response.success && response.data) {
                         renderMessages(response.data);
                     } else {
                         console.error('Unexpected response format:', response);
-                        $('#messagesTable tbody').html('<tr><td colspan="6" class="text-center text-muted py-4">No messages data found</td></tr>');
+                        $('#messages_Table tbody').html('<tr><td colspan="6" class="text-center text-muted py-4">No messages data found</td></tr>');
                     }
                 } catch (e) {
                     console.error('Error parsing messages:', e);
                     console.log('Raw response:', data);
-                    $('#messagesTable tbody').html('<tr><td colspan="6" class="text-center text-danger py-4">Error parsing messages - Check Console</td></tr>');
+                    $('#messages_Table tbody').html('<tr><td colspan="6" class="text-center text-danger py-4">Error parsing messages - Check Console</td></tr>');
                 }
             },
             error: function (xhr, status, error) {
                 console.error('AJAX Error loading messages:', error);
                 console.log('XHR response:', xhr.responseText);
-                $('#messagesTable tbody').html('<tr><td colspan="6" class="text-center text-danger py-4">Network Error - Failed to load messages</td></tr>');
+                $('#messages_Table tbody').html('<tr><td colspan="6" class="text-center text-danger py-4">Network Error - Failed to load messages</td></tr>');
             }
         });
     }
 
     // Render messages in table - UPDATED UI
     function renderMessages(messages) {
-        const tbody = $('#messagesTable tbody');
+        const tbody = $('#messages_Table tbody');
         tbody.empty();
 
         if (!messages || messages.length === 0) {
@@ -119,7 +119,7 @@ $(document).ready(function () {
                 <tr>
                     <td colspan="6" class="text-center py-8">
                         <div class="text-gray-500 fw-semibold fs-6">
-                            <i class="ki-duotone ki-file-list fs-2x text-gray-400 mb-2"></i>
+                            <div class="text-gray-400 mb-2">📄</div>
                             <div>No messages found</div>
                         </div>
                     </td>
@@ -156,24 +156,23 @@ $(document).ready(function () {
                         <span class="badge badge-light-primary fs-8 px-3 py-2">${escapeHtml(sellerType)}</span>
                     </td>
                     <td class="align-middle">
-                        <div class="fw-semibold fs-7">${expiry}</div>
+                        <div class="fw-semibold fs-7 text-center">${expiry}</div>
                     </td>
                     <td class="align-middle">
                         <span class="badge ${isActive ? 'badge-light-success' : 'badge-light-danger'} fs-8 px-3 py-2">
-                            <i class="${isActive ? 'ki-duotone ki-check fs-4' : 'ki-duotone ki-cross fs-4'} me-1"></i>
                             ${status}
                         </span>
                     </td>
                     <td class="text-end pe-4 align-middle">
                         <div class="d-flex justify-content-end">
-                            ${isActive ? 
-                                `<button class="btn btn-sm btn-icon btn-bg-light btn-active-color-danger delete-message" data-id="${messageId}" title="Delete Message">
-                                    <i class="ki-duotone ki-trash fs-2"></i>
-                                </button>` : 
-                                `<button class="btn btn-sm btn-icon btn-bg-light btn-active-color-muted" title="Expired - Cannot delete" disabled>
-                                    <i class="ki-duotone ki-lock fs-2 text-muted"></i>
+                            ${isActive ?
+                    `<button class="btn btn-sm btn-danger delete-btn" data-id="${messageId}">
+                                    DELETE
+                                </button>` :
+                    `<button class="btn btn-sm btn-light" disabled>
+                                    EXPIRED
                                 </button>`
-                            }
+                }
                         </div>
                     </td>
                 </tr>
@@ -181,49 +180,14 @@ $(document).ready(function () {
             tbody.append(row);
         });
 
-        addTableStyles();
+        // Remove any custom CSS styles since we're using Bootstrap classes
+        removeCustomStyles();
     }
 
-    // Add custom CSS for table
-    function addTableStyles() {
-        if (!$('#messagesTableStyles').length) {
-            $('head').append(`
-                <style id="messagesTableStyles">
-                    .line-clamp-2 {
-                        display: -webkit-box;
-                        -webkit-line-clamp: 2;
-                        -webkit-box-orient: vertical;
-                        overflow: hidden;
-                    }
-                    #messagesTable {
-                        width: 100%;
-                    }
-                    #messagesTable th {
-                        padding: 12px 8px;
-                        font-weight: 600;
-                    }
-                    #messagesTable td {
-                        padding: 16px 8px;
-                        vertical-align: middle;
-                    }
-                    .delete-message {
-                        width: 34px;
-                        height: 34px;
-                        border-radius: 6px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        transition: all 0.2s ease;
-                    }
-                    .delete-message:hover {
-                        transform: translateY(-1px);
-                        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                    }
-                    .table-responsive {
-                        border-radius: 8px;
-                    }
-                </style>
-            `);
+    // Remove custom CSS styles
+    function removeCustomStyles() {
+        if ($('#messages_TableStyles').length) {
+            $('#messages_TableStyles').remove();
         }
     }
 
@@ -236,7 +200,7 @@ $(document).ready(function () {
     }
 
     // Delete message
-    $(document).on('click', '.delete-message', function () {
+    $(document).on('click', '.delete-btn', function () {
         const messageId = $(this).data('id');
         const messageTitle = $(this).closest('tr').find('td:eq(1) .text-gray-800').text().trim();
 
@@ -317,19 +281,19 @@ $(document).ready(function () {
     });
 
     // Reset form
-    $('button[type="reset"]').on('click', function() {
+    $('button[type="reset"]').on('click', function () {
         $('#messageForm')[0].reset();
         $('select[name="seller_type[]"]').val(null).trigger('change');
         $('#just_created_seller').prop('checked', false);
     });
 
     // Search functionality
-    $('#searchMessages').on('keyup', function() {
+    $('#searchMessages').on('keyup', function () {
         const value = $(this).val().toLowerCase();
-        $('#messagesTable tbody tr').filter(function() {
+        $('#messages_Table tbody tr').filter(function () {
             $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
         });
     });
 
-    console.log('Dashboard Messages initialized (Updated UI Version)');
+    console.log('Dashboard Messages initialized (Simple Button Version)');
 });

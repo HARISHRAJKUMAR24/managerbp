@@ -90,7 +90,7 @@ renderTemplate('header');
                             <!--begin::Table container-->
                             <div class="table-responsive">
                                 <!--begin::Table-->
-                                <table id="messagesTable" class="table table-hover align-middle table-row-dashed fs-6 gy-5">
+                                <table id="messages_Table" class="table table-hover align-middle table-row-dashed fs-6 gy-5">
                                     <thead>
                                         <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
                                             <th class="w-50px ps-4">#</th>
@@ -98,7 +98,7 @@ renderTemplate('header');
                                             <th class="min-w-150px">Target Audience</th>
                                             <th class="min-w-150px">Expiry</th>
                                             <th class="min-w-100px">Status</th>
-                                            <th class="min-w-80px text-end pe-4">Actions</th>
+                                            
                                         </tr>
                                     </thead>
                                     <tbody class="fw-semibold text-gray-600">
