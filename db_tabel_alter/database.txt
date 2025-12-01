@@ -16,5 +16,7 @@ ADD COLUMN `phonepe_key_merchant_id` varchar(255) DEFAULT NULL AFTER `ippopay_pu
 ADD COLUMN `phonepe_key_index` varchar(255) DEFAULT NULL AFTER `phonepe_key_merchant_id`,
 ADD COLUMN `phonepe_key` varchar(255) DEFAULT NULL AFTER `phonepe_key_index`;
 
+29/11/2025
+This tabel query paste in settings For Time Zone
 
 ALTER TABLE `settings` ADD `timezone` VARCHAR(100) NOT NULL DEFAULT 'Asia/Kolkata' AFTER `disclaimer`;
