@@ -7,7 +7,7 @@ header("Content-Type: application/json");
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
 
-// Read raw JSON
+// Read JSON
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true);
 
@@ -17,7 +17,7 @@ if (!$data || !is_array($data)) {
     exit;
 }
 
-// Validate required fields
+// Required fields
 $required = ["user_id", "employee_id", "name", "phone"];
 foreach ($required as $field) {
     if (!isset($data[$field]) || trim($data[$field]) === "") {
@@ -37,7 +37,10 @@ $email         = $data['email'] ?? null;
 $phone         = $data['phone'];
 $address       = $data['address'] ?? null;
 
-// ⭐ FIX: convert to YYYY-MM-DD (remove time)
+// ⭐ NEW — Read image
+$image         = $data['image'] ?? null;
+
+// ⭐ FIX — convert to YYYY-MM-DD (remove time)
 $joining_date  = $data['joining_date'] ?? null;
 if (!empty($joining_date)) {
     $joining_date = date("Y-m-d", strtotime($joining_date));
@@ -45,10 +48,11 @@ if (!empty($joining_date)) {
 
 $pdo = getDbConnection();
 
+// ⭐ UPDATED QUERY — added image column
 $stmt = $pdo->prepare("
     INSERT INTO employees 
-    (employee_id, user_id, name, position, email, phone, address, joining_date)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    (employee_id, user_id, name, position, email, phone, address, joining_date, image)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 ");
 
 $ok = $stmt->execute([
@@ -59,7 +63,8 @@ $ok = $stmt->execute([
     $email,
     $phone,
     $address,
-    $joining_date
+    $joining_date,
+    $image    // ⭐ SAVED
 ]);
 
 if ($ok) {

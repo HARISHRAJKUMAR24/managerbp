@@ -4,6 +4,11 @@ header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: *");
 header("Content-Type: application/json");
 
+require_once "../../../config/config.php";
+require_once "../../../src/database.php";   // ⭐ DB connection
+
+$pdo = getDbConnection();
+
 $uploadDir = "../../../uploads/employees/";
 
 if (!file_exists($uploadDir)) {
@@ -21,11 +26,21 @@ $filename = uniqid() . "." . $ext;
 
 $path = $uploadDir . $filename;
 
+// ⭐ Move uploaded file
 if (move_uploaded_file($file["tmp_name"], $path)) {
+
+    // ⭐ SAVE IN DATABASE (files table)
+    $stmt = $pdo->prepare("INSERT INTO files (name, path) VALUES (?, ?)");
+    $stmt->execute([$filename, "employees/" . $filename]); // path saved WITHOUT uploads/
+
     echo json_encode([
         "success" => true,
-        "url" => "/uploads/employees/" . $filename
+        "url" => "/uploads/employees/" . $filename,
+        "path" => "employees/" . $filename
     ]);
-} else {
-    echo json_encode(["success" => false, "message" => "Upload failed"]);
+    exit;
 }
+
+// ❌ Error
+echo json_encode(["success" => false, "message" => "Upload failed"]);
+exit;
