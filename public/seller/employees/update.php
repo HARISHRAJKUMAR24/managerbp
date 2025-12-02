@@ -21,14 +21,23 @@ $position = $data["position"];
 $phone = $data["phone"];
 $email = $data["email"];
 $address = $data["address"];
+$joining_date = $data["joining_date"] ?? null;   // ⭐ NEW
 
 $stmt = $pdo->prepare("
     UPDATE employees 
-    SET name=?, position=?, phone=?, email=?, address=?
+    SET name=?, position=?, phone=?, email=?, address=?, joining_date=?
     WHERE employee_id=?
 ");
 
-$updated = $stmt->execute([$name, $position, $phone, $email, $address, $id]);
+$updated = $stmt->execute([
+    $name,
+    $position,
+    $phone,
+    $email,
+    $address,
+    $joining_date,   // ⭐ ADD HERE
+    $id
+]);
 
 if ($updated) {
     echo json_encode(["success" => true, "message" => "Employee updated"]);

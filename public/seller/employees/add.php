@@ -17,7 +17,7 @@ if (!$data || !is_array($data)) {
     exit;
 }
 
-// Validate required fields properly
+// Validate required fields
 $required = ["user_id", "employee_id", "name", "phone"];
 foreach ($required as $field) {
     if (!isset($data[$field]) || trim($data[$field]) === "") {
@@ -29,19 +29,26 @@ foreach ($required as $field) {
     }
 }
 
-$user_id     = $data['user_id'];
-$employee_id = $data['employee_id'];
-$name        = $data['name'];
-$position    = $data['position'] ?? null;
-$email       = $data['email'] ?? null;
-$phone       = $data['phone'];
-$address     = $data['address'] ?? null;
+$user_id       = $data['user_id'];
+$employee_id   = $data['employee_id'];
+$name          = $data['name'];
+$position      = $data['position'] ?? null;
+$email         = $data['email'] ?? null;
+$phone         = $data['phone'];
+$address       = $data['address'] ?? null;
+
+// ⭐ FIX: convert to YYYY-MM-DD (remove time)
+$joining_date  = $data['joining_date'] ?? null;
+if (!empty($joining_date)) {
+    $joining_date = date("Y-m-d", strtotime($joining_date));
+}
 
 $pdo = getDbConnection();
 
 $stmt = $pdo->prepare("
-    INSERT INTO employees (employee_id, user_id, name, position, email, phone, address)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO employees 
+    (employee_id, user_id, name, position, email, phone, address, joining_date)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 ");
 
 $ok = $stmt->execute([
@@ -51,7 +58,8 @@ $ok = $stmt->execute([
     $position,
     $email,
     $phone,
-    $address
+    $address,
+    $joining_date
 ]);
 
 if ($ok) {
@@ -62,9 +70,7 @@ if ($ok) {
     exit;
 }
 
-// full detailed SQL error
 $error = $stmt->errorInfo();
-
 echo json_encode([
     "success" => false,
     "message" => $error[2] ?: "Database insert failed"
