@@ -38,3 +38,12 @@ CREATE TABLE IF NOT EXISTS users_settings (
   UNIQUE KEY unique_user (user_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- Add social media columns to your site_settings table
+ALTER TABLE site_settings 
+ADD COLUMN facebook VARCHAR(255) DEFAULT NULL,
+ADD COLUMN twitter VARCHAR(255) DEFAULT NULL,
+ADD COLUMN instagram VARCHAR(255) DEFAULT NULL,
+ADD COLUMN linkedin VARCHAR(255) DEFAULT NULL,
+ADD COLUMN youtube VARCHAR(255) DEFAULT NULL,
+ADD COLUMN pinterest VARCHAR(255) DEFAULT NULL;
