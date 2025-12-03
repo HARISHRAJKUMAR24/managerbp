@@ -1,12 +1,11 @@
 <?php
-// coupons/delete.php
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
 
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
@@ -16,23 +15,28 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-// Get coupon ID from GET parameter (numeric ID, not coupon_id)
-$id = $_GET['id'] ?? 0;
+// FIX: use coupon_id instead of id
+$coupon_id = $_GET['coupon_id'] ?? '';
 
-if (!$id) {
+if (!$coupon_id) {
     echo json_encode(["success" => false, "message" => "Coupon ID is required"]);
     exit();
 }
 
-// Get user ID from token
+// TEMP user_id
 $headers = getallheaders();
 $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
-$user_id = 1; // In production, decode token to get user_id
+$user_id = $_GET['user_id'] ?? null;
 
-// Delete coupon
-$sql = "DELETE FROM coupons WHERE id = :id AND user_id = :user_id";
+if (!$user_id) {
+    echo json_encode(["success" => false, "message" => "User ID is required"]);
+    exit();
+}
+
+// Delete
+$sql = "DELETE FROM coupons WHERE coupon_id = :coupon_id";
 $stmt = $pdo->prepare($sql);
-$result = $stmt->execute([':id' => $id, ':user_id' => $user_id]);
+$result = $stmt->execute([':coupon_id' => $coupon_id]);
 
 if ($result && $stmt->rowCount() > 0) {
     echo json_encode(["success" => true, "message" => "Coupon deleted successfully"]);

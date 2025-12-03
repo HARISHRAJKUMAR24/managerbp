@@ -33,7 +33,7 @@ if (!$data) {
 // Validate required fields
 $required = ['name', 'code', 'discount_type', 'discount', 'start_date', 'end_date'];
 foreach ($required as $field) {
-    if (!isset($data[$field]) || empty(trim($data[$field]))) {
+    if (!isset($data[$field]) || $data[$field] === "" || $data[$field] === null) {
         echo json_encode(["success" => false, "message" => "$field is required"]);
         exit();
     }
@@ -60,8 +60,9 @@ $name = trim($data['name']);
 $code = strtoupper(trim($data['code']));
 $discount_type = trim($data['discount_type']);
 $discount = (int)$data['discount'];
-$start_date = date('Y-m-d H:i:s', strtotime($data['start_date']));
-$end_date = date('Y-m-d H:i:s', strtotime($data['end_date']));
+$start_date = date('Y-m-d H:i:s.v', strtotime($data['start_date']));
+$end_date = date('Y-m-d H:i:s.v', strtotime($data['end_date']));
+
 $usage_limit = isset($data['usage_limit']) && $data['usage_limit'] !== '' ? (int)$data['usage_limit'] : null;
 $min_booking_amount = isset($data['min_booking_amount']) && $data['min_booking_amount'] !== '' ? (int)$data['min_booking_amount'] : null;
 
