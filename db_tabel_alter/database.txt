@@ -20,3 +20,21 @@ ADD COLUMN `phonepe_key` varchar(255) DEFAULT NULL AFTER `phonepe_key_index`;
 This tabel query paste in settings For Time Zone
 
 ALTER TABLE `settings` ADD `timezone` VARCHAR(100) NOT NULL DEFAULT 'Asia/Kolkata' AFTER `disclaimer`;
+
+
+29/11/2025
+Create new tabel The tabel Name is users_settings 
+this tabel use for user data stored
+
+-- Create users_settings table
+CREATE TABLE IF NOT EXISTS users_settings (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  gst_number VARCHAR(50) DEFAULT NULL,
+  gst_type VARCHAR(50) DEFAULT NULL,
+  tax_percent DECIMAL(5,2) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_user (user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
