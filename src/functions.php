@@ -19,17 +19,60 @@ function redirect($url)
     echo '<script>window.location.href="' . $url . '"</script>';
 }
 
-function convertDays($totalDays)
+// Add these functions to function.php
+
+/**
+ * Get duration value from total days
+ */
+function getDurationValue($totalDays)
 {
-    if ($totalDays < 30) {
-        return "{$totalDays} days";
-    } elseif ($totalDays < 365) {
-        $months = floor($totalDays / 30);
-        return "{$months} months";
-    } else {
-        $years = floor($totalDays / 365);
-        return "{$years} years";
+    if ($totalDays % 365 === 0) {
+        return $totalDays / 365; // Years
+    } elseif ($totalDays % 30 === 0) {
+        return $totalDays / 30; // Months
     }
+    return 1; // Default
+}
+
+/**
+ * Get duration type from total days
+ */
+function getDurationType($totalDays)
+{
+    if ($totalDays % 365 === 0) {
+        return 'year';
+    } elseif ($totalDays % 30 === 0) {
+        return 'month';
+    }
+    return 'year'; // Default
+}
+
+/**
+ * Convert duration value and type to total days
+ */
+function convertToDays($value, $type)
+{
+    if ($type === 'month') {
+        return $value * 30; // Approximate month as 30 days
+    } elseif ($type === 'year') {
+        return $value * 365; // Approximate year as 365 days
+    }
+    return $value; // Default to days if somehow other type
+}
+
+/**
+ * Convert total days to display format (e.g., "1 Year", "6 Months")
+ */
+function convertDurationForDisplay($totalDays)
+{
+    if ($totalDays % 365 === 0) {
+        $years = $totalDays / 365;
+        return $years . ($years > 1 ? ' Years' : ' Year');
+    } elseif ($totalDays % 30 === 0) {
+        $months = $totalDays / 30;
+        return $months . ($months > 1 ? ' Months' : ' Month');
+    }
+    return $totalDays . ' Days'; // Fallback
 }
 
 function getCurrencySymbol($currency)

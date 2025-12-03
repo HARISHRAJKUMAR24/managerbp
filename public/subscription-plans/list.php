@@ -67,13 +67,17 @@ $settings = fetchSettings();
                             <div class="card-body">
                                 <h5 class="text-start text-uppercase mb-3"><?= $row['name'] ?></h5>
 
-                                <div class="text-center position-relative mb-2 pb-1">
-                                    <div class="mb-2 d-flex">
-
-                                        <h1 class="price-toggle text-primary price-yearly mb-0 d-flex"><?= getCurrencySymbol($settings->currency) . ' '.$row['amount'] ?></h1>
-                                        <sub class="h5 text-muted pricing-duration mt-auto mb-2">/<?= convertDays($row['duration']) ?></sub>
-                                    </div>
-                                </div>
+<!-- In the list.php card display, update the price display section: -->
+<div class="text-center position-relative mb-2 pb-1">
+    <div class="mb-2 d-flex">
+        <h1 class="price-toggle text-primary price-yearly mb-0 d-flex">
+            <?= getCurrencySymbol($settings->currency) . ' ' . $row['amount'] ?>
+        </h1>
+        <sub class="h5 text-muted pricing-duration mt-auto mb-2">
+            /<?= convertDurationForDisplay($row['duration']) ?>
+        </sub>
+    </div>
+</div>
 
                                 <p><?= $row['description'] ?></p>
 

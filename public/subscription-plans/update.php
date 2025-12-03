@@ -96,13 +96,24 @@ $plan = fetchPlan($_GET['id']);
                     </div>
                 </div>
 
-                <div class="col-sm-6 mb-5">
-                    <label class="form-label">Duration</label>
-                    <div class="input-group input-group-solid">
-                        <input type="number" name="duration" class="form-control form-control-solid" placeholder="365" value="<?= $plan->duration ?>" />
-                        <span class="input-group-text">days</span>
-                    </div>
-                </div>
+<!-- Change the duration field section in update.php -->
+<div class="col-sm-6 mb-5">
+    <label class="form-label">Duration</label>
+    <div class="row g-2">
+        <div class="col-6">
+            <input type="number" name="duration_value" class="form-control form-control-solid" 
+                   placeholder="1" min="1" max="100" value="<?= getDurationValue($plan->duration) ?>" required />
+            <div class="form-text text-gray-600">Duration value</div>
+        </div>
+        <div class="col-6">
+            <select name="duration_type" class="form-select form-select-solid" required>
+                <option value="month" <?= getDurationType($plan->duration) === 'month' ? 'selected' : '' ?>>Month</option>
+                <option value="year" <?= getDurationType($plan->duration) === 'year' ? 'selected' : '' ?>>Year</option>
+            </select>
+            <div class="form-text text-gray-600">Time unit</div>
+        </div>
+    </div>
+</div>
 
                 <div class="col-sm-12 mb-5">
                     <label class="required form-label">Description</label>
