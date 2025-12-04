@@ -11,38 +11,61 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
-require_once "../../../../../config/config.php";
-require_once "../../../../../src/database.php";
-
-$pdo = getDbConnection();
-
-// Get user ID
+// Get user ID from query parameters
 $user_id = $_GET['user_id'] ?? null;
 
 if (!$user_id) {
-    echo json_encode(["success" => false, "message" => "User ID required"]);
+    echo json_encode([
+        'success' => false,
+        'message' => 'User ID is required'
+    ]);
     exit();
 }
 
-// Get settings for user
-$sql = "SELECT * FROM users_settings WHERE user_id = :user_id";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([':user_id' => $user_id]);
-$settings = $stmt->fetch(PDO::FETCH_ASSOC);
+// Database connection
+$host = 'localhost';
+$dbname = 'admin_bookpannu';
+$username = 'root';  // Change if different
+$password = '';      // Change if different
 
-// ✅ LOG what we're returning
-error_log("Get Tax Settings for user $user_id: " . json_encode($settings));
-
-if (!$settings) {
-    // No record exists at all
-    $settings = [
-        'gst_number' => null,
-        'gst_type' => null,
-        'tax_percent' => null
-    ];
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    $sql = "SELECT gst_number, gst_type, tax_percent, country, state 
+            FROM site_settings 
+            WHERE user_id = ?";
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$user_id]);
+    $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$settings) {
+        $settings = [
+            'gst_number' => '',
+            'gst_type' => '',
+            'tax_percent' => '',
+            'country' => '',
+            'state' => ''
+        ];
+    } else {
+        // Convert null values to empty strings
+        foreach ($settings as $key => $value) {
+            if ($value === null) {
+                $settings[$key] = '';
+            }
+        }
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'data' => $settings
+    ]);
+    
+} catch (PDOException $e) {
+    error_log("Database error: " . $e->getMessage());
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database error occurred'
+    ]);
 }
-
-echo json_encode([
-    'success' => true,
-    'data' => $settings
-]);

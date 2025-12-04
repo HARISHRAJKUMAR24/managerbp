@@ -14,15 +14,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 require_once "../../../../config/config.php";
 require_once "../../../../src/database.php";
 
-try {
-    $pdo = getDbConnection();
-} catch (Exception $e) {
-    echo json_encode([
-        "success" => false,
-        "message" => "Database connection failed"
-    ]);
-    exit();
-}
 
 // Get user ID from query parameters
 $user_id = $_GET['user_id'] ?? null;
@@ -36,9 +27,9 @@ if (!$user_id) {
 }
 
 try {
-    // Query to get only social settings
+    // CORRECTED QUERY: Changed table name from 'users_settings' to 'site_settings'
     $sql = "SELECT facebook, twitter, instagram, linkedin, youtube, pinterest 
-            FROM users_settings 
+            FROM site_settings 
             WHERE user_id = :user_id";
 
     $stmt = $pdo->prepare($sql);
