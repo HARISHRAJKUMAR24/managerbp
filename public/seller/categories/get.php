@@ -47,7 +47,7 @@ $countStmt->execute($params);
 $totalRecords = $countStmt->fetchColumn();
 
 // ⭐ FIXED: Correct URL for stored category images
-$baseImageUrl = "http://localhost/managerbp/uploads/categories/";
+$baseImageUrl = "http://localhost/managerbp/public/uploads/";
 
 $sql = "SELECT 
             id, 
@@ -55,7 +55,11 @@ $sql = "SELECT
             user_id, 
             name, 
             slug, 
-            CONCAT('$baseImageUrl', image) AS image,
+CASE 
+    WHEN image IS NULL OR image = '' 
+        THEN NULL 
+    ELSE CONCAT('$baseImageUrl', image) 
+END AS image,
             meta_title, 
             meta_description, 
             created_at
