@@ -22,13 +22,14 @@ if (!$user_id) {
     exit;
 }
 
+// FIX: use correct column "id"
 $sql = "UPDATE users SET 
             name = :name,
             email = :email,
             phone = :phone,
             country = :country,
             image = :image
-        WHERE user_id = :user_id";
+        WHERE id = :user_id";
 
 $stmt = $pdo->prepare($sql);
 
