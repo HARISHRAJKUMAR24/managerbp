@@ -8,7 +8,7 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-$sql = "SELECT * FROM subscription_plans WHERE is_disabled = 0 ORDER BY amount ASC";
+$sql = "SELECT * FROM subscription_plans WHERE is_disabled = 1 ORDER BY amount ASC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
 $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
