@@ -24,16 +24,16 @@ if (!$user_id) {
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-// Validate required fields
 if (empty($data["name"]) || empty($data["slug"]) || empty($data["amount"])) {
     echo json_encode(["success" => false, "message" => "Missing required fields"]);
     exit();
 }
 
-$service_id = "SRV_" . uniqid();
+$service_id_string = "SRV_" . uniqid();
+
+$pdo->beginTransaction();
 
 try {
-
     $sql = "INSERT INTO services 
             (service_id, user_id, name, slug, amount, previous_amount, image, category_id,
             time_slot_interval, interval_type, description, gst_percentage, 
@@ -45,7 +45,7 @@ try {
     $stmt = $pdo->prepare($sql);
 
     $result = $stmt->execute([
-        ":sid" => $service_id,
+        ":sid" => $service_id_string,
         ":uid" => $user_id,
         ":name" => $data["name"],
         ":slug" => $data["slug"],
@@ -62,24 +62,40 @@ try {
         ":status" => $data["status"] ?? 0
     ]);
 
-    if ($result) {
-        echo json_encode([
-            "success" => true,
-            "message" => "Service created successfully",
-            "service_id" => $service_id
-        ]);
-    } else {
-        echo json_encode([
-            "success" => false,
-            "message" => "Insert failed"
-        ]);
+    if (!$result) {
+        throw new Exception("Failed to insert service");
+    }
+    
+    $numeric_service_id = $pdo->lastInsertId();
+
+    // Insert additional images
+    if (isset($data["additionalImages"]) && is_array($data["additionalImages"]) && !empty($data["additionalImages"])) {
+        $insertStmt = $pdo->prepare("INSERT INTO service_images (service_id, image, created_at) VALUES (:service_id, :img, NOW(3))");
+        
+        foreach ($data["additionalImages"] as $imgPath) {
+            if (!empty($imgPath)) {
+                $insertStmt->execute([
+                    ":service_id" => $numeric_service_id,
+                    ":img" => $imgPath
+                ]);
+            }
+        }
     }
 
+    $pdo->commit();
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Service created successfully",
+        "service_id" => $service_id_string
+    ]);
+
 } catch (Exception $e) {
+    $pdo->rollBack();
+    
     echo json_encode([
         "success" => false,
         "message" => "Error: " . $e->getMessage()
     ]);
 }
-
 ?>
