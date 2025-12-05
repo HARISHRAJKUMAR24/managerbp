@@ -15,14 +15,12 @@ if (!$user_id) {
 }
 
 try {
-    // Get basic settings for user
     $sql = "SELECT logo, favicon, email, phone, whatsapp, currency, country, state, address 
             FROM site_settings WHERE user_id = :user_id LIMIT 1";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([":user_id" => $user_id]);
     $settings = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // If no settings exist, return empty object
+
     if (!$settings) {
         $settings = [
             'logo' => null,
@@ -35,16 +33,16 @@ try {
             'state' => null,
             'address' => null
         ];
-    } else {
-        // Add full URL for images
-        $baseUrl = "http://localhost/managerbp/public/uploads/";
-        if ($settings['logo']) {
-            $settings['logo'] = $baseUrl . $settings['logo'];
-        }
-        if ($settings['favicon']) {
-            $settings['favicon'] = $baseUrl . $settings['favicon'];
-        }
     }
+
+    // Base uploads folder URL
+    $baseUrl = "http://localhost/managerbp/public/uploads/";
+
+    // Add full URL fields without modifying stored values
+    $settings['logo_url'] = $settings['logo'] ? $baseUrl . $settings['logo'] : null;
+    $settings['favicon_url'] = $settings['favicon'] ? $baseUrl . $settings['favicon'] : null;
+
+    $settings['user_id'] = $user_id;
 
     echo json_encode([
         "success" => true,
