@@ -14,7 +14,11 @@ require_once "../../../../config/config.php";
 require_once "../../../../src/database.php";
 
 $pdo = getDbConnection();
-$user_id = $_GET["user_id"] ?? null;
+// Read JSON payload first
+$data = json_decode(file_get_contents("php://input"), true);
+
+// Get the REAL primary key (users.id) from JSON body
+$user_id = $data["user_id"] ?? null;
 
 if (!$user_id) {
     echo json_encode(["success" => false, "message" => "user_id missing"]);

@@ -15,13 +15,10 @@ if (!isset($_FILES["file"])) {
     exit();
 }
 
-// ==== FINAL PATH YOU WANT ====
+// SAME AS FAVICON - MATCHED FIX
 $relativePath = "sellers/$user_id/site-settings/logo/";
-
-// upload folder is in public/uploads
 $uploadDir = "../../../uploads/" . $relativePath;
 
-// Make folders if missing
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0777, true);
 }
