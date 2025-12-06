@@ -1340,347 +1340,390 @@ require __DIR__ . "/includes/header.php";
     <!-- End Google Tag Manager (noscript) -->
 
 
-    <!-- Popup Overlay -->
-    <div id="popupOverlay"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
-        <div
-            class="bg-gradient-to-br from-ztore-purple/20 to-ztore-pink/20 rounded-3xl border border-white/20 backdrop-blur-xl max-w-md w-full p-6 relative">
-            <!-- Close Button -->
-            <button id="closePopup" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+<!-- Popup Overlay -->
+<div id="popupOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-ztore-purple/20 to-ztore-pink/20 rounded-3xl border border-white/20 backdrop-blur-xl max-w-md w-full p-6 relative">
+        <!-- Close Button -->
+        <button id="closePopup" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
 
-            <!-- Content -->
-            <div class="text-center">
-                <!-- Limited Time Badge -->
-                <div
-                    class="inline-flex items-center gap-2 bg-green-400/15 border border-green-400/25 rounded-full px-4 py-1.5 mb-4">
-                    <span class="text-green-500 text-sm font-semibold">💎 Professional Plan Offer 💎</span>
-                </div>
+        <!-- Content -->
+        <div class="text-center">
+            <!-- Limited Time Badge -->
+            <div class="inline-flex items-center gap-2 bg-green-400/15 border border-green-400/25 rounded-full px-4 py-1.5 mb-4">
+                <span class="text-green-500 text-sm font-semibold">💎 Professional Plan Offer 💎</span>
+            </div>
 
-                <!-- Professional Plan Details from Database -->
-                <?php
-                // Get the correct WHERE condition (same as pricing section)
-                $where = "new = 0 AND group_3 = 0";
-                if (getData("new_plan_start_date", "settings") && date('Y-m-d H:i:s') >= getData("new_plan_start_date", "settings") && getData("id", "subscription_plans", "new = 1")) {
-                    $where = "new = 1";
-                }
-                if (getData("group_3_plan_start_date", "settings") && date('Y-m-d H:i:s') >= getData("group_3_plan_start_date", "settings") && getData("id", "subscription_plans", "group_3 = 1")) {
-                    $where = "group_3 = 1";
-                }
-
-                $professionalPlan = null;
-                $targetDuration = 12;
-
-                // Try to get Professional plan from main table first
-                $professionalPlan = readData(
-                    "*",
-                    "subscription_plans",
-                    "$where AND name = 'Professional' AND status = 1 AND lifetime = 0 LIMIT 1"
-                )->fetch();
-
-                // If found in main table, check if it has duration 12 or get from durations table
-                if ($professionalPlan) {
-                    // If main plan duration is not 12, check subscription_plan_durations
-                    if ($professionalPlan['duration'] != $targetDuration) {
-                        $durationPlan = readData(
-                            "spd.*, sp.name, sp.description, sp.features",
-                            "subscription_plan_durations spd 
-                    JOIN subscription_plans sp ON sp.id = spd.plan_id",
-                            "sp.$where AND sp.name = 'Professional' AND sp.status = 1 
-                    AND spd.duration = $targetDuration LIMIT 1"
-                        )->fetch();
-
-                        if ($durationPlan) {
-                            $professionalPlan = array_merge($professionalPlan, $durationPlan);
-                            $professionalPlan['amount'] = $durationPlan['amount'];
-                            $professionalPlan['plan_duration'] = $durationPlan['duration'];
+            <?php
+            // IMPORTANT: Check if PHP functions exist before using them
+            if (!function_exists('getData') || !function_exists('readData') || !function_exists('calculateGst') || !function_exists('currencyToSymbol')) {
+                // Hide popup if functions don't exist
+                echo '<script>document.addEventListener("DOMContentLoaded", function() { document.getElementById("popupOverlay").style.display = "none"; });</script>';
+            } else {
+                try {
+                    // Get the correct WHERE condition (same as pricing section)
+                    $where = "new = 0 AND group_3 = 0";
+                    
+                    // Check for new plan activation with error handling
+                    $newPlanStartDate = getData("new_plan_start_date", "settings");
+                    if ($newPlanStartDate && date('Y-m-d H:i:s') >= $newPlanStartDate) {
+                        $checkNewPlan = getData("id", "subscription_plans", "new = 1");
+                        if ($checkNewPlan) {
+                            $where = "new = 1";
                         }
-                    } else {
-                        $professionalPlan['plan_duration'] = $professionalPlan['duration'];
                     }
-                } else {
-                    // Try to get from subscription_plan_durations directly
-                    $professionalPlan = readData(
-                        "spd.*, sp.name, sp.description, sp.features, sp.id",
-                        "subscription_plan_durations spd 
-                JOIN subscription_plans sp ON sp.id = spd.plan_id",
-                        "sp.$where AND sp.name = 'Professional' AND sp.status = 1 
-                AND spd.duration = $targetDuration LIMIT 1"
-                    )->fetch();
+                    
+                    // Check for group_3 plan activation with error handling
+                    $group3PlanStartDate = getData("group_3_plan_start_date", "settings");
+                    if ($group3PlanStartDate && date('Y-m-d H:i:s') >= $group3PlanStartDate) {
+                        $checkGroup3Plan = getData("id", "subscription_plans", "group_3 = 1");
+                        if ($checkGroup3Plan) {
+                            $where = "group_3 = 1";
+                        }
+                    }
+
+                    $professionalPlan = null;
+                    $targetDuration = 12;
+
+                    // Try to get Professional plan from main table first with error handling
+                    $professionalResult = readData(
+                        "*",
+                        "subscription_plans",
+                        "$where AND name = 'Professional' AND status = 1 AND lifetime = 0 LIMIT 1"
+                    );
+                    
+                    if ($professionalResult) {
+                        $professionalPlan = $professionalResult->fetch();
+                    }
+
+                    $planFound = false;
+                    $planData = [];
 
                     if ($professionalPlan) {
-                        $professionalPlan['plan_duration'] = $professionalPlan['duration'];
-                    }
-                }
-
-                // Only show popup if Professional plan exists
-                if ($professionalPlan && !empty($professionalPlan['amount'])) {
-                    $gstRate = getData("gst_percentage", "settings");
-                    $gstNumber = getData("gst_number", "settings");
-                    $gstType = getData("gst_tax_type", "settings");
-                    $currency = currencyToSymbol(getData("currency", "settings"));
-
-                    // Use the correct amount field
-                    $planAmount = $professionalPlan['amount'];
-
-                    // CALCULATE GST-INCLUSIVE PRICE FOR DISPLAY (SAME AS PRICING SECTION)
-                    $gstInclusivePrice = calculateGst($planAmount, $gstRate, $gstNumber, $gstType)['getPrice'];
-                    $finalPrice = number_format($gstInclusivePrice); // No decimal places
-
-                    $duration = $professionalPlan['plan_duration'] ?? $professionalPlan['duration'];
-                    $durationLabel = ($duration / 12) . " Year" . (($duration / 12) > 1 ? "s" : "");
-
-                    // CORRECT 3x MRP CALCULATION BASED ON GST-INCLUSIVE PRICE (SAME AS PRICING SECTION)
-                    $mrpAmount = $gstInclusivePrice * 3; // MRP = GST-Inclusive Price × 3
-                    $mrpPrice = number_format($mrpAmount);
-                    $savingsAmount = $mrpAmount - $gstInclusivePrice; // Save Amount = MRP - GST-Inclusive Price
-
-                    // Fixed 67% discount (dummy)
-                    $discountPercentage = 67;
-
-                ?>
-
-                    <!-- Main Heading -->
-                    <h3 class="text-2xl font-bold text-white mb-3">
-                        Grab the Ztorespot Professional Plan
-                    </h3>
-
-                    <!-- Offer Text -->
-                    <div class="mb-4">
-                        <!-- Discount Badge -->
-                        <div class="flex items-center justify-center gap-2 mb-3">
-                            <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded"><?= $discountPercentage ?>% OFF</span>
-                            <p class="text-green-400 text-xs">Save <?= $currency . number_format($savingsAmount) ?></p>
-                        </div>
-
-                        <!-- MRP and Current Price -->
-                        <div class="flex flex-col items-center justify-center mb-1">
-                            <!-- MRP and Current Price in one line -->
-                            <div class="flex items-baseline justify-center gap-2 mb-1">
-                                <span class="text-gray-400 text-sm line-through"><?= $currency . $mrpPrice ?></span>
-                                <span class="text-3xl font-bold text-white"><?= $currency . $finalPrice ?></span>
-                                <span class="text-gray-300">/ <?= $durationLabel ?></span>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <!-- Countdown Timer -->
-                    <div class="bg-white/10 rounded-2xl p-4 mb-6 border border-white/10">
-                        <p class="text-gray-400 text-sm mb-2">Offer ends in:</p>
-                        <div id="countdownTimer" class="flex justify-center gap-3 text-white font-mono">
-                            <div class="text-center">
-                                <div id="hours" class="text-2xl font-bold bg-white/10 rounded-lg py-2 px-3">02</div>
-                                <div class="text-xs text-gray-400 mt-1">HOURS</div>
-                            </div>
-                            <div class="text-2xl font-bold text-white pt-2">:</div>
-                            <div class="text-center">
-                                <div id="minutes" class="text-2xl font-bold bg-white/10 rounded-lg py-2 px-3">00</div>
-                                <div class="text-xs text-gray-400 mt-1">MINUTES</div>
-                            </div>
-                            <div class="text-2xl font-bold text-white pt-2">:</div>
-                            <div class="text-center">
-                                <div id="seconds" class="text-2xl font-bold bg-white/10 rounded-lg py-2 px-3">00</div>
-                                <div class="text-xs text-gray-400 mt-1">SECONDS</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CTA Buttons -->
-                    <div class="flex flex-col gap-3">
-                        <a href="<?= SELLER_URL . 'register?redirect=' . SELLER_URL . 'checkout?plan=' . $professionalPlan['id'] . '&duration=' . ($professionalPlan['plan_duration'] ?? $professionalPlan['duration']) ?>"
-                            class="bg-gradient-to-br from-ztore-purple to-ztore-pink hover:from-ztore-purple/90 hover:to-ztore-pink/90 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:scale-105 text-center">
-                            Grab My Professional Plan Now
-                        </a>
-                        <button id="noThanksBtn"
-                            class="bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-semibold transition-all duration-300 border border-white/10">
-                            No Thanks, Maybe Later
-                        </button>
-                    </div>
-
-                <?php } else { ?>
-                    <!-- If no Professional plan found, don't show the popup at all -->
-                    <script>
-                        // Hide popup if no Professional plan exists
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const popupOverlay = document.getElementById('popupOverlay');
-                            if (popupOverlay) {
-                                popupOverlay.style.display = 'none';
+                        // If main plan duration is not 12, check subscription_plan_durations
+                        if (($professionalPlan['duration'] ?? 0) != $targetDuration) {
+                            $durationResult = readData(
+                                "spd.*, sp.name, sp.description, sp.features, sp.id",
+                                "subscription_plan_durations spd 
+                                JOIN subscription_plans sp ON sp.id = spd.plan_id",
+                                "sp.$where AND sp.name = 'Professional' AND sp.status = 1 
+                                AND spd.duration = $targetDuration LIMIT 1"
+                            );
+                            
+                            if ($durationResult) {
+                                $durationPlan = $durationResult->fetch();
+                                if ($durationPlan) {
+                                    $planData = array_merge($professionalPlan, $durationPlan);
+                                    $planData['amount'] = $durationPlan['amount'] ?? 0;
+                                    $planData['plan_duration'] = $durationPlan['duration'] ?? $targetDuration;
+                                    $planFound = true;
+                                }
                             }
-                        });
-                    </script>
-                <?php } ?>
+                        } else {
+                            $planData = $professionalPlan;
+                            $planData['plan_duration'] = $professionalPlan['duration'] ?? $targetDuration;
+                            $planFound = true;
+                        }
+                    } else {
+                        // Try to get from subscription_plan_durations directly
+                        $durationResult = readData(
+                            "spd.*, sp.name, sp.description, sp.features, sp.id",
+                            "subscription_plan_durations spd 
+                            JOIN subscription_plans sp ON sp.id = spd.plan_id",
+                            "sp.$where AND sp.name = 'Professional' AND sp.status = 1 
+                            AND spd.duration = $targetDuration LIMIT 1"
+                        );
+                        
+                        if ($durationResult) {
+                            $professionalPlan = $durationResult->fetch();
+                            if ($professionalPlan) {
+                                $planData = $professionalPlan;
+                                $planData['plan_duration'] = $professionalPlan['duration'] ?? $targetDuration;
+                                $planFound = true;
+                            }
+                        }
+                    }
 
-                <!-- Trust Badge -->
-                <div class="flex items-center justify-center gap-2 mt-4 text-gray-400 text-sm">
-                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <span>• Cancel anytime</span>
+                    // Only show popup if Professional plan exists and has amount
+                    if ($planFound && isset($planData['amount']) && !empty($planData['amount'])) {
+                        $gstRate = getData("gst_percentage", "settings") ?: 0;
+                        $gstNumber = getData("gst_number", "settings") ?: '';
+                        $gstType = getData("gst_tax_type", "settings") ?: 'inclusive';
+                        $currency = currencyToSymbol(getData("currency", "settings")) ?: '₹';
+
+                        // Use the correct amount field
+                        $planAmount = (float)($planData['amount'] ?? 0);
+
+                        // Calculate GST with error handling
+                        $gstCalculation = calculateGst($planAmount, $gstRate, $gstNumber, $gstType);
+                        $gstInclusivePrice = $gstCalculation['getPrice'] ?? $planAmount;
+                        $finalPrice = number_format($gstInclusivePrice); // No decimal places
+
+                        $duration = $planData['plan_duration'] ?? ($planData['duration'] ?? 12);
+                        $years = $duration / 12;
+                        $durationLabel = $years . " Year" . ($years > 1 ? "s" : "");
+
+                        // Calculate MRP and savings
+                        $mrpAmount = $gstInclusivePrice * 3;
+                        $mrpPrice = number_format($mrpAmount);
+                        $savingsAmount = $mrpAmount - $gstInclusivePrice;
+
+                        // Fixed 67% discount for popup
+                        $discountPercentage = 67;
+                        $planId = $planData['id'] ?? 0;
+            ?>
+
+            <!-- Main Heading -->
+            <h3 class="text-2xl font-bold text-white mb-3">
+                Grab the Ztorespot Professional Plan
+            </h3>
+
+            <!-- Offer Text -->
+            <div class="mb-4">
+                <!-- Discount Badge -->
+                <div class="flex items-center justify-center gap-2 mb-3">
+                    <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded"><?= $discountPercentage ?>% OFF</span>
+                    <p class="text-green-400 text-xs">Save <?= $currency . number_format($savingsAmount) ?></p>
                 </div>
+
+                <!-- MRP and Current Price -->
+                <div class="flex flex-col items-center justify-center mb-1">
+                    <!-- MRP and Current Price in one line -->
+                    <div class="flex items-baseline justify-center gap-2 mb-1">
+                        <span class="text-gray-400 text-sm line-through"><?= $currency . $mrpPrice ?></span>
+                        <span class="text-3xl font-bold text-white"><?= $currency . $finalPrice ?></span>
+                        <span class="text-gray-300">/ <?= $durationLabel ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Countdown Timer -->
+            <div class="bg-white/10 rounded-2xl p-4 mb-6 border border-white/10">
+                <p class="text-gray-400 text-sm mb-2">Offer ends in:</p>
+                <div id="countdownTimer" class="flex justify-center gap-3 text-white font-mono">
+                    <div class="text-center">
+                        <div id="hours" class="text-2xl font-bold bg-white/10 rounded-lg py-2 px-3">02</div>
+                        <div class="text-xs text-gray-400 mt-1">HOURS</div>
+                    </div>
+                    <div class="text-2xl font-bold text-white pt-2">:</div>
+                    <div class="text-center">
+                        <div id="minutes" class="text-2xl font-bold bg-white/10 rounded-lg py-2 px-3">00</div>
+                        <div class="text-xs text-gray-400 mt-1">MINUTES</div>
+                    </div>
+                    <div class="text-2xl font-bold text-white pt-2">:</div>
+                    <div class="text-center">
+                        <div id="seconds" class="text-2xl font-bold bg-white/10 rounded-lg py-2 px-3">00</div>
+                        <div class="text-xs text-gray-400 mt-1">SECONDS</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-col gap-3">
+                <a href="<?= SELLER_URL . 'register?redirect=' . SELLER_URL . 'checkout?plan=' . $planId . '&duration=' . $duration ?>"
+                    class="bg-gradient-to-br from-ztore-purple to-ztore-pink hover:from-ztore-purple/90 hover:to-ztore-pink/90 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:scale-105 text-center">
+                    Grab My Professional Plan Now
+                </a>
+                <button id="noThanksBtn"
+                    class="bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-semibold transition-all duration-300 border border-white/10">
+                    No Thanks, Maybe Later
+                </button>
+            </div>
+
+            <?php 
+                    } else {
+                        // If no Professional plan found, hide the popup
+                        echo '<script>document.addEventListener("DOMContentLoaded", function() { document.getElementById("popupOverlay").style.display = "none"; });</script>';
+                    }
+                    
+                } catch (Exception $e) {
+                    // Log error and hide popup
+                    error_log("Popup error: " . $e->getMessage());
+                    echo '<script>document.addEventListener("DOMContentLoaded", function() { document.getElementById("popupOverlay").style.display = "none"; });</script>';
+                }
+            }
+            ?>
+
+            <!-- Trust Badge -->
+            <div class="flex items-center justify-center gap-2 mt-4 text-gray-400 text-sm">
+                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>• Cancel anytime</span>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        // Popup Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const popupOverlay = document.getElementById('popupOverlay');
-            const closePopup = document.getElementById('closePopup');
-            const noThanksBtn = document.getElementById('noThanksBtn');
-            const hoursElement = document.getElementById('hours');
-            const minutesElement = document.getElementById('minutes');
-            const secondsElement = document.getElementById('seconds');
+<script>
+    // Popup Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const popupOverlay = document.getElementById('popupOverlay');
+        
+        // If popup is hidden, don't initialize any functionality
+        if (!popupOverlay || popupOverlay.style.display === 'none') {
+            return;
+        }
+        
+        const closePopup = document.getElementById('closePopup');
+        const noThanksBtn = document.getElementById('noThanksBtn');
+        const hoursElement = document.getElementById('hours');
+        const minutesElement = document.getElementById('minutes');
+        const secondsElement = document.getElementById('seconds');
 
-            let popupShown = false;
-            let popupTimer = null;
-            let countdownInterval = null;
+        let popupShown = false;
+        let popupTimer = null;
+        let countdownInterval = null;
 
-            // Calculate end time (2 hours from now)
-            const endTime = new Date();
-            endTime.setHours(endTime.getHours() + 2);
+        // Calculate end time (2 hours from now)
+        const endTime = new Date();
+        endTime.setHours(endTime.getHours() + 2);
 
-            // Function to update countdown timer
-            function updateCountdown() {
-                const now = new Date();
-                const timeLeft = endTime - now;
+        // Function to update countdown timer
+        function updateCountdown() {
+            const now = new Date();
+            const timeLeft = endTime - now;
 
-                if (timeLeft <= 0) {
-                    // Reset timer when it ends
-                    endTime.setHours(endTime.getHours() + 2);
-                    return;
-                }
-
-                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-                hoursElement.textContent = hours.toString().padStart(2, '0');
-                minutesElement.textContent = minutes.toString().padStart(2, '0');
-                secondsElement.textContent = seconds.toString().padStart(2, '0');
+            if (timeLeft <= 0) {
+                // Reset timer when it ends
+                endTime.setHours(endTime.getHours() + 2);
+                return;
             }
 
-            // Function to show popup
-            function showPopup() {
-                if (popupShown) return;
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
-                popupOverlay.classList.remove('hidden');
-                popupOverlay.classList.add('flex');
-                document.body.classList.add('no-scroll');
-                popupShown = true;
+            if (hoursElement) hoursElement.textContent = hours.toString().padStart(2, '0');
+            if (minutesElement) minutesElement.textContent = minutes.toString().padStart(2, '0');
+            if (secondsElement) secondsElement.textContent = seconds.toString().padStart(2, '0');
+        }
 
-                // Start countdown timer
-                updateCountdown();
-                countdownInterval = setInterval(updateCountdown, 1000);
+        // Function to show popup
+        function showPopup() {
+            if (popupShown || !popupOverlay) return;
+
+            popupOverlay.classList.remove('hidden');
+            popupOverlay.classList.add('flex');
+            document.body.classList.add('no-scroll');
+            popupShown = true;
+
+            // Start countdown timer
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        // Function to hide popup
+        function hidePopup() {
+            if (!popupOverlay) return;
+            
+            popupOverlay.classList.add('hidden');
+            popupOverlay.classList.remove('flex');
+            document.body.classList.remove('no-scroll');
+
+            // Clear countdown interval
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
             }
+        }
 
-            // Function to hide popup
-            function hidePopup() {
-                popupOverlay.classList.add('hidden');
-                popupOverlay.classList.remove('flex');
-                document.body.classList.remove('no-scroll');
+        // Intersection Observer for "Next You" section
+        const nextYouSection = document.querySelector('.customer-logos');
 
-                // Clear countdown interval
-                if (countdownInterval) {
-                    clearInterval(countdownInterval);
-                }
-            }
-
-            // Intersection Observer for "Next You" section
-            const nextYouSection = document.querySelector('.customer-logos');
-
-            if (nextYouSection) {
-                const observer = new IntersectionObserver(function(entries) {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting && !popupShown) {
-                            // Wait 3 seconds after section becomes visible
-                            popupTimer = setTimeout(() => {
-                                showPopup();
-                            }, 3000);
-                        }
-                    });
-                }, {
-                    threshold: 0.3, // Trigger when 30% of section is visible
-                    rootMargin: '0px'
+        if (nextYouSection && popupOverlay) {
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !popupShown) {
+                        // Wait 3 seconds after section becomes visible
+                        popupTimer = setTimeout(() => {
+                            showPopup();
+                        }, 3000);
+                    }
                 });
+            }, {
+                threshold: 0.3,
+                rootMargin: '0px'
+            });
 
-                observer.observe(nextYouSection);
-            }
+            observer.observe(nextYouSection);
+        }
 
-            // Close popup functionality
+        // Close popup functionality
+        if (closePopup) {
             closePopup.addEventListener('click', hidePopup);
+        }
 
-            // No Thanks button
+        // No Thanks button
+        if (noThanksBtn) {
             noThanksBtn.addEventListener('click', hidePopup);
+        }
 
-            // Close when clicking outside popup
+        // Close when clicking outside popup
+        if (popupOverlay) {
             popupOverlay.addEventListener('click', function(e) {
                 if (e.target === popupOverlay) {
                     hidePopup();
                 }
             });
+        }
 
-            // Close with Escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && popupOverlay.classList.contains('flex')) {
-                    hidePopup();
-                }
-            });
-
-            // Cleanup on page leave
-            window.addEventListener('beforeunload', function() {
-                if (popupTimer) {
-                    clearTimeout(popupTimer);
-                }
-                if (countdownInterval) {
-                    clearInterval(countdownInterval);
-                }
-            });
+        // Close with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && popupOverlay && popupOverlay.classList.contains('flex')) {
+                hidePopup();
+            }
         });
-    </script>
 
-    <style>
-        /* Smooth popup animation */
-        #popupOverlay {
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
+        // Cleanup on page leave
+        window.addEventListener('beforeunload', function() {
+            if (popupTimer) {
+                clearTimeout(popupTimer);
             }
-
-            to {
-                opacity: 1;
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
             }
+        });
+    });
+</script>
+
+<style>
+    /* Smooth popup animation */
+    #popupOverlay {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
         }
-
-        /* Countdown timer pulse effect */
-        #countdownTimer div div:first-child {
-            animation: pulse 2s infinite;
+        to {
+            opacity: 1;
         }
+    }
 
-        @keyframes pulse {
+    /* Countdown timer pulse effect */
+    #countdownTimer div div:first-child {
+        animation: pulse 2s infinite;
+    }
 
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.05);
-            }
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
         }
-
-        /* Prevent background scroll when popup is open */
-        body.no-scroll {
-            overflow: hidden;
+        50% {
+            transform: scale(1.05);
         }
-    </style>
+    }
+
+    /* Prevent background scroll when popup is open */
+    body.no-scroll {
+        overflow: hidden;
+    }
+</style>
 
     <!-- Top Offer Bar -->
     <div
@@ -4195,719 +4238,808 @@ require __DIR__ . "/includes/header.php";
             </div>
         </section>
 
-        <!-- Pricing Plans Section -->
-        <section id="pricing" class="pricing py-20 px-4 sm:px-6 relative overflow-hidden">
-            <!-- Background Elements -->
-            <div class="absolute top-20 left-10% w-48 h-48 bg-ztore-purple/10 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-20 right-10% w-56 h-56 bg-ztore-pink/10 rounded-full blur-3xl"></div>
+<!-- Pricing Plans Section -->
+<section id="pricing" class="pricing py-20 px-4 sm:px-6 relative overflow-hidden">
+    <!-- Background Elements -->
+    <div class="absolute top-20 left-10% w-48 h-48 bg-ztore-purple/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-20 right-10% w-56 h-56 bg-ztore-pink/10 rounded-full blur-3xl"></div>
 
-            <div class="max-w-7xl mx-auto">
-                <!-- Section Header -->
-                <div class="text-center mb-16">
-                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-                        <span class="text-gradient">Choose</span> a plan that saves time and money
-                    </h2>
-                    <p class="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto">
-                        Simple Pricing for Every Business, Know exactly what you pay, start growing today.
-                    </p>
-                </div>
+    <div class="max-w-7xl mx-auto">
+        <!-- Section Header -->
+        <div class="text-center mb-16">
+            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+                <span class="text-gradient">Choose</span> a plan that saves time and money
+            </h2>
+            <p class="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto">
+                Simple Pricing for Every Business, Know exactly what you pay, start growing today.
+            </p>
+        </div>
 
-                <!-- Billing Toggle -->
-                <div class="flex justify-center mb-12 lg:mb-16">
-                    <div class="bg-white/5 rounded-2xl p-2 backdrop-blur-xl border border-white/10 relative">
-                        <!-- Save Message Style Bubble -->
-                        <div class="absolute -top-12 -right-4">
-                            <div class="bg-green-500 text-white px-4 py-2 rounded-2xl font-semibold text-sm shadow-lg relative">
-                                Save up to 67% yearly!
-                                <div class="absolute -bottom-2 right-6 w-4 h-4 bg-green-500 transform rotate-45"></div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <button class="tab-btn monthly-toggle px-6 py-3 rounded-3xl font-semibold transition-all duration-500 bg-gradient-to-br from-ztore-purple to-ztore-pink text-white" data-tab="monthly">
-                                Monthly
-                            </button>
-                            <button class="tab-btn yearly-toggle px-6 py-3 rounded-3xl font-semibold text-gray-300 transition-all duration-500 hover:text-white" data-tab="yearly">
-                                Yearly
-                            </button>
-                        </div>
+        <!-- Billing Toggle -->
+        <div class="flex justify-center mb-12 lg:mb-16">
+            <div class="bg-white/5 rounded-2xl p-2 backdrop-blur-xl border border-white/10 relative">
+                <!-- Save Message Style Bubble -->
+                <div class="absolute -top-12 -right-4">
+                    <div class="bg-green-500 text-white px-4 py-2 rounded-2xl font-semibold text-sm shadow-lg relative">
+                        Save up to 67% yearly!
+                        <div class="absolute -bottom-2 right-6 w-4 h-4 bg-green-500 transform rotate-45"></div>
                     </div>
                 </div>
 
-                <!-- Monthly Plans Container -->
-                <div class="tab-content active" id="monthly">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto">
-                        <?php
-                        $where = "new = 0 AND group_3 = 0";
-                        if (getData("new_plan_start_date", "settings") && date('Y-m-d H:i:s') >= getData("new_plan_start_date", "settings") && getData("id", "subscription_plans", "new = 1")) {
-                            $where = "new = 1";
-                        }
+                <div class="flex items-center gap-2">
+                    <button class="tab-btn monthly-toggle px-6 py-3 rounded-3xl font-semibold transition-all duration-500 bg-gradient-to-br from-ztore-purple to-ztore-pink text-white" data-tab="monthly">
+                        Monthly
+                    </button>
+                    <button class="tab-btn yearly-toggle px-6 py-3 rounded-3xl font-semibold text-gray-300 transition-all duration-500 hover:text-white" data-tab="yearly">
+                        Yearly
+                    </button>
+                </div>
+            </div>
+        </div>
 
-                        if (getData("group_3_plan_start_date", "settings") && date('Y-m-d H:i:s') >= getData("group_3_plan_start_date", "settings") && getData("id", "subscription_plans", "group_3 = 1")) {
-                            $where = "group_3 = 1";
-                        }
+        <?php
+        // Debug: Check if functions exist
+        if (!function_exists('getData') || !function_exists('readData') || !function_exists('calculateGst') || !function_exists('currencyToSymbol')) {
+            echo '<div class="text-center text-red-500 p-8">Error: Required PHP functions not found. Please check your includes.</div>';
+            return;
+        }
 
-                        $gstRate = getData("gst_percentage", "settings");
-                        $gstNumber = getData("gst_number", "settings");
-                        $gstType = getData("gst_tax_type", "settings");
-                        $currency = currencyToSymbol(getData("currency", "settings"));
+        try {
+            // Get settings with error handling
+            $where = "new = 0 AND group_3 = 0";
+            
+            // Check for new plan activation
+            $newPlanStartDate = getData("new_plan_start_date", "settings");
+            if ($newPlanStartDate && date('Y-m-d H:i:s') >= $newPlanStartDate) {
+                $checkNewPlan = getData("id", "subscription_plans", "new = 1");
+                if ($checkNewPlan) {
+                    $where = "new = 1";
+                }
+            }
 
-                        $plans = [];
+            // Check for group_3 plan activation
+            $group3PlanStartDate = getData("group_3_plan_start_date", "settings");
+            if ($group3PlanStartDate && date('Y-m-d H:i:s') >= $group3PlanStartDate) {
+                $checkGroup3Plan = getData("id", "subscription_plans", "group_3 = 1");
+                if ($checkGroup3Plan) {
+                    $where = "group_3 = 1";
+                }
+            }
 
-                        // Get ALL monthly plans (<12 months) for Welcome and Starter
-                        $data = readData("*", "subscription_plans", $where . " AND lifetime = 0 AND status = 1 ORDER BY CAST(amount AS DECIMAL) ASC");
+            // Get GST and currency settings
+            $gstRate = getData("gst_percentage", "settings") ?: 0;
+            $gstNumber = getData("gst_number", "settings") ?: '';
+            $gstType = getData("gst_tax_type", "settings") ?: 'inclusive';
+            $currency = currencyToSymbol(getData("currency", "settings")) ?: '₹';
+            
+            // Debug log (remove in production)
+            error_log("Pricing Section - Where clause: $where");
+            error_log("Pricing Section - GST Rate: $gstRate, Currency: $currency");
+        ?>
+        
+        <!-- Monthly Plans Container -->
+        <div class="tab-content active" id="monthly">
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto">
+                <?php
+                $monthlyPlans = [];
+                $yearlyPlans = [];
+                $allPlans = [];
+
+                try {
+                    // Get ALL monthly plans (<12 months) for Welcome and Starter
+                    $data = readData("*", "subscription_plans", "$where AND lifetime = 0 AND status = 1 ORDER BY CAST(amount AS DECIMAL) ASC");
+                    if ($data) {
                         while ($row = $data->fetch()) {
-                            $mainDuration = (int)$row['duration'];
+                            $mainDuration = (int)($row['duration'] ?? 0);
                             if ($mainDuration >= 12) continue;
                             $row['plan_duration'] = $mainDuration;
-                            $plans[$row['id'] . '_' . $mainDuration] = $row;
+                            $monthlyPlans[$row['id'] . '_' . $mainDuration] = $row;
                         }
+                    }
 
-                        // Get extra durations for monthly plans
-                        $durations = readData("spd.*, sp.*", "subscription_plan_durations spd JOIN subscription_plans sp ON sp.id = spd.plan_id", $where);
+                    // Get extra durations for monthly plans
+                    $durations = readData("spd.*, sp.*", "subscription_plan_durations spd JOIN subscription_plans sp ON sp.id = spd.plan_id", $where);
+                    if ($durations) {
                         while ($row = $durations->fetch()) {
-                            $row['plan_duration'] = (int)$row['duration'];
-                            $row['amount'] = $row['amount'];
+                            $row['plan_duration'] = (int)($row['duration'] ?? 0);
+                            $row['amount'] = $row['amount'] ?? 0;
                             if ($row['plan_duration'] >= 12) continue;
-                            $plans[$row['plan_id'] . '_' . $row['plan_duration']] = $row;
+                            $monthlyPlans[$row['plan_id'] . '_' . $row['plan_duration']] = $row;
                         }
+                    }
 
-                        // Get yearly plans for Intermediate and Professional
-                        $yearlyPlans = [];
-                        $targetDuration = 12;
+                    // Get yearly plans for Intermediate and Professional
+                    $targetDuration = 12;
 
-                        // Get Intermediate and Professional yearly plans
-                        $yearlyData = readData("*", "subscription_plans", "$where AND lifetime = 0 AND status = 1 AND duration = $targetDuration AND (name = 'Intermediate' OR name = 'Professional') ORDER BY CAST(amount AS DECIMAL) ASC");
+                    // Get Intermediate and Professional yearly plans from main table
+                    $yearlyData = readData("*", "subscription_plans", "$where AND lifetime = 0 AND status = 1 AND duration = $targetDuration AND (name = 'Intermediate' OR name = 'Professional') ORDER BY CAST(amount AS DECIMAL) ASC");
+                    if ($yearlyData) {
                         while ($row = $yearlyData->fetch()) {
-                            $row['plan_duration'] = (int)$row['duration'];
-                            $row['amount'] = $row['amount'];
+                            $row['plan_duration'] = (int)($row['duration'] ?? 0);
+                            $row['amount'] = $row['amount'] ?? 0;
                             $yearlyPlans[$row['id'] . '_' . $targetDuration] = $row;
                         }
+                    }
 
-                        // Get extra durations for Intermediate and Professional yearly plans
-                        $yearlyDurations = readData(
-                            "spd.*, sp.name, sp.description, sp.features",
-                            "subscription_plan_durations spd JOIN subscription_plans sp ON sp.id = spd.plan_id",
-                            "sp.$where AND spd.duration = $targetDuration AND (sp.name = 'Intermediate' OR sp.name = 'Professional')"
-                        );
+                    // Get extra durations for Intermediate and Professional yearly plans
+                    $yearlyDurations = readData(
+                        "spd.*, sp.name, sp.description, sp.features, sp.id",
+                        "subscription_plan_durations spd JOIN subscription_plans sp ON sp.id = spd.plan_id",
+                        "sp.$where AND spd.duration = $targetDuration AND (sp.name = 'Intermediate' OR sp.name = 'Professional')"
+                    );
 
+                    if ($yearlyDurations) {
                         while ($row = $yearlyDurations->fetch()) {
-                            $row['plan_duration'] = (int)$row['duration'];
-                            $row['amount'] = $row['amount'];
+                            $row['plan_duration'] = (int)($row['duration'] ?? 0);
+                            $row['amount'] = $row['amount'] ?? 0;
                             $yearlyPlans[$row['plan_id'] . '_' . $targetDuration] = $row;
                         }
+                    }
 
-                        // Combine both monthly and yearly plans
-                        $allPlans = array_merge($plans, $yearlyPlans);
-                        usort($allPlans, fn($a, $b) => (float)$a['amount'] <=> (float)$b['amount']);
+                    // Combine both monthly and yearly plans for monthly tab
+                    $allPlans = array_merge($monthlyPlans, $yearlyPlans);
+                    usort($allPlans, fn($a, $b) => ((float)($a['amount'] ?? 0)) <=> ((float)($b['amount'] ?? 0)));
 
-                        if (count($allPlans)) :
-                            foreach ($allPlans as $row) :
-                                // Determine if this plan should show yearly price in monthly tab
-                                $showYearlyPriceInMonthly = ($row['name'] === 'Intermediate' || $row['name'] === 'Professional');
+                } catch (Exception $e) {
+                    error_log("Error fetching plans: " . $e->getMessage());
+                    $allPlans = [];
+                }
 
-                                if ($showYearlyPriceInMonthly) {
-                                    // Show yearly price for Intermediate and Professional
-                                    $finalPrice = number_format(calculateGst($row['amount'], $gstRate, $gstNumber, $gstType)['getPrice']); // WITH GST
-                                    $durationLabel = ($row['plan_duration'] / 12) . " Year" . (($row['plan_duration'] / 12) > 1 ? "s" : "");
+                if (count($allPlans) > 0) :
+                    foreach ($allPlans as $row) :
+                        // Validate required fields
+                        $planName = $row['name'] ?? 'Unknown Plan';
+                        $planAmount = (float)($row['amount'] ?? 0);
+                        $planDuration = (int)($row['plan_duration'] ?? ($row['duration'] ?? 1));
+                        $planId = $row['id'] ?? 0;
+                        $planDescription = $row['description'] ?? '';
+                        $planFeatures = $row['features'] ?? '';
 
-                                    // Calculate monthly equivalent for comparison
-                                    $monthlyEquivalent = $row['amount'] / 12;
-                                    $monthlyEquivalentPrice = number_format(calculateGst($monthlyEquivalent, $gstRate, $gstNumber, $gstType)['getPrice']); // WITH GST
+                        // Determine if this plan should show yearly price in monthly tab
+                        $showYearlyPriceInMonthly = ($planName === 'Intermediate' || $planName === 'Professional');
 
-                                    // CALCULATE GST-INCLUSIVE PRICE FOR DISPLAY
-                                    $gstInclusivePrice = calculateGst($row['amount'], $gstRate, $gstNumber, $gstType)['getPrice'];
+                        // Calculate GST
+                        $gstCalculation = calculateGst($planAmount, $gstRate, $gstNumber, $gstType);
+                        $gstInclusivePrice = $gstCalculation['getPrice'] ?? $planAmount;
+                        
+                        // Format prices
+                        $finalPrice = number_format($gstInclusivePrice);
+                        
+                        // Calculate MRP and savings
+                        $mrpAmount = $gstInclusivePrice * 3;
+                        $mrpPrice = number_format($mrpAmount);
+                        $savingsAmount = $mrpAmount - $gstInclusivePrice;
+                        $discountPercentage = round(($savingsAmount / $mrpAmount) * 100);
 
-                                    // CORRECT 3x MRP CALCULATION BASED ON GST-INCLUSIVE PRICE
-                                    $mrpAmount = $gstInclusivePrice * 3; // MRP = GST-Inclusive Price × 3
-                                    $mrpPrice = number_format($mrpAmount);
-                                    $savingsAmount = $mrpAmount - $gstInclusivePrice; // Save Amount = MRP - GST-Inclusive Price
+                        // Set duration label
+                        if ($showYearlyPriceInMonthly) {
+                            $years = $planDuration / 12;
+                            $durationLabel = $years . " Year" . ($years > 1 ? "s" : "");
+                            
+                            // Calculate monthly equivalent
+                            $monthlyEquivalent = $planAmount / 12;
+                            $monthlyGstCalculation = calculateGst($monthlyEquivalent, $gstRate, $gstNumber, $gstType);
+                            $monthlyEquivalentPrice = number_format($monthlyGstCalculation['getPrice'] ?? $monthlyEquivalent);
+                        } else {
+                            $durationLabel = $planDuration . " Month" . ($planDuration > 1 ? "s" : "");
+                        }
 
-                                    // Calculate actual discount percentage
-                                    $actualDiscountPercentage = round(($savingsAmount / $mrpAmount) * 100);
-                                    $discountPercentage = $actualDiscountPercentage;
-                                } else {
-                                    // Show monthly price for Welcome and Starter
-                                    $finalPrice = number_format(calculateGst($row['amount'], $gstRate, $gstNumber, $gstType)['getPrice']); // WITH GST
-                                    $durationLabel = $row['plan_duration'] . " Month" . ($row['plan_duration'] > 1 ? "s" : "");
+                        // UI Configuration
+                        $uiConfig = [
+                            'Welcome' => ['recommended' => false, 'best_value' => false],
+                            'Starter Plan' => ['recommended' => false, 'best_value' => false],
+                            'Intermediate' => ['recommended' => true, 'best_value' => false],
+                            'Professional' => ['recommended' => false, 'best_value' => true]
+                        ];
+                        $config = $uiConfig[$planName] ?? $uiConfig['Welcome'];
 
-                                    // CALCULATE GST-INCLUSIVE PRICE FOR DISPLAY
-                                    $gstInclusivePrice = calculateGst($row['amount'], $gstRate, $gstNumber, $gstType)['getPrice'];
+                        // Process features
+                        $allFeatures = !empty($planFeatures) ? explode(",", $planFeatures) : [];
+                        $visibleFeatures = array_slice($allFeatures, 0, 6);
+                        $hiddenFeatures = array_slice($allFeatures, 6);
+                        $hasHiddenFeatures = !empty($hiddenFeatures);
 
-                                    // CORRECT 3x MRP CALCULATION BASED ON GST-INCLUSIVE PRICE
-                                    $mrpAmount = $gstInclusivePrice * 3; // MRP = GST-Inclusive Price × 3
-                                    $mrpPrice = number_format($mrpAmount);
-                                    $savingsAmount = $mrpAmount - $gstInclusivePrice; // Save Amount = MRP - GST-Inclusive Price
+                        // CSS class names
+                        $planSlug = strtolower(str_replace(' ', '-', $planName));
+                ?>
+                <div class="pricing-card group relative <?= $config['recommended'] || $config['best_value'] ? 'transform scale-105 z-10 mt-8 lg:mt-4' : '' ?>">
+                    <?php if ($config['recommended']): ?>
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
+                            <div class="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
+                                RECOMMENDED
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-ztore-purple/30 to-ztore-pink/30 rounded-3xl p-6 h-full border-2 border-yellow-400/50 backdrop-blur-xl shadow-2xl shadow-yellow-400/20">
+                    <?php elseif ($config['best_value']): ?>
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
+                            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
+                                BEST VALUE
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-amber-400/30 to-orange-500/30 rounded-3xl p-6 h-full border-2 border-purple-400/50 backdrop-blur-xl shadow-2xl shadow-purple-400/20">
+                    <?php else: ?>
+                        <div class="bg-white/5 rounded-3xl p-6 h-full border border-white/10 backdrop-blur-xl transition-all duration-500">
+                    <?php endif; ?>
 
-                                    // Calculate actual discount percentage
-                                    $actualDiscountPercentage = round(($savingsAmount / $mrpAmount) * 100);
-                                    $discountPercentage = $actualDiscountPercentage;
-                                }
+                            <!-- Plan Header -->
+                            <div class="text-center mb-6">
+                                <h3 class="text-xl font-bold text-white mb-2"><?= htmlspecialchars($planName) ?></h3>
 
-                                $uiConfig = [
-                                    'Welcome' => ['recommended' => false, 'best_value' => false],
-                                    'Starter Plan' => ['recommended' => false, 'best_value' => false],
-                                    'Intermediate' => ['recommended' => true, 'best_value' => false],
-                                    'Professional' => ['recommended' => false, 'best_value' => true]
-                                ];
-                                $config = $uiConfig[$row['name']] ?? $uiConfig['Welcome'];
-
-                                // Get all features
-                                $allFeatures = explode(",", $row['features']);
-                                $visibleFeatures = array_slice($allFeatures, 0, 6);
-                                $hiddenFeatures = array_slice($allFeatures, 6);
-                        ?>
-                                <div class="pricing-card group relative <?= $config['recommended'] || $config['best_value'] ? 'transform scale-105 z-10 mt-8 lg:mt-4' : '' ?>">
-                                    <?php if ($config['recommended']): ?>
-                                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                                            <div class="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
-                                                RECOMMENDED
-                                            </div>
-                                        </div>
-                                        <div class="bg-gradient-to-br from-ztore-purple/30 to-ztore-pink/30 rounded-3xl p-6 h-full border-2 border-yellow-400/50 backdrop-blur-xl shadow-2xl shadow-yellow-400/20">
-                                        <?php elseif ($config['best_value']): ?>
-                                            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                                                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
-                                                    BEST VALUE
-                                                </div>
-                                            </div>
-                                            <div class="bg-gradient-to-br from-amber-400/30 to-orange-500/30 rounded-3xl p-6 h-full border-2 border-purple-400/50 backdrop-blur-xl shadow-2xl shadow-purple-400/20">
-                                            <?php else: ?>
-                                                <div class="bg-white/5 rounded-3xl p-6 h-full border border-white/10 backdrop-blur-xl transition-all duration-500">
-                                                <?php endif; ?>
-
-                                                <!-- Plan Header -->
-                                                <div class="text-center mb-6">
-                                                    <h3 class="text-xl font-bold text-white mb-2"><?= $row['name'] ?></h3>
-
-                                                    <!-- Discount Badge - Show calculated percentage -->
-                                                    <div class="flex items-center justify-center gap-2 mb-3">
-                                                        <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded"><?= $discountPercentage ?>% OFF</span>
-                                                        <p class="text-green-400 text-xs">Save <?= $currency . number_format($savingsAmount) ?></p>
-                                                    </div>
-
-                                                    <?php if ($showYearlyPriceInMonthly): ?>
-                                                        <!-- Show yearly price for Intermediate and Professional -->
-                                                        <div class="flex flex-col items-center justify-center mb-1">
-                                                            <!-- MRP and Current Price in one line -->
-                                                            <div class="flex items-baseline justify-center gap-2 mb-1">
-                                                                <span class="text-gray-400 text-sm line-through"><?= $currency . $mrpPrice ?></span>
-                                                                <span class="text-3xl font-bold text-white"><?= $currency . $finalPrice ?></span>
-                                                                <span class="text-gray-300">/ <?= $durationLabel ?></span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-sm text-gray-400 mb-2">
-                                                            <span>Equivalent to <?= $currency . $monthlyEquivalentPrice ?>/month</span>
-                                                        </div>
-                                                    <?php else: ?>
-                                                        <!-- Show monthly price for Welcome and Starter -->
-                                                        <div class="flex flex-col items-center justify-center mb-1">
-                                                            <!-- MRP and Current Price in one line -->
-                                                            <div class="flex items-baseline justify-center gap-2 mb-1">
-                                                                <span class="text-gray-400 text-sm line-through"><?= $currency . $mrpPrice ?></span>
-                                                                <span class="text-3xl font-bold text-white"><?= $currency . $finalPrice ?></span>
-                                                                <span class="text-gray-300">/ <?= $durationLabel ?></span>
-                                                            </div>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                    <p class="text-gray-400 text-sm mt-2">
-                                                        <?= $row['description'] ?>
-                                                    </p>
-                                                </div>
-
-                                                <!-- Features -->
-                                                <ul class="space-y-3 mb-4 <?= strtolower(str_replace(' ', '-', $row['name'])) ?>-features">
-                                                    <?php foreach ($visibleFeatures as $index => $value): ?>
-                                                        <?php if ($row['name'] === 'Professional' && $index === 0): ?>
-                                                            <!-- Enhanced Custom Domain Mapping Feature for Professional -->
-                                                            <li class="flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg p-2 border border-purple-400/30">
-                                                                <svg class="w-4 h-4 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                                                                </svg>
-                                                                <span class="text-white text-sm font-semibold"><?= trim($value) ?></span>
-                                                            </li>
-                                                        <?php else: ?>
-                                                            <li class="flex items-center gap-2">
-                                                                <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                                </svg>
-                                                                <span class="text-gray-300 text-sm"><?= trim($value) ?></span>
-                                                            </li>
-                                                        <?php endif; ?>
-                                                    <?php endforeach; ?>
-
-                                                    <!-- Hidden features -->
-                                                    <?php if (!empty($hiddenFeatures)): ?>
-                                                        <div class="<?= strtolower(str_replace(' ', '-', $row['name'])) ?>-hidden-features hidden space-y-3">
-                                                            <?php foreach ($hiddenFeatures as $value): ?>
-                                                                <li class="flex items-center gap-2">
-                                                                    <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                                    </svg>
-                                                                    <span class="text-gray-300 text-sm"><?= trim($value) ?></span>
-                                                                </li>
-                                                            <?php endforeach; ?>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                </ul>
-
-                                                <!-- See More/Less Button -->
-                                                <?php if (!empty($hiddenFeatures)): ?>
-                                                    <div class="text-center mb-4">
-                                                        <button class="see-more-btn <?= strtolower(str_replace(' ', '-', $row['name'])) ?>-see-more <?= $config['recommended'] ? 'text-yellow-400 hover:text-orange-400' : ($config['best_value'] ? 'text-purple-300 hover:text-indigo-300' : 'text-ztore-purple hover:text-ztore-pink') ?> text-sm font-semibold transition-colors duration-300">
-                                                            See More Features ↓
-                                                        </button>
-                                                        <button class="see-less-btn <?= strtolower(str_replace(' ', '-', $row['name'])) ?>-see-less hidden <?= $config['recommended'] ? 'text-yellow-400 hover:text-orange-400' : ($config['best_value'] ? 'text-purple-300 hover:text-indigo-300' : 'text-ztore-purple hover:text-ztore-pink') ?> text-sm font-semibold transition-colors duration-300">
-                                                            See Less Features ↑
-                                                        </button>
-                                                    </div>
-                                                <?php endif; ?>
-
-                                                <!-- CTA Button -->
-                                                <?php
-                                                $buttonClass = "w-full py-3 rounded-xl font-semibold transition-all duration-300 text-sm ";
-                                                if ($config['recommended']) {
-                                                    $buttonClass .= "bg-gradient-to-br from-yellow-400 to-orange-500 text-black shadow-lg hover:scale-105 font-bold";
-                                                } elseif ($config['best_value']) {
-                                                    $buttonClass .= "bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg hover:scale-105 font-bold";
-                                                } else {
-                                                    $buttonClass .= "bg-white/10 text-white border border-white/10 hover:bg-white/20";
-                                                }
-
-                                                // Determine the correct duration parameter for checkout
-                                                $durationParam = $row['plan_duration'];
-                                                ?>
-                                                <a href="<?= $row['id'] == 1 ? SELLER_URL . "register" : SELLER_URL . "register?redirect=" . SELLER_URL . "checkout?plan=" . $row['id'] . "&duration=" . $durationParam ?>"
-                                                    class="<?= $buttonClass ?> block text-center">
-                                                    Choose <?= $row['name'] ?>
-                                                </a>
-                                                </div>
-                                            </div>
-                                    <?php
-                                endforeach;
-                            else :
-                                echo "<p class='text-center text-gray-400 col-span-4'>No plans available.</p>";
-                            endif;
-                                    ?>
-                                        </div>
+                                <!-- Discount Badge -->
+                                <div class="flex items-center justify-center gap-2 mb-3">
+                                    <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded"><?= $discountPercentage ?>% OFF</span>
+                                    <p class="text-green-400 text-xs">Save <?= $currency . number_format($savingsAmount) ?></p>
                                 </div>
 
-                                <!-- Yearly Plans Container -->
-                                <div class="tab-content hidden" id="yearly">
-                                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto">
-                                        <?php
-                                        $plans = [];
-                                        $targetDuration = 12;
-
-                                        // Get ALL yearly plans
-                                        $data = readData("*", "subscription_plans", "$where AND lifetime = 0 AND status = 1 AND duration = $targetDuration ORDER BY CAST(amount AS DECIMAL) ASC");
-                                        while ($row = $data->fetch()) {
-                                            $row['plan_duration'] = (int)$row['duration'];
-                                            $row['amount'] = $row['amount'];
-                                            $plans[$row['id'] . '_' . $targetDuration] = $row;
-                                        }
-
-                                        // Get ALL extra durations for yearly
-                                        $durations = readData(
-                                            "spd.*, sp.name, sp.description, sp.features",
-                                            "subscription_plan_durations spd JOIN subscription_plans sp ON sp.id = spd.plan_id",
-                                            "sp.$where AND spd.duration = $targetDuration"
-                                        );
-
-                                        while ($row = $durations->fetch()) {
-                                            $row['plan_duration'] = (int)$row['duration'];
-                                            $row['amount'] = $row['amount'];
-                                            $plans[$row['plan_id'] . '_' . $targetDuration] = $row;
-                                        }
-
-                                        usort($plans, fn($a, $b) => (float)$a['amount'] <=> (float)$b['amount']);
-
-                                        if (count($plans)) :
-                                            foreach ($plans as $row) :
-                                                $finalPrice = number_format(calculateGst($row['amount'], $gstRate, $gstNumber, $gstType)['getPrice']); // WITH GST
-                                                $durationLabel = ($row['plan_duration'] / 12) . " Year" . (($row['plan_duration'] / 12) > 1 ? "s" : "");
-
-                                                // CALCULATE GST-INCLUSIVE PRICE FOR DISPLAY
-                                                $gstInclusivePrice = calculateGst($row['amount'], $gstRate, $gstNumber, $gstType)['getPrice'];
-
-                                                // CORRECT 3x MRP CALCULATION BASED ON GST-INCLUSIVE PRICE
-                                                $mrpAmount = $gstInclusivePrice * 3; // MRP = GST-Inclusive Price × 3
-                                                $mrpPrice = number_format($mrpAmount);
-                                                $savingsAmount = $mrpAmount - $gstInclusivePrice; // Save Amount = MRP - GST-Inclusive Price
-
-                                                // Calculate actual discount percentage
-                                                $actualDiscountPercentage = round(($savingsAmount / $mrpAmount) * 100);
-                                                $discountPercentage = $actualDiscountPercentage;
-
-                                                $uiConfig = [
-                                                    'Welcome' => ['recommended' => false, 'best_value' => false],
-                                                    'Starter Plan' => ['recommended' => false, 'best_value' => false],
-                                                    'Intermediate' => ['recommended' => true, 'best_value' => false],
-                                                    'Professional' => ['recommended' => false, 'best_value' => true]
-                                                ];
-                                                $config = $uiConfig[$row['name']] ?? $uiConfig['Welcome'];
-
-                                                // Get all features
-                                                $allFeatures = explode(",", $row['features']);
-                                                $visibleFeatures = array_slice($allFeatures, 0, 6);
-                                                $hiddenFeatures = array_slice($allFeatures, 6);
-                                        ?>
-                                                <div class="pricing-card group relative <?= $config['recommended'] || $config['best_value'] ? 'transform scale-105 z-10 mt-8 lg:mt-4' : '' ?>">
-                                                    <?php if ($config['recommended']): ?>
-                                                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                                                            <div class="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
-                                                                RECOMMENDED
-                                                            </div>
-                                                        </div>
-                                                        <div class="bg-gradient-to-br from-ztore-purple/30 to-ztore-pink/30 rounded-3xl p-6 h-full border-2 border-yellow-400/50 backdrop-blur-xl shadow-2xl shadow-yellow-400/20">
-                                                        <?php elseif ($config['best_value']): ?>
-                                                            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                                                                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
-                                                                    BEST VALUE
-                                                                </div>
-                                                            </div>
-                                                            <div class="bg-gradient-to-br from-amber-400/30 to-orange-500/30 rounded-3xl p-6 h-full border-2 border-purple-400/50 backdrop-blur-xl shadow-2xl shadow-purple-400/20">
-                                                            <?php else: ?>
-                                                                <div class="bg-white/5 rounded-3xl p-6 h-full border border-white/10 backdrop-blur-xl transition-all duration-500">
-                                                                <?php endif; ?>
-
-                                                                <!-- Plan Header -->
-                                                                <div class="text-center mb-6">
-                                                                    <h3 class="text-xl font-bold text-white mb-2"><?= $row['name'] ?></h3>
-
-                                                                    <!-- Discount Badge - Show calculated percentage -->
-                                                                    <div class="flex items-center justify-center gap-2 mb-3">
-                                                                        <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded"><?= $discountPercentage ?>% OFF</span>
-                                                                        <p class="text-green-400 text-xs">Save <?= $currency . number_format($savingsAmount) ?></p>
-                                                                    </div>
-
-                                                                    <div class="flex flex-col items-center justify-center mb-1">
-                                                                        <!-- MRP and Current Price in one line -->
-                                                                        <div class="flex items-baseline justify-center gap-2 mb-1">
-                                                                            <span class="text-gray-400 text-sm line-through"><?= $currency . $mrpPrice ?></span>
-                                                                            <span class="text-3xl font-bold text-white"><?= $currency . $finalPrice ?></span>
-                                                                            <span class="text-gray-300">/ <?= $durationLabel ?></span>
-                                                                        </div>
-                                                                    </div>
-                                                                    <p class="text-gray-400 text-sm mt-2">
-                                                                        <?= $row['description'] ?>
-                                                                    </p>
-                                                                </div>
-
-                                                                <!-- Features -->
-                                                                <ul class="space-y-3 mb-4 <?= strtolower(str_replace(' ', '-', $row['name'])) ?>-features">
-                                                                    <?php foreach ($visibleFeatures as $index => $value): ?>
-                                                                        <?php if ($row['name'] === 'Professional' && $index === 0): ?>
-                                                                            <!-- Enhanced Custom Domain Mapping Feature for Professional -->
-                                                                            <li class="flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg p-2 border border-purple-400/30">
-                                                                                <svg class="w-4 h-4 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                                                                                </svg>
-                                                                                <span class="text-white text-sm font-semibold"><?= trim($value) ?></span>
-                                                                            </li>
-                                                                        <?php else: ?>
-                                                                            <li class="flex items-center gap-2">
-                                                                                <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                                                </svg>
-                                                                                <span class="text-gray-300 text-sm"><?= trim($value) ?></span>
-                                                                            </li>
-                                                                        <?php endif; ?>
-                                                                    <?php endforeach; ?>
-
-                                                                    <!-- Hidden features -->
-                                                                    <?php if (!empty($hiddenFeatures)): ?>
-                                                                        <div class="<?= strtolower(str_replace(' ', '-', $row['name'])) ?>-hidden-features hidden space-y-3">
-                                                                            <?php foreach ($hiddenFeatures as $value): ?>
-                                                                                <li class="flex items-center gap-2">
-                                                                                    <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                                                    </svg>
-                                                                                    <span class="text-gray-300 text-sm"><?= trim($value) ?></span>
-                                                                                </li>
-                                                                            <?php endforeach; ?>
-                                                                        </div>
-                                                                    <?php endif; ?>
-                                                                </ul>
-
-                                                                <!-- See More/Less Button -->
-                                                                <?php if (!empty($hiddenFeatures)): ?>
-                                                                    <div class="text-center mb-4">
-                                                                        <button class="see-more-btn <?= strtolower(str_replace(' ', '-', $row['name'])) ?>-see-more <?= $config['recommended'] ? 'text-yellow-400 hover:text-orange-400' : ($config['best_value'] ? 'text-purple-300 hover:text-indigo-300' : 'text-ztore-purple hover:text-ztore-pink') ?> text-sm font-semibold transition-colors duration-300">
-                                                                            See More Features ↓
-                                                                        </button>
-                                                                        <button class="see-less-btn <?= strtolower(str_replace(' ', '-', $row['name'])) ?>-see-less hidden <?= $config['recommended'] ? 'text-yellow-400 hover:text-orange-400' : ($config['best_value'] ? 'text-purple-300 hover:text-indigo-300' : 'text-ztore-purple hover:text-ztore-pink') ?> text-sm font-semibold transition-colors duration-300">
-                                                                            See Less Features ↑
-                                                                        </button>
-                                                                    </div>
-                                                                <?php endif; ?>
-
-                                                                <!-- CTA Button -->
-                                                                <?php
-                                                                $buttonClass = "w-full py-3 rounded-xl font-semibold transition-all duration-300 text-sm ";
-                                                                if ($config['recommended']) {
-                                                                    $buttonClass .= "bg-gradient-to-br from-yellow-400 to-orange-500 text-black shadow-lg hover:scale-105 font-bold";
-                                                                } elseif ($config['best_value']) {
-                                                                    $buttonClass .= "bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg hover:scale-105 font-bold";
-                                                                } else {
-                                                                    $buttonClass .= "bg-white/10 text-white border border-white/10 hover:bg-white/20";
-                                                                }
-                                                                ?>
-                                                                <a href="<?= $row['id'] == 1 ? SELLER_URL . "register" : SELLER_URL . "register?redirect=" . SELLER_URL . "checkout?plan=" . $row['id'] . "&duration=" . $row['plan_duration'] ?>"
-                                                                    class="<?= $buttonClass ?> block text-center">
-                                                                    Choose <?= $row['name'] ?>
-                                                                </a>
-                                                                </div>
-                                                            </div>
-                                                    <?php
-                                                endforeach;
-                                            else :
-                                                echo "<p class='text-center text-gray-400 col-span-4'>No yearly plans available.</p>";
-                                            endif;
-                                                    ?>
-                                                        </div>
-                                                </div>
-
-                                                <!-- Trust Badge -->
-                                                <div class="text-center mt-12">
-                                                    <div class="inline-flex items-center gap-4 text-gray-400 text-sm">
-                                                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                                        </svg>
-                                                        <span>14-day money-back guarantee • Cancel anytime</span>
-                                                    </div>
-                                                </div>
+                                <?php if ($showYearlyPriceInMonthly): ?>
+                                    <!-- Show yearly price for Intermediate and Professional -->
+                                    <div class="flex flex-col items-center justify-center mb-1">
+                                        <!-- MRP and Current Price -->
+                                        <div class="flex items-baseline justify-center gap-2 mb-1">
+                                            <span class="text-gray-400 text-sm line-through"><?= $currency . $mrpPrice ?></span>
+                                            <span class="text-3xl font-bold text-white"><?= $currency . $finalPrice ?></span>
+                                            <span class="text-gray-300">/ <?= $durationLabel ?></span>
+                                        </div>
                                     </div>
-        </section>
-        <script>
-            // Simple Tab Switching with Smooth Animation
-            document.addEventListener('DOMContentLoaded', function() {
-                const tabButtons = document.querySelectorAll('.tab-btn');
-                const tabContents = document.querySelectorAll('.tab-content');
+                                    <div class="text-sm text-gray-400 mb-2">
+                                        <span>Equivalent to <?= $currency . $monthlyEquivalentPrice ?>/month</span>
+                                    </div>
+                                <?php else: ?>
+                                    <!-- Show monthly price for Welcome and Starter -->
+                                    <div class="flex flex-col items-center justify-center mb-1">
+                                        <!-- MRP and Current Price -->
+                                        <div class="flex items-baseline justify-center gap-2 mb-1">
+                                            <span class="text-gray-400 text-sm line-through"><?= $currency . $mrpPrice ?></span>
+                                            <span class="text-3xl font-bold text-white"><?= $currency . $finalPrice ?></span>
+                                            <span class="text-gray-300">/ <?= $durationLabel ?></span>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <p class="text-gray-400 text-sm mt-2">
+                                    <?= htmlspecialchars($planDescription) ?>
+                                </p>
+                            </div>
 
-                // Initialize everything on page load
-                initializeTabSystem();
-                initializeSeeMoreFunctionality();
+                            <!-- Features -->
+                            <ul class="space-y-3 mb-4 <?= $planSlug ?>-features">
+                                <?php foreach ($visibleFeatures as $index => $value): 
+                                    $trimmedValue = trim($value);
+                                    if (empty($trimmedValue)) continue;
+                                ?>
+                                    <?php if ($planName === 'Professional' && $index === 0): ?>
+                                        <!-- Enhanced Custom Domain Mapping Feature for Professional -->
+                                        <li class="flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg p-2 border border-purple-400/30">
+                                            <svg class="w-4 h-4 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                            </svg>
+                                            <span class="text-white text-sm font-semibold"><?= htmlspecialchars($trimmedValue) ?></span>
+                                        </li>
+                                    <?php else: ?>
+                                        <li class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span class="text-gray-300 text-sm"><?= htmlspecialchars($trimmedValue) ?></span>
+                                        </li>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
 
-                function initializeTabSystem() {
-                    tabButtons.forEach(button => {
-                        button.addEventListener('click', function() {
-                            const targetTab = this.getAttribute('data-tab');
+                                <!-- Hidden features -->
+                                <?php if ($hasHiddenFeatures): ?>
+                                    <div class="<?= $planSlug ?>-hidden-features hidden space-y-3">
+                                        <?php foreach ($hiddenFeatures as $value): 
+                                            $trimmedValue = trim($value);
+                                            if (empty($trimmedValue)) continue;
+                                        ?>
+                                            <li class="flex items-center gap-2">
+                                                <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span class="text-gray-300 text-sm"><?= htmlspecialchars($trimmedValue) ?></span>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </ul>
 
-                            // Update button styles
-                            tabButtons.forEach(btn => {
-                                btn.classList.remove('bg-gradient-to-br', 'from-ztore-purple', 'to-ztore-pink', 'text-white');
-                                btn.classList.add('text-gray-300');
-                            });
-                            this.classList.remove('text-gray-300');
-                            this.classList.add('bg-gradient-to-br', 'from-ztore-purple', 'to-ztore-pink', 'text-white');
+                            <!-- See More/Less Button -->
+                            <?php if ($hasHiddenFeatures): ?>
+                                <div class="text-center mb-4">
+                                    <button class="see-more-btn <?= $planSlug ?>-see-more <?= $config['recommended'] ? 'text-yellow-400 hover:text-orange-400' : ($config['best_value'] ? 'text-purple-300 hover:text-indigo-300' : 'text-ztore-purple hover:text-ztore-pink') ?> text-sm font-semibold transition-colors duration-300">
+                                        See More Features ↓
+                                    </button>
+                                    <button class="see-less-btn <?= $planSlug ?>-see-less hidden <?= $config['recommended'] ? 'text-yellow-400 hover:text-orange-400' : ($config['best_value'] ? 'text-purple-300 hover:text-indigo-300' : 'text-ztore-purple hover:text-ztore-pink') ?> text-sm font-semibold transition-colors duration-300">
+                                        See Less Features ↑
+                                    </button>
+                                </div>
+                            <?php endif; ?>
 
-                            // Show/hide tab contents with fade animation
-                            tabContents.forEach(content => {
-                                content.style.opacity = '0';
-                                content.style.transform = 'translateY(20px)';
-                                setTimeout(() => {
-                                    content.classList.add('hidden');
-                                    content.classList.remove('active');
-                                }, 300);
-                            });
-
-                            const targetContent = document.getElementById(targetTab);
-                            if (targetContent) {
-                                setTimeout(() => {
-                                    targetContent.classList.remove('hidden');
-                                    targetContent.classList.add('active');
-                                    setTimeout(() => {
-                                        targetContent.style.opacity = '1';
-                                        targetContent.style.transform = 'translateY(0)';
-
-                                        // Re-initialize see more functionality after tab switch
-                                        setTimeout(initializeSeeMoreFunctionality, 200);
-                                    }, 50);
-                                }, 300);
+                            <!-- CTA Button -->
+                            <?php
+                            $buttonClass = "w-full py-3 rounded-xl font-semibold transition-all duration-300 text-sm ";
+                            if ($config['recommended']) {
+                                $buttonClass .= "bg-gradient-to-br from-yellow-400 to-orange-500 text-black shadow-lg hover:scale-105 font-bold";
+                            } elseif ($config['best_value']) {
+                                $buttonClass .= "bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg hover:scale-105 font-bold";
+                            } else {
+                                $buttonClass .= "bg-white/10 text-white border border-white/10 hover:bg-white/20";
                             }
-                        });
-                    });
+
+                            // Determine checkout URL
+                            if ($planId == 1) {
+                                $checkoutUrl = SELLER_URL . "register";
+                            } else {
+                                $durationParam = $planDuration;
+                                $checkoutUrl = SELLER_URL . "register?redirect=" . SELLER_URL . "checkout?plan=" . $planId . "&duration=" . $durationParam;
+                            }
+                            ?>
+                            <a href="<?= $checkoutUrl ?>" class="<?= $buttonClass ?> block text-center">
+                                Choose <?= htmlspecialchars($planName) ?>
+                            </a>
+                        </div>
+                    </div>
+                <?php
+                    endforeach;
+                else :
+                ?>
+                    <div class="col-span-4 text-center py-12">
+                        <div class="bg-white/5 rounded-2xl p-8 backdrop-blur-xl border border-white/10">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <h3 class="text-xl font-semibold text-gray-300 mb-2">No Plans Available</h3>
+                            <p class="text-gray-400">Please check your subscription plan settings.</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Yearly Plans Container -->
+        <div class="tab-content hidden" id="yearly">
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto">
+                <?php
+                $yearlyTabPlans = [];
+                $targetDuration = 12;
+
+                try {
+                    // Get ALL yearly plans from main table
+                    $yearlyTabData = readData("*", "subscription_plans", "$where AND lifetime = 0 AND status = 1 AND duration = $targetDuration ORDER BY CAST(amount AS DECIMAL) ASC");
+                    if ($yearlyTabData) {
+                        while ($row = $yearlyTabData->fetch()) {
+                            $row['plan_duration'] = (int)($row['duration'] ?? 0);
+                            $row['amount'] = $row['amount'] ?? 0;
+                            $yearlyTabPlans[$row['id'] . '_' . $targetDuration] = $row;
+                        }
+                    }
+
+                    // Get ALL extra durations for yearly
+                    $yearlyTabDurations = readData(
+                        "spd.*, sp.name, sp.description, sp.features, sp.id",
+                        "subscription_plan_durations spd JOIN subscription_plans sp ON sp.id = spd.plan_id",
+                        "sp.$where AND spd.duration = $targetDuration"
+                    );
+
+                    if ($yearlyTabDurations) {
+                        while ($row = $yearlyTabDurations->fetch()) {
+                            $row['plan_duration'] = (int)($row['duration'] ?? 0);
+                            $row['amount'] = $row['amount'] ?? 0;
+                            $yearlyTabPlans[$row['plan_id'] . '_' . $targetDuration] = $row;
+                        }
+                    }
+
+                    usort($yearlyTabPlans, fn($a, $b) => ((float)($a['amount'] ?? 0)) <=> ((float)($b['amount'] ?? 0)));
+
+                } catch (Exception $e) {
+                    error_log("Error fetching yearly plans: " . $e->getMessage());
+                    $yearlyTabPlans = [];
                 }
 
-                function initializeSeeMoreFunctionality() {
-                    console.log('Initializing See More functionality...');
+                if (count($yearlyTabPlans) > 0) :
+                    foreach ($yearlyTabPlans as $row) :
+                        // Validate required fields
+                        $planName = $row['name'] ?? 'Unknown Plan';
+                        $planAmount = (float)($row['amount'] ?? 0);
+                        $planDuration = (int)($row['plan_duration'] ?? ($row['duration'] ?? 12));
+                        $planId = $row['id'] ?? 0;
+                        $planDescription = $row['description'] ?? '';
+                        $planFeatures = $row['features'] ?? '';
 
-                    // Remove any existing event listeners to prevent duplicates
-                    document.querySelectorAll('.see-more-btn, .see-less-btn').forEach(btn => {
-                        btn.replaceWith(btn.cloneNode(true));
-                    });
+                        // Calculate GST
+                        $gstCalculation = calculateGst($planAmount, $gstRate, $gstNumber, $gstType);
+                        $gstInclusivePrice = $gstCalculation['getPrice'] ?? $planAmount;
+                        
+                        // Format prices
+                        $finalPrice = number_format($gstInclusivePrice);
+                        
+                        // Calculate MRP and savings
+                        $mrpAmount = $gstInclusivePrice * 3;
+                        $mrpPrice = number_format($mrpAmount);
+                        $savingsAmount = $mrpAmount - $gstInclusivePrice;
+                        $discountPercentage = round(($savingsAmount / $mrpAmount) * 100);
 
-                    // Get all see more/less buttons in the CURRENTLY ACTIVE tab
-                    const activeTab = document.querySelector('.tab-content.active');
-                    if (!activeTab) return;
+                        // Set duration label
+                        $years = $planDuration / 12;
+                        $durationLabel = $years . " Year" . ($years > 1 ? "s" : "");
 
-                    const seeMoreButtons = activeTab.querySelectorAll('.see-more-btn');
-                    const seeLessButtons = activeTab.querySelectorAll('.see-less-btn');
+                        // UI Configuration
+                        $uiConfig = [
+                            'Welcome' => ['recommended' => false, 'best_value' => false],
+                            'Starter Plan' => ['recommended' => false, 'best_value' => false],
+                            'Intermediate' => ['recommended' => true, 'best_value' => false],
+                            'Professional' => ['recommended' => false, 'best_value' => true]
+                        ];
+                        $config = $uiConfig[$planName] ?? $uiConfig['Welcome'];
 
-                    console.log('Found see more buttons:', seeMoreButtons.length);
-                    console.log('Found see less buttons:', seeLessButtons.length);
+                        // Process features
+                        $allFeatures = !empty($planFeatures) ? explode(",", $planFeatures) : [];
+                        $visibleFeatures = array_slice($allFeatures, 0, 6);
+                        $hiddenFeatures = array_slice($allFeatures, 6);
+                        $hasHiddenFeatures = !empty($hiddenFeatures);
 
-                    // Add click event to See More buttons
-                    seeMoreButtons.forEach(button => {
-                        button.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
+                        // CSS class names
+                        $planSlug = strtolower(str_replace(' ', '-', $planName));
+                ?>
+                <div class="pricing-card group relative <?= $config['recommended'] || $config['best_value'] ? 'transform scale-105 z-10 mt-8 lg:mt-4' : '' ?>">
+                    <?php if ($config['recommended']): ?>
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
+                            <div class="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
+                                RECOMMENDED
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-ztore-purple/30 to-ztore-pink/30 rounded-3xl p-6 h-full border-2 border-yellow-400/50 backdrop-blur-xl shadow-2xl shadow-yellow-400/20">
+                    <?php elseif ($config['best_value']): ?>
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
+                            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
+                                BEST VALUE
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-amber-400/30 to-orange-500/30 rounded-3xl p-6 h-full border-2 border-purple-400/50 backdrop-blur-xl shadow-2xl shadow-purple-400/20">
+                    <?php else: ?>
+                        <div class="bg-white/5 rounded-3xl p-6 h-full border border-white/10 backdrop-blur-xl transition-all duration-500">
+                    <?php endif; ?>
 
-                            const buttonClass = this.className;
-                            const planTypeMatch = buttonClass.match(/(welcome|starter-plan|intermediate|professional)-see-more/);
+                            <!-- Plan Header -->
+                            <div class="text-center mb-6">
+                                <h3 class="text-xl font-bold text-white mb-2"><?= htmlspecialchars($planName) ?></h3>
 
-                            if (planTypeMatch) {
-                                const planType = planTypeMatch[1];
-                                console.log('See More clicked for:', planType);
+                                <!-- Discount Badge -->
+                                <div class="flex items-center justify-center gap-2 mb-3">
+                                    <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded"><?= $discountPercentage ?>% OFF</span>
+                                    <p class="text-green-400 text-xs">Save <?= $currency . number_format($savingsAmount) ?></p>
+                                </div>
 
-                                const hiddenFeatures = activeTab.querySelector(`.${planType}-hidden-features`);
-                                const seeLessBtn = activeTab.querySelector(`.${planType}-see-less`);
+                                <div class="flex flex-col items-center justify-center mb-1">
+                                    <!-- MRP and Current Price -->
+                                    <div class="flex items-baseline justify-center gap-2 mb-1">
+                                        <span class="text-gray-400 text-sm line-through"><?= $currency . $mrpPrice ?></span>
+                                        <span class="text-3xl font-bold text-white"><?= $currency . $finalPrice ?></span>
+                                        <span class="text-gray-300">/ <?= $durationLabel ?></span>
+                                    </div>
+                                </div>
+                                
+                                <p class="text-gray-400 text-sm mt-2">
+                                    <?= htmlspecialchars($planDescription) ?>
+                                </p>
+                            </div>
 
-                                if (hiddenFeatures && seeLessBtn) {
-                                    // Show hidden features with animation
-                                    hiddenFeatures.classList.remove('hidden');
-                                    this.classList.add('hidden');
-                                    seeLessBtn.classList.remove('hidden');
+                            <!-- Features -->
+                            <ul class="space-y-3 mb-4 <?= $planSlug ?>-features">
+                                <?php foreach ($visibleFeatures as $index => $value): 
+                                    $trimmedValue = trim($value);
+                                    if (empty($trimmedValue)) continue;
+                                ?>
+                                    <?php if ($planName === 'Professional' && $index === 0): ?>
+                                        <!-- Enhanced Custom Domain Mapping Feature for Professional -->
+                                        <li class="flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg p-2 border border-purple-400/30">
+                                            <svg class="w-4 h-4 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                            </svg>
+                                            <span class="text-white text-sm font-semibold"><?= htmlspecialchars($trimmedValue) ?></span>
+                                        </li>
+                                    <?php else: ?>
+                                        <li class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span class="text-gray-300 text-sm"><?= htmlspecialchars($trimmedValue) ?></span>
+                                        </li>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
 
-                                    // Animate the expansion
-                                    requestAnimationFrame(() => {
-                                        hiddenFeatures.style.maxHeight = hiddenFeatures.scrollHeight + 'px';
-                                        hiddenFeatures.style.opacity = '1';
-                                    });
-                                }
+                                <!-- Hidden features -->
+                                <?php if ($hasHiddenFeatures): ?>
+                                    <div class="<?= $planSlug ?>-hidden-features hidden space-y-3">
+                                        <?php foreach ($hiddenFeatures as $value): 
+                                            $trimmedValue = trim($value);
+                                            if (empty($trimmedValue)) continue;
+                                        ?>
+                                            <li class="flex items-center gap-2">
+                                                <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span class="text-gray-300 text-sm"><?= htmlspecialchars($trimmedValue) ?></span>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </ul>
+
+                            <!-- See More/Less Button -->
+                            <?php if ($hasHiddenFeatures): ?>
+                                <div class="text-center mb-4">
+                                    <button class="see-more-btn <?= $planSlug ?>-see-more <?= $config['recommended'] ? 'text-yellow-400 hover:text-orange-400' : ($config['best_value'] ? 'text-purple-300 hover:text-indigo-300' : 'text-ztore-purple hover:text-ztore-pink') ?> text-sm font-semibold transition-colors duration-300">
+                                        See More Features ↓
+                                    </button>
+                                    <button class="see-less-btn <?= $planSlug ?>-see-less hidden <?= $config['recommended'] ? 'text-yellow-400 hover:text-orange-400' : ($config['best_value'] ? 'text-purple-300 hover:text-indigo-300' : 'text-ztore-purple hover:text-ztore-pink') ?> text-sm font-semibold transition-colors duration-300">
+                                        See Less Features ↑
+                                    </button>
+                                </div>
+                            <?php endif; ?>
+
+                            <!-- CTA Button -->
+                            <?php
+                            $buttonClass = "w-full py-3 rounded-xl font-semibold transition-all duration-300 text-sm ";
+                            if ($config['recommended']) {
+                                $buttonClass .= "bg-gradient-to-br from-yellow-400 to-orange-500 text-black shadow-lg hover:scale-105 font-bold";
+                            } elseif ($config['best_value']) {
+                                $buttonClass .= "bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg hover:scale-105 font-bold";
+                            } else {
+                                $buttonClass .= "bg-white/10 text-white border border-white/10 hover:bg-white/20";
                             }
-                        });
-                    });
 
-                    // Add click event to See Less buttons
-                    seeLessButtons.forEach(button => {
-                        button.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-
-                            const buttonClass = this.className;
-                            const planTypeMatch = buttonClass.match(/(welcome|starter-plan|intermediate|professional)-see-less/);
-
-                            if (planTypeMatch) {
-                                const planType = planTypeMatch[1];
-                                console.log('See Less clicked for:', planType);
-
-                                const hiddenFeatures = activeTab.querySelector(`.${planType}-hidden-features`);
-                                const seeMoreBtn = activeTab.querySelector(`.${planType}-see-more`);
-
-                                if (hiddenFeatures && seeMoreBtn) {
-                                    // Hide features with animation
-                                    hiddenFeatures.style.maxHeight = '0';
-                                    hiddenFeatures.style.opacity = '0';
-
-                                    setTimeout(() => {
-                                        hiddenFeatures.classList.add('hidden');
-                                        this.classList.add('hidden');
-                                        seeMoreBtn.classList.remove('hidden');
-                                    }, 300);
-                                }
+                            // Determine checkout URL
+                            if ($planId == 1) {
+                                $checkoutUrl = SELLER_URL . "register";
+                            } else {
+                                $checkoutUrl = SELLER_URL . "register?redirect=" . SELLER_URL . "checkout?plan=" . $planId . "&duration=" . $planDuration;
                             }
-                        });
-                    });
+                            ?>
+                            <a href="<?= $checkoutUrl ?>" class="<?= $buttonClass ?> block text-center">
+                                Choose <?= htmlspecialchars($planName) ?>
+                            </a>
+                        </div>
+                    </div>
+                <?php
+                    endforeach;
+                else :
+                ?>
+                    <div class="col-span-4 text-center py-12">
+                        <div class="bg-white/5 rounded-2xl p-8 backdrop-blur-xl border border-white/10">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <h3 class="text-xl font-semibold text-gray-300 mb-2">No Yearly Plans Available</h3>
+                            <p class="text-gray-400">Please check your yearly subscription plan settings.</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Trust Badge -->
+        <div class="text-center mt-12">
+            <div class="inline-flex items-center gap-4 text-gray-400 text-sm">
+                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>14-day money-back guarantee • Cancel anytime</span>
+            </div>
+        </div>
+        
+        <?php
+        } catch (Exception $e) {
+            echo '<div class="text-center text-red-500 p-8">Error loading pricing plans: ' . htmlspecialchars($e->getMessage()) . '</div>';
+        }
+        ?>
+    </div>
+</section>
+
+<!-- JavaScript (Improved) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    // Initialize tab system
+    function initializeTabSystem() {
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetTab = this.getAttribute('data-tab');
+                
+                // Update button styles
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('bg-gradient-to-br', 'from-ztore-purple', 'to-ztore-pink', 'text-white');
+                    btn.classList.add('text-gray-300');
+                });
+                this.classList.remove('text-gray-300');
+                this.classList.add('bg-gradient-to-br', 'from-ztore-purple', 'to-ztore-pink', 'text-white');
+
+                // Show/hide tab contents with animation
+                tabContents.forEach(content => {
+                    content.style.opacity = '0';
+                    content.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        content.classList.add('hidden');
+                        content.classList.remove('active');
+                    }, 300);
+                });
+
+                const targetContent = document.getElementById(targetTab);
+                if (targetContent) {
+                    setTimeout(() => {
+                        targetContent.classList.remove('hidden');
+                        targetContent.classList.add('active');
+                        setTimeout(() => {
+                            targetContent.style.opacity = '1';
+                            targetContent.style.transform = 'translateY(0)';
+                            // Re-initialize see more functionality
+                            initializeSeeMoreFunctionality(targetContent);
+                        }, 50);
+                    }, 300);
                 }
+            });
+        });
+    }
 
-                // Debug function
-                function debugSeeMoreButtons() {
-                    const activeTab = document.querySelector('.tab-content.active');
-                    if (activeTab) {
-                        const seeMoreButtons = activeTab.querySelectorAll('.see-more-btn');
-                        const seeLessButtons = activeTab.querySelectorAll('.see-less-btn');
-                        console.log('Active tab See More buttons:', seeMoreButtons.length);
-                        console.log('Active tab See Less buttons:', seeLessButtons.length);
+    // Initialize see more functionality for a specific tab
+    function initializeSeeMoreFunctionality(activeTab) {
+        if (!activeTab) return;
+        
+        const seeMoreButtons = activeTab.querySelectorAll('.see-more-btn');
+        const seeLessButtons = activeTab.querySelectorAll('.see-less-btn');
+
+        // Add click event to See More buttons
+        seeMoreButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const buttonClass = this.className;
+                const planTypeMatch = buttonClass.match(/(welcome|starter-plan|intermediate|professional)-see-more/);
+
+                if (planTypeMatch) {
+                    const planType = planTypeMatch[1];
+                    const hiddenFeatures = activeTab.querySelector(`.${planType}-hidden-features`);
+                    const seeLessBtn = activeTab.querySelector(`.${planType}-see-less`);
+
+                    if (hiddenFeatures && seeLessBtn) {
+                        // Show hidden features with animation
+                        hiddenFeatures.classList.remove('hidden');
+                        this.classList.add('hidden');
+                        seeLessBtn.classList.remove('hidden');
+
+                        // Animate the expansion
+                        requestAnimationFrame(() => {
+                            hiddenFeatures.style.maxHeight = hiddenFeatures.scrollHeight + 'px';
+                            hiddenFeatures.style.opacity = '1';
+                        });
                     }
                 }
-
-                // Run debug after initialization
-                setTimeout(debugSeeMoreButtons, 1000);
             });
-        </script>
+        });
 
-        <style>
-            /* Smooth See More/Less Animations */
-            .animate-feature-slideDown {
-                animation: featureSlideDown 0.4s ease-out forwards;
-            }
+        // Add click event to See Less buttons
+        seeLessButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-            .animate-feature-slideUp {
-                animation: featureSlideUp 0.4s ease-out forwards;
-            }
+                const buttonClass = this.className;
+                const planTypeMatch = buttonClass.match(/(welcome|starter-plan|intermediate|professional)-see-less/);
 
-            @keyframes featureSlideDown {
-                0% {
-                    opacity: 0;
-                    max-height: 0;
-                    transform: translateY(-10px);
+                if (planTypeMatch) {
+                    const planType = planTypeMatch[1];
+                    const hiddenFeatures = activeTab.querySelector(`.${planType}-hidden-features`);
+                    const seeMoreBtn = activeTab.querySelector(`.${planType}-see-more`);
+
+                    if (hiddenFeatures && seeMoreBtn) {
+                        // Hide features with animation
+                        hiddenFeatures.style.maxHeight = '0';
+                        hiddenFeatures.style.opacity = '0';
+
+                        setTimeout(() => {
+                            hiddenFeatures.classList.add('hidden');
+                            this.classList.add('hidden');
+                            seeMoreBtn.classList.remove('hidden');
+                        }, 300);
+                    }
                 }
+            });
+        });
+    }
 
-                100% {
-                    opacity: 1;
-                    max-height: 1000px;
-                    transform: translateY(0);
-                }
-            }
+    // Initialize on page load
+    initializeTabSystem();
+    
+    // Initialize see more for the initially active tab
+    const initialActiveTab = document.querySelector('.tab-content.active');
+    if (initialActiveTab) {
+        initializeSeeMoreFunctionality(initialActiveTab);
+    }
+});
+</script>
 
-            @keyframes featureSlideUp {
-                0% {
-                    opacity: 1;
-                    max-height: 1000px;
-                    transform: translateY(0);
-                }
+<!-- CSS (Keep the same) -->
+<style>
+/* Smooth See More/Less Animations */
+.animate-feature-slideDown {
+    animation: featureSlideDown 0.4s ease-out forwards;
+}
 
-                100% {
-                    opacity: 0;
-                    max-height: 0;
-                    transform: translateY(-10px);
-                }
-            }
+.animate-feature-slideUp {
+    animation: featureSlideUp 0.4s ease-out forwards;
+}
 
-            /* Ensure smooth transitions for hidden features */
-            .welcome-hidden-features,
-            .starter-plan-hidden-features,
-            .intermediate-hidden-features,
-            .professional-hidden-features {
-                overflow: hidden;
-                max-height: 0;
-                opacity: 0;
-                transition: all 0.4s ease-in-out;
-            }
+@keyframes featureSlideDown {
+    0% {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        max-height: 1000px;
+        transform: translateY(0);
+    }
+}
 
-            /* Button hover effects */
-            .see-more-btn,
-            .see-less-btn {
-                transition: all 0.3s ease;
-                cursor: pointer;
-            }
+@keyframes featureSlideUp {
+    0% {
+        opacity: 1;
+        max-height: 1000px;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+}
 
-            .see-more-btn:hover,
-            .see-less-btn:hover {
-                transform: translateY(-2px);
-            }
+/* Ensure smooth transitions for hidden features */
+.welcome-hidden-features,
+.starter-plan-hidden-features,
+.intermediate-hidden-features,
+.professional-hidden-features {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: all 0.4s ease-in-out;
+}
 
-            /* Responsive spacing for pricing cards */
-            @media (max-width: 1024px) {
-                .pricing-card {
-                    margin-bottom: 1rem;
-                }
-            }
+/* Button hover effects */
+.see-more-btn,
+.see-less-btn {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
 
-            @media (max-width: 768px) {
-                .pricing-card {
-                    margin-bottom: 1.5rem;
-                }
-            }
+.see-more-btn:hover,
+.see-less-btn:hover {
+    transform: translateY(-2px);
+}
 
-            /* Smooth tab transitions */
-            .tab-content {
-                transition: all 0.3s ease-in-out;
-            }
-        </style>
+/* Responsive spacing for pricing cards */
+@media (max-width: 1024px) {
+    .pricing-card {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .pricing-card {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Smooth tab transitions */
+.tab-content {
+    transition: all 0.3s ease-in-out;
+}
+</style>
 
         <!-- Theme Portfolio Section -->
         <section id="themes" class="theme-portfolio py-16 px-4 sm:px-6 relative overflow-hidden">
