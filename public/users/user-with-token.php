@@ -6,12 +6,10 @@ header("Content-Type: application/json");
 require_once "../../config/config.php";
 require_once "../../src/database.php";
 
-// ACCEPT TOKEN FROM COOKIE OR JSON
 $raw = file_get_contents("php://input");
 $input = json_decode($raw, true);
 
-$token = $_COOKIE["token"] 
-    ?? ($input["token"] ?? "");
+$token = $_COOKIE["token"] ?? ($input["token"] ?? "");
 
 if (!$token) {
     echo json_encode(["success" => false, "message" => "Missing token"]);
@@ -19,6 +17,8 @@ if (!$token) {
 }
 
 $pdo = getDbConnection();
+
+// Fetch user by token
 $stmt = $pdo->prepare("SELECT * FROM users WHERE api_token = ? LIMIT 1");
 $stmt->execute([$token]);
 $user = $stmt->fetchObject();
@@ -26,6 +26,29 @@ $user = $stmt->fetchObject();
 if (!$user) {
     echo json_encode(["success" => false, "message" => "Invalid token"]);
     exit;
+}
+
+// Fetch site settings (logo, favicon, etc)
+$st = $pdo->prepare("SELECT * FROM site_settings WHERE user_id = :id LIMIT 1");
+$st->execute([":id" => $user->id]);
+$siteSettings = $st->fetch(PDO::FETCH_ASSOC);
+
+// Base uploads URL
+$baseUrl = "http://localhost/managerbp/public/uploads/";
+
+// Add full URLs
+if ($siteSettings) {
+    $siteSettings["logo_url"] = $siteSettings["logo"]
+        ? $baseUrl . $siteSettings["logo"]
+        : null;
+
+    $siteSettings["favicon_url"] = $siteSettings["favicon"]
+        ? $baseUrl . $siteSettings["favicon"]
+        : null;
+
+    $siteSettings["sharing_image_preview_url"] = $siteSettings["sharing_image_preview"]
+        ? $baseUrl . $siteSettings["sharing_image_preview"]
+        : null;
 }
 
 echo json_encode([
@@ -39,5 +62,6 @@ echo json_encode([
         "image"     => $user->image,
         "siteSlug"  => $user->site_slug,
         "siteName"  => $user->site_name,
+        "siteSettings" => $siteSettings ?? []
     ]
 ]);
