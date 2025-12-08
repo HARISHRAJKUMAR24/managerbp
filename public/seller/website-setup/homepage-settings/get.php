@@ -8,9 +8,10 @@ require_once "../../../../src/database.php";
 
 $pdo = getDbConnection();
 
-$public_user_id = $_GET["user_id"] ?? null;
+// GET REAL USER ID DIRECTLY FROM REQUEST
+$realUser = $_GET["user_id"] ?? null;
 
-if (!$public_user_id) {
+if (!$realUser) {
     echo json_encode([
         "success" => false,
         "message" => "user_id missing"
@@ -18,9 +19,9 @@ if (!$public_user_id) {
     exit;
 }
 
-// Convert PUBLIC → REAL primary key
-$stmt = $pdo->prepare("SELECT id FROM users WHERE user_id = :uid LIMIT 1");
-$stmt->execute([":uid" => $public_user_id]);
+// VERIFY USER EXISTS USING REAL PRIMARY KEY
+$stmt = $pdo->prepare("SELECT id FROM users WHERE id = :uid LIMIT 1");
+$stmt->execute([":uid" => $realUser]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
@@ -28,11 +29,9 @@ if (!$user) {
     exit;
 }
 
-$realUser = $user["id"];
-
-// GET header settings
+// GET homepage settings
 $stmt = $pdo->prepare("
-    SELECT hero_title, hero_description, hero_image
+    SELECT id, hero_title, hero_description, hero_image
     FROM website_settings
     WHERE user_id = :uid
 ");
@@ -51,7 +50,7 @@ $baseURL = "http://localhost/managerbp/public/uploads/";
 
 $data["hero_image_url"] = $data["hero_image"]
     ? $baseURL . $data["hero_image"]
-    : null;
+    : "";
 
 $data["user_id"] = $realUser;
 

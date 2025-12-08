@@ -26,7 +26,9 @@ $file = $_FILES["file"];
 $ext = pathinfo($file["name"], PATHINFO_EXTENSION);
 
 $filename = "hero_" . time() . "." . $ext;
-$uploadDir = "../../../uploads/sellers/$user_id/website/";
+
+// ⭐ FIXED FOLDER
+$uploadDir = "../../../uploads/sellers/$user_id/website-settings/homepage/";
 
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0777, true);
@@ -34,10 +36,11 @@ if (!is_dir($uploadDir)) {
 
 $path = $uploadDir . $filename;
 
+// ⭐ FIXED RETURN PATH
 if (move_uploaded_file($file["tmp_name"], $path)) {
     echo json_encode([
         "success" => true,
-        "filename" => "sellers/$user_id/website/" . $filename
+        "filename" => "sellers/$user_id/website-settings/homepage/" . $filename
     ]);
 } else {
     echo json_encode(["success" => false, "message" => "Upload failed"]);

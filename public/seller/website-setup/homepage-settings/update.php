@@ -10,33 +10,48 @@ $pdo = getDbConnection();
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-$user_id = $data["user_id"] ?? null;
+$realUser = $data["user_id"] ?? null; // REAL PRIMARY KEY from Next.js cookie
+
 $hero_title = $data["hero_title"] ?? "";
 $hero_description = $data["hero_description"] ?? "";
 $hero_image = $data["hero_image"] ?? "";
 
-if (!$user_id) {
+if (!$realUser) {
     echo json_encode(["success" => false, "message" => "Missing user_id"]);
     exit;
 }
 
+// VALIDATE USER EXISTS
+$stmt = $pdo->prepare("SELECT id FROM users WHERE id = :uid LIMIT 1");
+$stmt->execute([":uid" => $realUser]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$user) {
+    echo json_encode(["success" => false, "message" => "Invalid user"]);
+    exit;
+}
+
+// CHECK IF ROW EXISTS FOR THIS REAL USER ID
 $stmt = $pdo->prepare("SELECT id FROM website_settings WHERE user_id = :uid");
-$stmt->execute([":uid" => $user_id]);
+$stmt->execute([":uid" => $realUser]);
 
 if ($stmt->fetch()) {
+    // UPDATE
     $sql = "UPDATE website_settings SET 
             hero_title = :title,
             hero_description = :description,
             hero_image = :image
             WHERE user_id = :uid";
 } else {
+    // INSERT
     $sql = "INSERT INTO website_settings 
             (user_id, hero_title, hero_description, hero_image)
             VALUES (:uid, :title, :description, :image)";
 }
 
+// EXECUTE
 $pdo->prepare($sql)->execute([
-    ":uid" => $user_id,
+    ":uid" => $realUser,
     ":title" => $hero_title,
     ":description" => $hero_description,
     ":image" => $hero_image
@@ -44,5 +59,5 @@ $pdo->prepare($sql)->execute([
 
 echo json_encode([
     "success" => true,
-    "message" => "Header settings updated successfully"
+    "message" => "Homepage settings updated successfully"
 ]);
