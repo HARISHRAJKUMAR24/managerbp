@@ -2,10 +2,9 @@
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header("Content-Type: application/json");
+header("Access-Control-Allow-Headers: Content-Type");
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if ($_SERVER['REQUEST_METHOD'] === "OPTIONS") {
     http_response_code(200);
     exit();
 }
@@ -13,42 +12,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $user_id = $_GET["user_id"] ?? null;
 
 if (!$user_id) {
-    echo json_encode(["success" => false, "message" => "user_id missing"]);
+    echo json_encode(["success" => false, "message" => "Missing user_id"]);
     exit();
-}
-
-$year = date("Y");
-$month = date("m");
-$day = date("d");
-
-// MAIN IMAGE PATH: services/main_image/user_id/year/month/day/
-$relativePath = "services/main_image/$user_id/$year/$month/$day/";
-$uploadDir = "../../../public/uploads/" . $relativePath;
-
-if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0777, true);
 }
 
 if (!isset($_FILES["file"])) {
-    echo json_encode(["success" => false, "message" => "No file received"]);
+    echo json_encode(["success" => false, "message" => "No file uploaded"]);
     exit();
 }
 
-$file = $_FILES["file"];
-$ext = pathinfo($file["name"], PATHINFO_EXTENSION);
-$filename = uniqid("main_") . "." . $ext;
+$today = date("Y/m/d");
 
-$target = $uploadDir . $filename;
+// NEW PATH (correct)
+$basePath = __DIR__ . "/../../../public/uploads/sellers/$user_id/services/$today";
 
-if (move_uploaded_file($file["tmp_name"], $target)) {
-    // Store relative path
-    $relativeFilePath = $relativePath . $filename;
-    
-    echo json_encode([
-        "success" => true,
-        "filename" => $relativeFilePath
-    ]);
-} else {
-    echo json_encode(["success" => false, "message" => "Upload failed"]);
+if (!is_dir($basePath)) {
+    mkdir($basePath, 0777, true);
 }
+
+$extension = pathinfo($_FILES["file"]["name"], PATHINFO_EXTENSION);
+$filename = "srv_" . uniqid() . "." . $extension;
+
+$fullPath = "$basePath/$filename";
+move_uploaded_file($_FILES["file"]["tmp_name"], $fullPath);
+
+// DB relative path (clean)
+$dbPath = "sellers/$user_id/services/$today/$filename";
+
+echo json_encode([
+    "success" => true,
+    "filename" => $dbPath
+]);
 ?>

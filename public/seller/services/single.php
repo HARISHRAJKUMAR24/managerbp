@@ -7,6 +7,7 @@ require_once "../../../config/config.php";
 require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
+
 $service_id_param = $_GET["service_id"] ?? null;
 
 if (!$service_id_param) {
@@ -17,41 +18,79 @@ if (!$service_id_param) {
 $baseUrl = "http://localhost/managerbp/public/uploads/";
 
 try {
-    // Get main service data
-    $serviceStmt = $pdo->prepare("
+
+    // -----------------------------------------
+    // Fetch main service record
+    // -----------------------------------------
+    $stmt = $pdo->prepare("
         SELECT *, 
-        CASE WHEN image IS NULL OR image = '' THEN NULL 
-             ELSE CONCAT('$baseUrl', image) END AS image
-        FROM services 
+        CASE 
+            WHEN image IS NULL OR image = '' THEN NULL 
+            ELSE CONCAT('$baseUrl', image) 
+        END AS full_image
+        FROM services
         WHERE service_id = :sid
     ");
-    $serviceStmt->execute([":sid" => $service_id_param]);
-    $service = $serviceStmt->fetch(PDO::FETCH_ASSOC);
-    
+    $stmt->execute([":sid" => $service_id_param]);
+    $service = $stmt->fetch(PDO::FETCH_ASSOC);
+
     if (!$service) {
         echo json_encode(["success" => false, "message" => "Service not found"]);
         exit();
     }
-    
-    // Get additional images
-    $imagesStmt = $pdo->prepare("
+
+    // ----------------------------------------------------
+    // Normalize keys to match frontend naming conventions
+    // ----------------------------------------------------
+    $serviceData = [
+        "id"                => $service["id"],
+        "service_id"        => $service["service_id"],
+        "user_id"           => $service["user_id"],
+        "name"              => $service["name"],
+        "slug"              => $service["slug"],
+        "amount"            => $service["amount"],
+        "previousAmount"    => $service["previous_amount"],
+        "categoryId"        => $service["category_id"],
+        "timeSlotInterval"  => $service["time_slot_interval"],
+        "intervalType"      => $service["interval_type"],
+        "description"       => $service["description"],
+        "gstPercentage"     => $service["gst_percentage"],
+        "metaTitle"         => $service["meta_title"],
+        "metaDescription"   => $service["meta_description"],
+        "status"            => $service["status"],
+        "image"             => $service["full_image"],   // full URL
+    ];
+
+    // ----------------------------------------------------
+    // Get additional images — return as objects, not strings
+    // ----------------------------------------------------
+    $imgStmt = $pdo->prepare("
         SELECT 
-        CASE WHEN image IS NULL OR image = '' THEN NULL 
-             ELSE CONCAT('$baseUrl', image) END AS image
-        FROM service_images 
-        WHERE service_id = :service_id 
+            CASE 
+                WHEN image IS NULL OR image = '' THEN NULL
+                ELSE CONCAT('$baseUrl', image)
+            END AS full_image
+        FROM service_images
+        WHERE service_id = :sid
         ORDER BY id
     ");
-    $imagesStmt->execute([":service_id" => $service['id']]);
-    $additionalImages = $imagesStmt->fetchAll(PDO::FETCH_COLUMN, 0);
-    
-    $service["additionalImages"] = $additionalImages ?: [];
-    
+    $imgStmt->execute([":sid" => $service["id"]]);
+
+    $images = $imgStmt->fetchAll(PDO::FETCH_COLUMN, 0);
+
+    // Convert to object format: [{ image: "URL" }]
+    $serviceData["additionalImages"] = array_map(function($img) {
+        return ["image" => $img];
+    }, $images);
+
+    // ----------------------------------------------------
+    // Final response
+    // ----------------------------------------------------
     echo json_encode([
         "success" => true,
-        "data" => $service
+        "data" => $serviceData
     ]);
-    
+
 } catch (Exception $e) {
     echo json_encode([
         "success" => false,

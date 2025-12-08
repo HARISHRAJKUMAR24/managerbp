@@ -15,23 +15,54 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-$service_id = $_GET["service_id"] ?? null;
+$service_uid = $_GET["service_id"] ?? null;
 
-if (!$service_id) {
+if (!$service_uid) {
     echo json_encode(["success" => false, "message" => "service_id missing"]);
     exit();
 }
 
-// Delete main service
-$stmt = $pdo->prepare("DELETE FROM services WHERE service_id = :sid");
-$stmt->execute(["sid" => $service_id]);
+// 1️⃣ Fetch numeric ID + image paths before deleting
+$stmt = $pdo->prepare("SELECT id, image FROM services WHERE service_id = ?");
+$stmt->execute([$service_uid]);
+$service = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Also delete additional images table
-$pdo->prepare("DELETE FROM service_images WHERE service_id = ?")->execute([$service_id]);
+if (!$service) {
+    echo json_encode(["success" => false, "message" => "Service not found"]);
+    exit();
+}
 
-$deleted = $stmt->rowCount() > 0;
+$service_numeric_id = $service["id"];
+$main_image = $service["image"];
+
+// Fetch additional images
+$imgStmt = $pdo->prepare("SELECT image FROM service_images WHERE service_id = ?");
+$imgStmt->execute([$service_numeric_id]);
+$additional_images = $imgStmt->fetchAll(PDO::FETCH_COLUMN);
+
+$basePath = __DIR__ . "/../../../public/uploads/";
+
+// 2️⃣ Delete main image file
+if ($main_image && file_exists($basePath . $main_image)) {
+    unlink($basePath . $main_image);
+}
+
+// 3️⃣ Delete additional image files
+foreach ($additional_images as $img) {
+    if (!empty($img) && file_exists($basePath . $img)) {
+        unlink($basePath . $img);
+    }
+}
+
+// 4️⃣ Delete DB records
+$pdo->prepare("DELETE FROM service_images WHERE service_id = ?")
+    ->execute([$service_numeric_id]);
+
+$pdo->prepare("DELETE FROM services WHERE service_id = ?")
+    ->execute([$service_uid]);
 
 echo json_encode([
-    "success" => $deleted,
-    "message" => $deleted ? "Service deleted" : "Service not found"
+    "success" => true,
+    "message" => "Service deleted successfully"
 ]);
+?>

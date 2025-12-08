@@ -15,105 +15,153 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-$service_id_param = $_GET["service_id"] ?? null;
 $user_id = $_GET["user_id"] ?? null;
+$service_id = $_GET["service_id"] ?? null;
 
-if (!$service_id_param || !$user_id) {
-    echo json_encode(["success" => false, "message" => "Missing service_id or user_id"]);
+if (!$user_id || !$service_id) {
+    echo json_encode(["success" => false, "message" => "Missing user_id or service_id"]);
     exit();
 }
 
-$data = json_decode(file_get_contents("php://input"), true);
+$name = $_POST["name"] ?? "";
+$slug = $_POST["slug"] ?? "";
+$amount = $_POST["amount"] ?? "";
+$previousAmount = $_POST["previousAmount"] ?? null;
+$categoryId = $_POST["categoryId"] ?? null;
+$timeSlotInterval = $_POST["timeSlotInterval"] ?? "";
+$intervalType = $_POST["intervalType"] ?? "";
+$description = $_POST["description"] ?? "";
+$gstPercentage = $_POST["gstPercentage"] ?? null;
+$metaTitle = $_POST["metaTitle"] ?? "";
+$metaDescription = $_POST["metaDescription"] ?? "";
+$status = $_POST["status"] ?? 0;
 
-$pdo->beginTransaction();
+/**********************************************
+ * FIX #1 — CLEAN EXISTING MAIN IMAGE
+ **********************************************/
+$baseUrl = "http://localhost/managerbp/public/uploads/";
 
-try {
-    // Get numeric ID
-    $getIdStmt = $pdo->prepare("SELECT id FROM services WHERE service_id = :service_id AND user_id = :user_id");
-    $getIdStmt->execute([
-        ":service_id" => $service_id_param,
-        ":user_id" => $user_id
-    ]);
-    $service = $getIdStmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$service) {
-        throw new Exception("Service not found or unauthorized");
+$mainImagePath = $_POST["existing_main_image"] ?? "";
+$mainImagePath = str_replace($baseUrl, "", $mainImagePath); // remove full URL
+
+// HANDLE NEW MAIN IMAGE
+if (!empty($_FILES["main_image"]) && $_FILES["main_image"]["error"] === 0) {
+
+    $year  = date("Y");
+    $month = date("m");
+    $day   = date("d");
+
+    $folder = __DIR__ . "/../../../public/uploads/sellers/$user_id/services/$year/$month/$day/";
+    if (!is_dir($folder)) mkdir($folder, 0777, true);
+
+    $file = $_FILES["main_image"];
+    $ext = pathinfo($file["name"], PATHINFO_EXTENSION);
+    $filename = "srv_" . uniqid() . "." . $ext;
+
+    if (move_uploaded_file($file["tmp_name"], $folder . $filename)) {
+        $mainImagePath = "sellers/$user_id/services/$year/$month/$day/$filename";
     }
-    
-    $numeric_service_id = $service['id'];
+}
 
-    // Update main service
-    $sql = "UPDATE services SET
-                name = :name,
-                slug = :slug,
-                amount = :amount,
-                previous_amount = :pamount,
-                image = :image,
-                category_id = :cat,
-                time_slot_interval = :slot,
-                interval_type = :itype,
-                description = :descr,
-                gst_percentage = :gst,
-                meta_title = :mtitle,
-                meta_description = :mdesc,
-                status = :status
-            WHERE id = :id AND user_id = :uid";
+/**********************************************
+ * UPDATE MAIN SERVICE RECORD
+ **********************************************/
+$updateSQL = "UPDATE services SET 
+    name = :name,
+    slug = :slug,
+    amount = :amount,
+    previous_amount = :previousAmount,
+    image = :image,
+    category_id = :categoryId,
+    time_slot_interval = :slot,
+    interval_type = :itype,
+    description = :descr,
+    gst_percentage = :gst,
+    meta_title = :mtitle,
+    meta_description = :mdesc,
+    status = :status
+    WHERE service_id = :service_id AND user_id = :user_id
+";
 
-    $stmt = $pdo->prepare($sql);
+$stmt = $pdo->prepare($updateSQL);
+$updated = $stmt->execute([
+    ":name" => $name,
+    ":slug" => $slug,
+    ":amount" => $amount,
+    ":previousAmount" => $previousAmount,
+    ":image" => $mainImagePath, // ALWAYS relative
+    ":categoryId" => $categoryId,
+    ":slot" => $timeSlotInterval,
+    ":itype" => $intervalType,
+    ":descr" => $description,
+    ":gst" => $gstPercentage,
+    ":mtitle" => $metaTitle,
+    ":mdesc" => $metaDescription,
+    ":status" => $status,
+    ":service_id" => $service_id,
+    ":user_id" => $user_id
+]);
 
-    $result = $stmt->execute([
-        ":name" => $data["name"] ?? '',
-        ":slug" => $data["slug"] ?? '',
-        ":amount" => $data["amount"] ?? 0,
-        ":pamount" => $data["previousAmount"] ?? null,
-        ":image" => $data["image"] ?? null,
-        ":cat" => $data["categoryId"] ?? null,
-        ":slot" => $data["timeSlotInterval"] ?? null,
-        ":itype" => $data["intervalType"] ?? null,
-        ":descr" => $data["description"] ?? null,
-        ":gst" => $data["gstPercentage"] ?? null,
-        ":mtitle" => $data["metaTitle"] ?? null,
-        ":mdesc" => $data["metaDescription"] ?? null,
-        ":status" => $data["status"] ?? 0,
-        ":id" => $numeric_service_id,
-        ":uid" => $user_id
-    ]);
+if (!$updated) {
+    echo json_encode(["success" => false, "message" => "Service update failed"]);
+    exit();
+}
 
-    if (!$result) {
-        throw new Exception("Failed to update service");
-    }
+/**********************************************
+ * FIX #2 — CLEAN EXISTING ADDITIONAL IMAGES
+ **********************************************/
+$existingImages = json_decode($_POST["existing_additional_images"] ?? "[]", true);
+$cleanImages = [];
 
-    // Update additional images
-    $deleteStmt = $pdo->prepare("DELETE FROM service_images WHERE service_id = :service_id");
-    $deleteStmt->execute([":service_id" => $numeric_service_id]);
-    
-    if (isset($data["additionalImages"]) && is_array($data["additionalImages"]) && !empty($data["additionalImages"])) {
-        $insertStmt = $pdo->prepare("INSERT INTO service_images (service_id, image, created_at) VALUES (:service_id, :img, NOW(3))");
-        
-        foreach ($data["additionalImages"] as $imgPath) {
-            if (!empty($imgPath)) {
-                $insertStmt->execute([
-                    ":service_id" => $numeric_service_id,
-                    ":img" => $imgPath
-                ]);
-            }
+foreach ($existingImages as $img) {
+    $cleanImages[] = str_replace($baseUrl, "", $img); // remove full URL
+}
+
+// DELETE old rows
+$pdo->prepare("
+    DELETE FROM service_images 
+    WHERE service_id = (SELECT id FROM services WHERE service_id = ?)
+")->execute([$service_id]);
+
+// REINSERT clean old ones
+$insertStmt = $pdo->prepare("
+    INSERT INTO service_images (service_id, image) 
+    VALUES ((SELECT id FROM services WHERE service_id = ?), ?)
+");
+
+foreach ($cleanImages as $img) {
+    $insertStmt->execute([$service_id, $img]);
+}
+
+/**********************************************
+ * HANDLE NEW ADDITIONAL IMAGES
+ **********************************************/
+if (!empty($_FILES["additional_images"]["name"][0])) {
+
+    for ($i = 0; $i < count($_FILES["additional_images"]["name"]); $i++) {
+
+        $tmp = $_FILES["additional_images"]["tmp_name"][$i];
+        $name = $_FILES["additional_images"]["name"][$i];
+
+        $ext = pathinfo($name, PATHINFO_EXTENSION);
+        $filename = "add_" . uniqid() . "." . $ext;
+
+        $year = date("Y");
+        $month = date("m");
+        $day = date("d");
+
+        $folder = __DIR__ . "/../../../public/uploads/sellers/$user_id/services/additional/$year/$month/$day/";
+        if (!is_dir($folder)) mkdir($folder, 0777, true);
+
+        if (move_uploaded_file($tmp, $folder . $filename)) {
+            $relativePath = "sellers/$user_id/services/additional/$year/$month/$day/$filename";
+            $insertStmt->execute([$service_id, $relativePath]);
         }
     }
-
-    $pdo->commit();
-
-    echo json_encode([
-        "success" => true,
-        "message" => "Service updated successfully"
-    ]);
-
-} catch (Exception $e) {
-    $pdo->rollBack();
-    
-    echo json_encode([
-        "success" => false,
-        "message" => "Error: " . $e->getMessage()
-    ]);
-    exit();
 }
+
+echo json_encode([
+    "success" => true,
+    "message" => "Service updated successfully"
+]);
 ?>

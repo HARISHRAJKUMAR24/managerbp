@@ -3,35 +3,17 @@ header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
-header("Content-Type: application/json");
 
-if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+if ($_SERVER['REQUEST_METHOD'] === "OPTIONS") {
     http_response_code(200);
     exit();
 }
 
-require_once "../../../config/config.php";
-require_once "../../../src/database.php";
-
-$pdo = getDbConnection();
-
 $user_id = $_GET["user_id"] ?? null;
 
 if (!$user_id) {
-    echo json_encode(["success" => false, "message" => "user_id missing"]);
+    echo json_encode(["success" => false, "message" => "Missing user_id"]);
     exit();
-}
-
-$year = date("Y");
-$month = date("m");
-$day = date("d");
-
-// ADDITIONAL IMAGES PATH: services/additional/user_id/year/month/day/
-$relativePath = "services/additional/$user_id/$year/$month/$day/";
-$uploadDir = "../../../public/uploads/" . $relativePath;
-
-if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0777, true);
 }
 
 if (!isset($_FILES["files"])) {
@@ -39,43 +21,33 @@ if (!isset($_FILES["files"])) {
     exit();
 }
 
-$files = $_FILES["files"];
-$stored = [];
+$today = date("Y/m/d");
 
-if (is_array($files["name"])) {
-    for ($i = 0; $i < count($files["name"]); $i++) {
-        if ($files["error"][$i] !== UPLOAD_ERR_OK) {
-            continue;
-        }
-        
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $fileType = mime_content_type($files["tmp_name"][$i]);
-        
-        if (!in_array($fileType, $allowedTypes)) {
-            continue;
-        }
-        
-        $ext = pathinfo($files["name"][$i], PATHINFO_EXTENSION);
-        $filename = uniqid("add_") . "." . $ext;
-        $fullPath = $uploadDir . $filename;
-        
-        if (move_uploaded_file($files["tmp_name"][$i], $fullPath)) {
-            $stored[] = $relativePath . $filename;
-        }
-    }
+// NEW PATH (correct)
+$basePath = __DIR__ . "/../../../public/uploads/sellers/$user_id/services/additional/$today";
+
+if (!is_dir($basePath)) {
+    mkdir($basePath, 0777, true);
 }
 
-if (empty($stored)) {
-    echo json_encode([
-        "success" => false,
-        "message" => "No files were successfully uploaded"
-    ]);
-    exit();
+$resultFiles = [];
+
+foreach ($_FILES["files"]["name"] as $i => $file) {
+
+    $extension = pathinfo($file, PATHINFO_EXTENSION);
+    $filename = "add_" . uniqid() . "." . $extension;
+
+    $tmp = $_FILES["files"]["tmp_name"][$i];
+    $fullPath = "$basePath/$filename";
+
+    move_uploaded_file($tmp, $fullPath);
+
+    // DB relative path
+    $resultFiles[] = "sellers/$user_id/services/additional/$today/$filename";
 }
 
 echo json_encode([
     "success" => true,
-    "files" => $stored,
-    "message" => count($stored) . " file(s) uploaded successfully"
+    "files" => $resultFiles
 ]);
 ?>
