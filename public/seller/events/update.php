@@ -1,57 +1,49 @@
-<?php
+<?php  
+header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-require_once __DIR__ . '/../../../config/config.php';
-require_once __DIR__ . '/../../../seller/functions.php';
 
-$pdo = getDbConnection();
+include '../config.php';
 
-$id = $_GET["id"] ?? null;
+$id = $_GET['id'];
+$data = json_decode(file_get_contents("php://input"), true);
 
-if (!$id) {
-    echo json_encode(["success" => false, "message" => "Event ID missing"]);
-    exit;
+$stmt = $conn->prepare("
+  UPDATE events SET
+    title=?, description=?, date=?, organizer=?, category=?, info=?, comfort=?, 
+    things_to_know=?, videos=?, logo=?, banner=?, country=?, state=?, city=?, 
+    pincode=?, address=?, map_link=?, terms=?, seat_layout=?
+  WHERE id=?
+");
+
+$stmt->bind_param(
+  "ssssssssssssssssssss",
+  $data['title'],
+  $data['description'],
+  $data['date'],
+  $data['organizer'],
+  $data['category'],
+  $data['info'],
+  $data['comfort'],
+  json_encode($data['things_to_know']),
+  json_encode($data['videos']),
+  $data['logo'],
+  $data['banner'],
+  $data['country'],
+  $data['state'],
+  $data['city'],
+  $data['pincode'],
+  $data['address'],
+  $data['map_link'],
+  $data['terms'],
+  $data['seat_layout'],
+  $id
+);
+
+if ($stmt->execute()) {
+  echo json_encode(["success" => true, "message" => "Event updated!"]);
+} else {
+  echo json_encode(["success" => false, "message" => $stmt->error]);
 }
 
-$title = $_POST["title"] ?? "";
-$date = $_POST["date"] ?? "";
-$location = $_POST["location"] ?? "";
-$organizer = $_POST["organizer"] ?? "";
-$category = $_POST["category"] ?? "";
-$status = $_POST["status"] ?? "active";
-$description = $_POST["description"] ?? "";
-
-$banner = null;
-
-if (!empty($_FILES["banner"]["name"])) {
-    $upload = uploadImage($_FILES["banner"], "events");
-    if ($upload["success"]) {
-        $banner = $upload["file_name"];
-    }
-}
-
-$sql = "UPDATE events SET 
-        title = ?, description = ?, date = ?, location = ?, 
-        organizer = ?, category = ?, status = ?" . 
-        ($banner ? ", banner = ?" : "") . 
-        " WHERE id = ?";
-
-$stmt = $pdo->prepare($sql);
-
-$params = [
-    $title, $description, $date, $location,
-    $organizer, $category, $status
-];
-
-if ($banner) {
-    $params[] = $banner;
-}
-
-$params[] = $id;
-
-$success = $stmt->execute($params);
-
-echo json_encode([
-    "success" => $success,
-    "message" => $success ? "Event updated successfully" : "Update failed"
-]);
-?>
+$stmt->close();
+$conn->close();
