@@ -1,51 +1,75 @@
 <?php
-header('Content-Type: application/json');
-
 require_once '../../../src/database.php';
+require_once '../../../src/functions.php';
 
-$limit = isset($_POST['length']) ? (int)$_POST['length'] : 10;
-$offset = isset($_POST['start']) ? (int)$_POST['start'] : 0;
-$searchValue = isset($_POST['search']) ? $_POST['search'] : '';
+$pdo = getDbConnection();
 
-// Fetch data
-$histories = fetchSubscriptionHistories($limit, $offset, $searchValue);
-$totalRecords = getTotalSubscriptionHistories();
+// Get filter parameters
+$plan_filter = $_POST['plan_filter'] ?? 'all';
+$gst_filter = $_POST['gst_filter'] ?? 'all';
+$payment_method = $_POST['payment_method'] ?? 'all';
+$date_from = $_POST['date_from'] ?? '';
+$date_to = $_POST['date_to'] ?? '';
 
-$data = array();
+// Build query
+$query = "SELECT 
+            sh.id,
+            sh.invoice_number,
+            sh.plan_id,
+            sp.name as plan_name,
+            sh.name,
+            sh.gst_number,
+            sh.payment_method,
+            sh.amount,
+            sh.currency,
+            sh.created_at
+          FROM subscription_histories sh 
+          LEFT JOIN subscription_plans sp ON sh.plan_id = sp.id 
+          WHERE 1=1";
 
-foreach ($histories as $row) {
-    $user = fetchUserById($row['user_id']);
+$params = [];
 
-    $data[] = [
-        'invoice_number' => '#' . $row['invoice_number'],
-        'user' => '<div class="d-flex align-items-center"><!--begin:: Avatar -->
-        <div class="symbol symbol-circle symbol-50px overflow-hidden me-3">
-            <a href="#">
-                <div class="symbol-label">
-                    <img src="' . UPLOADS_URL . $user->image . '" alt="' . $user->name . '" class="w-100" />
-                </div>
-            </a>
-        </div>
-        <!--end::Avatar-->
-        <!--begin::User details-->
-        <div class="d-flex flex-column">
-            <a href="#" class="text-gray-800 text-hover-primary mb-1">' . $user->name . '</a>
-            <span>' . $user->email . '</span>
-        </div>
-        <!--begin::User details--></div>',
-        'payment_method' => $row['payment_method'],
-        'payment_id' => $row['payment_id'],
-        'amount' => $row['amount'],
-    ];
+// Apply plan filter
+if ($plan_filter !== 'all') {
+    $query .= " AND sh.plan_id = :plan_id";
+    $params[':plan_id'] = $plan_filter;
 }
 
-// Prepare response
-$response = [
-    "draw" => intval($_POST['draw'] ?? 1),
-    "recordsTotal" => $totalRecords,
-    "recordsFiltered" => $totalRecords, // Adjust this if you implement filtering
-    "data" => $data
-];
+// Apply GST filter
+if ($gst_filter === 'with_gst_number') {
+    $query .= " AND sh.gst_number IS NOT NULL AND sh.gst_number != ''";
+} elseif ($gst_filter === 'without_gst_number') {
+    $query .= " AND (sh.gst_number IS NULL OR sh.gst_number = '')";
+}
 
-// Return JSON response
-echo json_encode($response);
+// Apply payment method filter
+if ($payment_method !== 'all') {
+    $query .= " AND sh.payment_method = :payment_method";
+    $params[':payment_method'] = $payment_method;
+}
+
+// Apply date filter
+if ($date_from) {
+    $query .= " AND DATE(sh.created_at) >= :date_from";
+    $params[':date_from'] = $date_from;
+}
+
+if ($date_to) {
+    $query .= " AND DATE(sh.created_at) <= :date_to";
+    $params[':date_to'] = $date_to;
+}
+
+// Order by date
+$query .= " ORDER BY sh.created_at DESC";
+
+// Prepare and execute query
+$stmt = $pdo->prepare($query);
+foreach ($params as $key => $value) {
+    $stmt->bindValue($key, $value);
+}
+
+$stmt->execute();
+$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+echo json_encode($data);
+?>

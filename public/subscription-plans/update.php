@@ -96,24 +96,24 @@ $plan = fetchPlan($_GET['id']);
                     </div>
                 </div>
 
-<!-- Change the duration field section in update.php -->
-<div class="col-sm-6 mb-5">
-    <label class="form-label">Duration</label>
-    <div class="row g-2">
-        <div class="col-6">
-            <input type="number" name="duration_value" class="form-control form-control-solid" 
-                   placeholder="1" min="1" max="100" value="<?= getDurationValue($plan->duration) ?>" required />
-            <div class="form-text text-gray-600">Duration value</div>
-        </div>
-        <div class="col-6">
-            <select name="duration_type" class="form-select form-select-solid" required>
-                <option value="month" <?= getDurationType($plan->duration) === 'month' ? 'selected' : '' ?>>Month</option>
-                <option value="year" <?= getDurationType($plan->duration) === 'year' ? 'selected' : '' ?>>Year</option>
-            </select>
-            <div class="form-text text-gray-600">Time unit</div>
-        </div>
-    </div>
-</div>
+                <!-- Change the duration field section in update.php -->
+                <div class="col-sm-6 mb-5">
+                    <label class="form-label">Duration</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="number" name="duration_value" class="form-control form-control-solid"
+                                placeholder="1" min="1" max="100" value="<?= getDurationValue($plan->duration) ?>" required />
+                            <div class="form-text text-gray-600">Duration value</div>
+                        </div>
+                        <div class="col-6">
+                            <select name="duration_type" class="form-select form-select-solid" required>
+                                <option value="month" <?= getDurationType($plan->duration) === 'month' ? 'selected' : '' ?>>Month</option>
+                                <option value="year" <?= getDurationType($plan->duration) === 'year' ? 'selected' : '' ?>>Year</option>
+                            </select>
+                            <div class="form-text text-gray-600">Time unit</div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="col-sm-12 mb-5">
                     <label class="required form-label">Description</label>
@@ -162,26 +162,27 @@ $plan = fetchPlan($_GET['id']);
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 
+                <!-- Change this section in update.php -->
                 <div class="col-sm-6 mb-5">
                     <label class="form-label">Payment Methods</label>
 
                     <div class="d-flex align-items-center flex-wrap gap-3 mt-2">
                         <div class="form-check form-switch form-check-custom form-check-solid">
-                            <input class="form-check-input" type="checkbox" id="razorpay" <?= $plan->razorpay ? 'checked' : null ?> />
+                            <input class="form-check-input" type="checkbox" id="razorpay" name="razorpay" value="1" <?= $plan->razorpay ? 'checked' : '' ?> />
                             <label class="form-check-label" for="razorpay">
                                 Razorpay
                             </label>
                         </div>
 
                         <div class="form-check form-switch form-check-custom form-check-solid">
-                            <input class="form-check-input" type="checkbox" id="phonepe" <?= $plan->phonepe ? 'checked' : null ?> />
+                            <input class="form-check-input" type="checkbox" id="phonepe" name="phonepe" value="1" <?= $plan->phonepe ? 'checked' : '' ?> />
                             <label class="form-check-label" for="phonepe">
                                 Phonepe
                             </label>
                         </div>
 
                         <div class="form-check form-switch form-check-custom form-check-solid">
-                            <input class="form-check-input" type="checkbox" id="payu" <?= $plan->payu ? 'checked' : null ?> />
+                            <input class="form-check-input" type="checkbox" id="payu" name="payu" value="1" <?= $plan->payu ? 'checked' : '' ?> />
                             <label class="form-check-label" for="payu">
                                 Payu
                             </label>

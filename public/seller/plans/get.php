@@ -69,6 +69,16 @@ foreach ($data as &$row) {
     $row['previous_display_price'] = $row['previous_amount'] && $row['previous_amount'] > 0 
         ? round($row['previous_amount']) 
         : null;
+    
+    // Add payment gateway information
+    $row['payment_gateways'] = [
+        'razorpay' => (bool)$row['razorpay'],
+        'phonepe' => (bool)$row['phonepe'],
+        'payu' => (bool)$row['payu']
+    ];
+    
+    // Remove individual gateway fields from response for cleaner output
+    unset($row['razorpay'], $row['phonepe'], $row['payu']);
 }
 
 echo json_encode([
