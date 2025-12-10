@@ -5,14 +5,19 @@ header("Content-Type: application/json");
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
+require_once "../../../src/functions.php"; // Include functions.php to use getCurrencySymbol()
 
 $pdo = getDbConnection();
 
-// Get GST settings
-$settingsSql = "SELECT gst_percentage, gst_tax_type FROM settings LIMIT 1";
+// Get settings including currency
+$settingsSql = "SELECT currency, gst_percentage, gst_tax_type, app_name, address, gst_number FROM settings LIMIT 1";
 $settingsStmt = $pdo->prepare($settingsSql);
 $settingsStmt->execute();
 $settings = $settingsStmt->fetch(PDO::FETCH_ASSOC);
+
+// Get currency from settings
+$currency = $settings['currency'] ?? 'INR';
+$currencySymbol = getCurrencySymbol($currency);
 
 // Get plans
 $sql = "SELECT * FROM subscription_plans WHERE is_disabled = 1 ORDER BY amount ASC";
@@ -84,6 +89,15 @@ foreach ($data as &$row) {
 echo json_encode([
     "success" => true,
     "data" => $data,
+    "currency_settings" => [
+        "currency" => $currency,
+        "currency_symbol" => $currencySymbol
+    ],
+    "company_settings" => [
+        "app_name" => $settings['app_name'] ?? 'Book Pannu',
+        "address" => $settings['address'] ?? '',
+        "gst_number" => $settings['gst_number'] ?? ''
+    ],
     "gst_settings" => [
         "gst_percentage" => $settings['gst_percentage'] ?? 18,
         "gst_tax_type" => $settings['gst_tax_type'] ?? 'exclusive'
