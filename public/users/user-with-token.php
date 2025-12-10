@@ -33,10 +33,8 @@ $st = $pdo->prepare("SELECT * FROM site_settings WHERE user_id = :id LIMIT 1");
 $st->execute([":id" => $user->id]);
 $siteSettings = $st->fetch(PDO::FETCH_ASSOC);
 
-// Base uploads URL
 $baseUrl = "http://localhost/managerbp/public/uploads/";
 
-// Add full URLs
 if ($siteSettings) {
     $siteSettings["logo_url"] = $siteSettings["logo"]
         ? $baseUrl . $siteSettings["logo"]
@@ -55,6 +53,7 @@ echo json_encode([
     "success" => true,
     "data" => [
         "id"        => $user->id,
+        "user_id"   => $user->user_id,  // ⭐ IMPORTANT — THIS FIXES YOUR IMAGE PATH ISSUE!
         "name"      => $user->name,
         "email"     => $user->email,
         "phone"     => $user->phone,
@@ -65,3 +64,4 @@ echo json_encode([
         "siteSettings" => $siteSettings ?? []
     ]
 ]);
+?>

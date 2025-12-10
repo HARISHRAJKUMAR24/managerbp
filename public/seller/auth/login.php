@@ -2,7 +2,7 @@
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Content-Type: application/json");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -12,6 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
+
+$pdo = getDbConnection();
 
 $raw = file_get_contents("php://input");
 $input = json_decode($raw, true) ?? $_POST;
@@ -24,7 +26,7 @@ if (!$phone || !$password) {
     exit;
 }
 
-$pdo = getDbConnection();
+// Get correct seller row
 $stmt = $pdo->prepare("SELECT * FROM users WHERE phone = ? LIMIT 1");
 $stmt->execute([$phone]);
 $user = $stmt->fetchObject();
@@ -39,26 +41,22 @@ if (!password_verify($password, $user->password)) {
     exit;
 }
 
+// generate token
 $token = bin2hex(random_bytes(32));
-
 $update = $pdo->prepare("UPDATE users SET api_token = ? WHERE id = ?");
 $update->execute([$token, $user->id]);
 
-setcookie("token", $token, [
-    "expires" => time() + (86400 * 30),
-    "path" => "/",
-    "secure" => false,
-    "httponly" => true,
-    "samesite" => "Lax"
-]);
-
+// response structure FIXED
 echo json_encode([
     "success" => true,
     "message" => "Login successful",
-    "data" => [
-        "id" => $user->id,
+    "token" => $token,
+    "user" => [
+        "id" => $user->user_id, // ⭐ REAL SELLER USER_ID
         "name" => $user->name,
         "phone" => $user->phone,
-        "token" => $token
+        "site_slug" => $user->site_slug,
     ]
 ]);
+exit;
+?>

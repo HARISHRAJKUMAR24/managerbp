@@ -22,13 +22,23 @@ if (!$category_id) {
     exit();
 }
 
+// Read JSON body
 $data = json_decode(file_get_contents("php://input"), true);
+
 if (!$data) {
     echo json_encode(["success" => false, "message" => "Invalid JSON"]);
     exit();
 }
 
-// Check existence
+// ❌ REMOVE token from update fields
+if (isset($data["token"])) unset($data["token"]);
+
+// ❌ DO NOT allow user_id OR category_id to be overwritten
+unset($data["user_id"]);
+unset($data["category_id"]);
+unset($data["created_at"]);
+
+// Check if category exists
 $check = $pdo->prepare("SELECT COUNT(*) FROM categories WHERE category_id = :cid");
 $check->execute([':cid' => $category_id]);
 
@@ -37,13 +47,13 @@ if ($check->fetchColumn() == 0) {
     exit();
 }
 
+// Build SQL dynamically
 $fields = [];
 $params = [':cid' => $category_id];
 
 foreach ($data as $key => $value) {
-    if ($key === "created_at") continue;
     $fields[] = "$key = :$key";
-    $params[":$key"] = $value ?: '';
+    $params[":$key"] = $value ?? '';
 }
 
 $sql = "UPDATE categories SET " . implode(", ", $fields) . " WHERE category_id = :cid";
@@ -53,5 +63,5 @@ $result = $stmt->execute($params);
 
 echo json_encode([
     "success" => $result,
-    "message" => $result ? "Category updated" : "Update failed"
+    "message" => $result ? "Category updated successfully" : "Update failed"
 ]);

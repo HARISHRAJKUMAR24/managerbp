@@ -16,7 +16,7 @@ if (!isset($_GET["user_id"])) {
 $userId = $_GET["user_id"];
 
 // -----------------------------
-// Create folder: uploads/sellers/{user_id}/employees/YYYY/MM/DD
+// Create folder: /uploads/sellers/{user_id}/employees/YYYY/MM/DD
 // -----------------------------
 $year = date("Y");
 $month = date("m");
@@ -24,7 +24,7 @@ $day = date("d");
 
 $uploadDir = "../../uploads/sellers/$userId/employees/$year/$month/$day/";
 
-// Create directories
+// Create directories if missing
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0777, true);
 }
@@ -38,7 +38,7 @@ if (!isset($_FILES["file"])) {
 }
 
 $file = $_FILES["file"];
-$ext = pathinfo($file["name"], PATHINFO_EXTENSION);
+$ext = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
 $filename = uniqid("emp_") . "." . $ext;
 
 $path = $uploadDir . $filename;
@@ -48,9 +48,9 @@ $path = $uploadDir . $filename;
 // -----------------------------
 if (move_uploaded_file($file["tmp_name"], $path)) {
 
-    // relative path saved in DB:
-    // sellers/{user_id}/employees/YYYY/MM/DD/file.ext
-    $relativePath = "$userId/employees/$year/$month/$day/$filename";
+    // ⭐ THIS MUST MATCH THE PUBLIC URL
+    // React loads: http://localhost/managerbp/public{filename}
+    $relativePath = "/uploads/sellers/$userId/employees/$year/$month/$day/$filename";
 
     echo json_encode([
         "success" => true,
@@ -59,3 +59,4 @@ if (move_uploaded_file($file["tmp_name"], $path)) {
 } else {
     echo json_encode(["success" => false, "message" => "Upload failed"]);
 }
+?>

@@ -22,23 +22,32 @@ if (!$category_id) {
     exit();
 }
 
+// Base path for images
+$baseImageUrl = "http://localhost/managerbp/public/uploads/";
+
 $sql = "SELECT 
             id,
             category_id,
             user_id,
             name,
             slug,
-            CONCAT('http://localhost/managerbp/public/uploads/categories/', image) AS image,
+            CASE 
+                WHEN image IS NULL OR image = '' 
+                    THEN NULL
+                ELSE CONCAT(:base_url, image)
+            END AS image,
             meta_title,
             meta_description,
             created_at
-        FROM categories 
+        FROM categories
         WHERE category_id = :cid
         LIMIT 1";
 
-
 $stmt = $pdo->prepare($sql);
-$stmt->execute([':cid' => $category_id]);
+$stmt->execute([
+    ':cid'      => $category_id,
+    ':base_url' => $baseImageUrl
+]);
 
 $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -51,3 +60,5 @@ echo json_encode([
     "success" => true,
     "data" => $data
 ]);
+exit();
+?>
