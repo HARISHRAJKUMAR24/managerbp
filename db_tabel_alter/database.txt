@@ -35,3 +35,43 @@ ALTER TABLE site_settings ADD COLUMN tax_percent DECIMAL(5,2) DEFAULT NULL;
 ALTER TABLE site_settings 
 ADD COLUMN tax_percent DECIMAL(5,2) DEFAULT NULL 
 AFTER gst_type;
+
+
+
+10/12/2025
+
+-- Create subscription_histories table
+CREATE TABLE IF NOT EXISTS `subscription_histories` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `invoice_number` int(11) NOT NULL,
+  `plan_id` int(11) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `payment_method` varchar(50) DEFAULT NULL,
+  `payment_id` varchar(255) DEFAULT NULL,
+  `currency` varchar(10) DEFAULT 'INR',
+  `currency_symbol` varchar(10) DEFAULT '₹',
+  `amount` int(11) NOT NULL DEFAULT 0,
+  `gst_amount` int(11) NOT NULL DEFAULT 0,
+  `gst_type` varchar(20) DEFAULT NULL,
+  `gst_number` varchar(255) DEFAULT NULL,
+  `gst_percentage` int(11) DEFAULT 18,
+  `discount` int(11) NOT NULL DEFAULT 0,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `address_1` text DEFAULT NULL,
+  `address_2` text DEFAULT NULL,
+  `state` varchar(100) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `pin_code` varchar(10) DEFAULT NULL,
+  `country` varchar(100) DEFAULT 'India',
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `invoice_number` (`invoice_number`),
+  KEY `plan_id` (`plan_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- If the table already exists, just add missing columns
+ALTER TABLE `subscription_histories` 
+ADD COLUMN IF NOT EXISTS `currency_symbol` VARCHAR(10) DEFAULT '₹';
