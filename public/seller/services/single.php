@@ -15,20 +15,13 @@ if (!$service_id_param) {
     exit();
 }
 
-$baseUrl = "http://localhost/managerbp/public/uploads/";
-
 try {
 
     // -----------------------------------------
-    // Fetch main service record
+    // Fetch service (return ONLY raw relative path!)
     // -----------------------------------------
     $stmt = $pdo->prepare("
-        SELECT *, 
-        CASE 
-            WHEN image IS NULL OR image = '' THEN NULL 
-            ELSE CONCAT('$baseUrl', image) 
-        END AS full_image
-        FROM services
+        SELECT * FROM services
         WHERE service_id = :sid
     ");
     $stmt->execute([":sid" => $service_id_param]);
@@ -39,8 +32,14 @@ try {
         exit();
     }
 
+    // Force image to ALWAYS start with /
+    $imagePath = $service["image"];
+    if ($imagePath && $imagePath[0] !== "/") {
+        $imagePath = "/" . $imagePath;
+    }
+
     // ----------------------------------------------------
-    // Normalize keys to match frontend naming conventions
+    // Format serviceData (NO full URLs!!!)
     // ----------------------------------------------------
     $serviceData = [
         "id"                => $service["id"],
@@ -58,30 +57,28 @@ try {
         "metaTitle"         => $service["meta_title"],
         "metaDescription"   => $service["meta_description"],
         "status"            => $service["status"],
-        "image"             => $service["full_image"],   // full URL
+        "image"             => $imagePath, // RAW DB PATH ONLY
     ];
 
     // ----------------------------------------------------
-    // Get additional images — return as objects, not strings
+    // Get additional images (ALSO only raw paths)
     // ----------------------------------------------------
     $imgStmt = $pdo->prepare("
-        SELECT 
-            CASE 
-                WHEN image IS NULL OR image = '' THEN NULL
-                ELSE CONCAT('$baseUrl', image)
-            END AS full_image
-        FROM service_images
+        SELECT image FROM service_images
         WHERE service_id = :sid
         ORDER BY id
     ");
     $imgStmt->execute([":sid" => $service["id"]]);
 
-    $images = $imgStmt->fetchAll(PDO::FETCH_COLUMN, 0);
+    $rawImages = $imgStmt->fetchAll(PDO::FETCH_COLUMN, 0);
 
-    // Convert to object format: [{ image: "URL" }]
+    // Normalize: Always start with "/"
     $serviceData["additionalImages"] = array_map(function($img) {
+        if ($img && $img[0] !== "/") {
+            $img = "/" . $img;
+        }
         return ["image" => $img];
-    }, $images);
+    }, $rawImages);
 
     // ----------------------------------------------------
     // Final response

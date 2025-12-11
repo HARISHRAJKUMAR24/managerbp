@@ -37,7 +37,7 @@ $fullPath = "$basePath/$filename";
 move_uploaded_file($_FILES["file"]["tmp_name"], $fullPath);
 
 // DB relative path (clean)
-$dbPath = "sellers/$user_id/services/$today/$filename";
+$dbPath = "/uploads/sellers/$user_id/services/$today/$filename";
 
 echo json_encode([
     "success" => true,

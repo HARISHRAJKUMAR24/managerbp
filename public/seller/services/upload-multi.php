@@ -43,7 +43,7 @@ foreach ($_FILES["files"]["name"] as $i => $file) {
     move_uploaded_file($tmp, $fullPath);
 
     // DB relative path
-    $resultFiles[] = "sellers/$user_id/services/additional/$today/$filename";
+$resultFiles[] = "/uploads/sellers/$user_id/services/additional/$today/$filename";
 }
 
 echo json_encode([
