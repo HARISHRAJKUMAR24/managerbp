@@ -75,3 +75,14 @@ CREATE TABLE IF NOT EXISTS `subscription_histories` (
 -- If the table already exists, just add missing columns
 ALTER TABLE `subscription_histories` 
 ADD COLUMN IF NOT EXISTS `currency_symbol` VARCHAR(10) DEFAULT '₹';
+
+11/12/2025
+
+For PayU (Deepak Work) ----------> {This Paste In settings Tabel}
+-- Remove ippopay_public_key column and add PayU columns
+ALTER TABLE `settings` 
+DROP COLUMN `ippopay_public_key`,
+ADD COLUMN `payu_merchant_key` VARCHAR(255) DEFAULT NULL AFTER `razorpay_key_secret`,
+ADD COLUMN `payu_salt` VARCHAR(255) DEFAULT NULL AFTER `payu_merchant_key`,
+ADD COLUMN `payu_client_id` VARCHAR(255) DEFAULT NULL AFTER `payu_salt`,
+ADD COLUMN `payu_client_secret` VARCHAR(255) DEFAULT NULL AFTER `payu_client_id`;

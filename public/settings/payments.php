@@ -21,10 +21,13 @@ if (!$settings) {
 // Get payment settings
 $razorpay_key_id = $settings->razorpay_key_id ?? '';
 $razorpay_key_secret = $settings->razorpay_key_secret ?? '';
-$ippopay_public_key = $settings->ippopay_public_key ?? '';
 $phonepe_key_merchant_id = $settings->phonepe_key_merchant_id ?? '';
 $phonepe_key_index = $settings->phonepe_key_index ?? '';
 $phonepe_key = $settings->phonepe_key ?? '';
+$payu_merchant_key = $settings->payu_merchant_key ?? '';
+$payu_salt = $settings->payu_salt ?? '';
+$payu_client_id = $settings->payu_client_id ?? '';
+$payu_client_secret = $settings->payu_client_secret ?? '';
 
 renderTemplate('header');
 ?>
@@ -134,25 +137,67 @@ renderTemplate('header');
                         </div>
                         <!--end::Razorpay Section-->
 
-                        <!--begin::IppoPay Section-->
+                        <!--begin::PayU Section-->
                         <div class="mb-12">
-                            <h4 class="fw-bold text-gray-800 mb-6">IppoPay Settings</h4>
+                            <h4 class="fw-bold text-gray-800 mb-6">PayU Settings</h4>
                             
                             <!--begin::Input group-->
                             <div class="row mb-6">
                                 <!--begin::Label-->
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">IppoPay Public Key</label>
+                                <label class="col-lg-4 col-form-label fw-semibold fs-6">PayU Merchant Key</label>
                                 <!--end::Label-->
                                 <!--begin::Col-->
                                 <div class="col-lg-8 fv-row">
-                                    <input type="text" name="ippopay_public_key" class="form-control form-control-lg border-gray-300 bg-body" placeholder="Enter IppoPay Public Key" value="<?= htmlspecialchars($ippopay_public_key) ?>" style="background-color: #f8f9fa; border-color: #d1d3e0;" />
-                                    <div class="form-text text-gray-600 mt-2">Your IppoPay Public Key from the dashboard</div>
+                                    <input type="text" name="payu_merchant_key" class="form-control form-control-lg border-gray-300 bg-body" placeholder="Enter PayU Merchant Key" value="<?= htmlspecialchars($payu_merchant_key) ?>" style="background-color: #f8f9fa; border-color: #d1d3e0;" />
+                                    <div class="form-text text-gray-600 mt-2">Your PayU Merchant Key from the dashboard</div>
+                                </div>
+                                <!--end::Col-->
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Input group-->
+                            <div class="row mb-6">
+                                <!--begin::Label-->
+                                <label class="col-lg-4 col-form-label fw-semibold fs-6">PayU Salt</label>
+                                <!--end::Label-->
+                                <!--begin::Col-->
+                                <div class="col-lg-8 fv-row">
+                                    <input type="text" name="payu_salt" class="form-control form-control-lg border-gray-300 bg-body" placeholder="Enter PayU Salt" value="<?= htmlspecialchars($payu_salt) ?>" style="background-color: #f8f9fa; border-color: #d1d3e0;" />
+                                    <div class="form-text text-gray-600 mt-2">Your PayU Salt Key from the dashboard</div>
+                                </div>
+                                <!--end::Col-->
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Input group-->
+                            <div class="row mb-6">
+                                <!--begin::Label-->
+                                <label class="col-lg-4 col-form-label fw-semibold fs-6">PayU Client ID (Optional)</label>
+                                <!--end::Label-->
+                                <!--begin::Col-->
+                                <div class="col-lg-8 fv-row">
+                                    <input type="text" name="payu_client_id" class="form-control form-control-lg border-gray-300 bg-body" placeholder="Enter PayU Client ID" value="<?= htmlspecialchars($payu_client_id) ?>" style="background-color: #f8f9fa; border-color: #d1d3e0;" />
+                                    <div class="form-text text-gray-600 mt-2">Your PayU Client ID (optional, for additional API features)</div>
+                                </div>
+                                <!--end::Col-->
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Input group-->
+                            <div class="row mb-6">
+                                <!--begin::Label-->
+                                <label class="col-lg-4 col-form-label fw-semibold fs-6">PayU Client Secret (Optional)</label>
+                                <!--end::Label-->
+                                <!--begin::Col-->
+                                <div class="col-lg-8 fv-row">
+                                    <input type="text" name="payu_client_secret" class="form-control form-control-lg border-gray-300 bg-body" placeholder="Enter PayU Client Secret" value="<?= htmlspecialchars($payu_client_secret) ?>" style="background-color: #f8f9fa; border-color: #d1d3e0;" />
+                                    <div class="form-text text-gray-600 mt-2">Your PayU Client Secret (optional, for additional API features)</div>
                                 </div>
                                 <!--end::Col-->
                             </div>
                             <!--end::Input group-->
                         </div>
-                        <!--end::IppoPay Section-->
+                        <!--end::PayU Section-->
 
                         <!--begin::PhonePe Section-->
                         <div class="mb-0">

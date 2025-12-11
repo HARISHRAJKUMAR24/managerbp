@@ -6,7 +6,7 @@ header("Content-Type: application/json");
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
-require_once "../../../src/functions.php"; // Include functions.php
+require_once "../../../src/functions.php";
 
 $pdo = getDbConnection();
 
@@ -21,29 +21,22 @@ if (!$invoiceNumber) {
     exit;
 }
 
-// Check if subscription_histories table exists
-$tableCheck = $pdo->query("SHOW TABLES LIKE 'subscription_histories'");
-$tableExists = $tableCheck->rowCount() > 0;
-
-$paymentDetails = null;
-
-if ($tableExists) {
-    // Get payment details from subscription_histories
-    $sql = "SELECT 
-                sh.*,
-                sp.name as plan_name,
-                sp.duration as plan_duration,
-                u.email as user_email,
-                u.name as user_name
-            FROM subscription_histories sh
-            LEFT JOIN subscription_plans sp ON sh.plan_id = sp.id
-            LEFT JOIN users u ON sh.user_id = u.id
-            WHERE sh.invoice_number = ?";
+// Get payment details from subscription_histories
+$sql = "SELECT 
+            sh.*,
+            sp.name as plan_name,
+            sp.duration as plan_duration,
+            u.email as user_email,
+            u.name as user_name,
+            u.phone as user_phone
+        FROM subscription_histories sh
+        LEFT JOIN subscription_plans sp ON sh.plan_id = sp.id
+        LEFT JOIN users u ON sh.user_id = u.user_id  -- Changed from u.id to u.user_id
+        WHERE sh.invoice_number = ?";
     
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$invoiceNumber]);
-    $paymentDetails = $stmt->fetch(PDO::FETCH_ASSOC);
-}
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$invoiceNumber]);
+$paymentDetails = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // If no record found, create a mock response
 if (!$paymentDetails) {
