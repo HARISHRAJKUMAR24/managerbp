@@ -4,8 +4,10 @@ header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
 header("Content-Type: application/json");
 
+// FIXED FILE PATH
+require_once(__DIR__ . '/../../../src/functions.php');
+
 require_once __DIR__ . '/../../../config/config.php';
-require_once __DIR__ . '/../../../seller/functions.php';
 
 $pdo = getDbConnection();
 
@@ -24,7 +26,7 @@ try {
         echo json_encode([
             "success" => false,
             "message" => "SQL execution failed",
-            "errorInfo" => $stmt->errorInfo()   // 🔥 DEBUG EXACT SQL ERROR
+            "errorInfo" => $stmt->errorInfo()
         ]);
         exit;
     }
@@ -33,6 +35,7 @@ try {
         "success" => true,
         "message" => "Event deleted successfully"
     ]);
+
 } catch (Exception $e) {
     echo json_encode([
         "success" => false,
@@ -41,4 +44,3 @@ try {
     ]);
 }
 exit;
-?>

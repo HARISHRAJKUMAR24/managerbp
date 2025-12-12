@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Dec 11, 2025 at 05:26 AM
+-- Host: 127.0.0.1:3306
+-- Generation Time: Dec 11, 2025 at 05:53 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -91,13 +91,6 @@ CREATE TABLE `categories` (
   `meta_description` varchar(255) DEFAULT NULL,
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `categories`
---
-
-INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `image`, `meta_title`, `meta_description`, `created_at`) VALUES
-(1, 'CAT_69325e2a903c6', 9, 'Nala Tholil', 'wertq', 'sellers/9/categories/2025/12/05/1764908615_69325e47771aa.png', '', '', '2025-12-05 09:53:06.591');
 
 -- --------------------------------------------------------
 
@@ -229,6 +222,53 @@ CREATE TABLE `employees` (
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `employees`
+--
+
+INSERT INTO `employees` (`id`, `employee_id`, `user_id`, `name`, `position`, `email`, `phone`, `address`, `joining_date`, `image`, `created_at`) VALUES
+(1, '0bc94c68-5a03-4378-9d06-d09f0f034508', 52064, 'ddd', 'dd', 'deepakchitravel@gmail.com', '+919345604653', '1/60 Middle street ,Cholapandi', '2025-12-31', '/uploads/sellers/52064/employees/2025/12/11/emp_693a88060aeab.webp', '2025-12-11 14:29:52.467');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `events`
+--
+
+CREATE TABLE `events` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `date` date DEFAULT NULL,
+  `start_time` varchar(50) DEFAULT NULL,
+  `end_time` varchar(50) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `organizer` varchar(255) DEFAULT NULL,
+  `category` varchar(255) DEFAULT NULL,
+  `banner` varchar(255) DEFAULT NULL,
+  `logo` varchar(255) DEFAULT NULL,
+  `country` varchar(100) DEFAULT NULL,
+  `state` varchar(100) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `pincode` varchar(20) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `map_link` varchar(500) DEFAULT NULL,
+  `comfort` varchar(255) DEFAULT NULL,
+  `things_to_know` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`things_to_know`)),
+  `terms` text DEFAULT NULL,
+  `videos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`videos`)),
+  `seat_layout` varchar(255) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `events`
+--
+
+INSERT INTO `events` (`id`, `user_id`, `title`, `description`, `date`, `start_time`, `end_time`, `location`, `organizer`, `category`, `banner`, `logo`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `comfort`, `things_to_know`, `terms`, `videos`, `seat_layout`, `created_at`) VALUES
+(1, 52064, 'dsdf', '', '2025-12-12', '', '', 'Aduthurai, TN', 'sdf', 'sdf', '/uploads/sellers/52064/events/banner/1765444423_8181.png', '/uploads/sellers/52064/events/logo/1765444428_5482.webp', 'IN', 'TN', 'Aduthurai', '', '', 'https://www.google.com/maps?q=1%2F60%20Middle%20street%20%2CCholapandi%20Aduthurai%20614016&output=embed', 'dsf', '[]', '', '[]', '', '2025-12-11 14:43:51.653');
+
 -- --------------------------------------------------------
 
 --
@@ -309,14 +349,16 @@ CREATE TABLE `services` (
   `meta_description` varchar(255) DEFAULT NULL,
   `status` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `services`
 --
 
 INSERT INTO `services` (`id`, `service_id`, `user_id`, `name`, `slug`, `amount`, `previous_amount`, `image`, `category_id`, `time_slot_interval`, `interval_type`, `description`, `gst_percentage`, `meta_title`, `meta_description`, `status`, `created_at`) VALUES
-(3, 'SRV_693260768d116', 9, 'Nala Tholil mama ', 'Nala Tholil Nala Tholil mama ', '123', NULL, 'http://localhost/managerbp/public/uploads/services/main_image/9/2025/12/05/main_6932a58968466.jpg', NULL, '', 'minutes', 'Nala Tholil mama Nala Tholil mama Nala Tholil mama ', NULL, NULL, NULL, 0, '2025-12-05 10:02:54.577');
+(1, 'SRV_693a930157c43', 52064, 'fdg', 'fdg', '34', '43', 'http://localhost/managerbp/public/uploads/sellers/sellers/52064/services/2025/12/11/srv_693a92bb4b9b0.png', NULL, '2', 'minutes', NULL, NULL, NULL, NULL, 0, '2025-12-11 15:16:41.360'),
+(2, 'SRV_693aaca95cf2d', 52064, 'dfg', 'fg', '33', '44', '/uploads/sellers/52064/services/2025/12/11/srv_693ab205bc44c.png', 0, '2', 'minutes', 'sdf', NULL, '', '', 0, '2025-12-11 17:06:09.381'),
+(3, 'SRV_693ab1e9f048d', 52064, 'sdf', 'sdf', '2', '2', '/uploads/sellers/52064/services/2025/12/11/srv_693ab6be40a17.png', 0, '2', 'minutes', '', NULL, '', '', 0, '2025-12-11 17:28:33.984');
 
 -- --------------------------------------------------------
 
@@ -336,8 +378,11 @@ CREATE TABLE `service_images` (
 --
 
 INSERT INTO `service_images` (`id`, `service_id`, `image`, `created_at`) VALUES
-(46, 3, 'services/additional/9/2025/12/05/add_6932a5fe2dc39.jpg', '2025-12-05 14:59:41.157'),
-(47, 3, 'services/additional/9/2025/12/05/add_6932a6040bd75.jpg', '2025-12-05 14:59:41.157');
+(48, 1, 'http://localhost/managerbp/public/uploads/sellers/sellers/52064/services/additional/2025/12/11/add_693a92c081d08.png', '2025-12-11 15:16:41.383'),
+(52, 2, '/uploads/sellers/52064/services/additional/2025/12/11/add_693aac7a9af47.png', '2025-12-11 17:29:03.367'),
+(53, 2, '/uploads/sellers/52064/services/additional/2025/12/11/add_693aac7a9bb36.webp', '2025-12-11 17:29:03.374'),
+(58, 3, '/uploads/sellers/52064/services/additional/2025/12/11/add_693aae255eb6f.webp', '2025-12-11 18:12:17.711'),
+(59, 3, '/uploads/sellers/52064/services/additional/2025/12/11/add_693abc27d69e8.webp', '2025-12-11 18:12:17.714');
 
 -- --------------------------------------------------------
 
@@ -557,7 +602,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (1, 9621, 'Muhammad Muawiyah', 'muawiyahdev@gmail.com', '+8801914513373', '$2b$12$eGO8sJ/beIqQzLLAO/XjE.9y60Zaq9mBaUSm9TAbuujCnZhXWI70O', 'BD', '', 'Auto Care', 'auto-care', '2024-11-14 00:40:52.868', NULL, NULL, 0, NULL, NULL),
-(9, 52064, 'Captian', 'cap@gmail.com', '8015021359', '$2y$10$s0KzfCZefZL2vmGxyFopieT9DTWpEghtPsS3ZFyC5m4Kc.di.wAVa', 'IN', 'sellers/9/profile/1765188047_download__1_.jpg', 'Captian', 'captian', '2025-12-02 14:55:43.000', NULL, NULL, 0, 5, 'b5faa5745f37f534a9b5b2add20a4d159df6243688959cfca130b0aef17029bc');
+(9, 52064, 'Captian', 'cap@gmail.com', '8015021359', '$2y$10$s0KzfCZefZL2vmGxyFopieT9DTWpEghtPsS3ZFyC5m4Kc.di.wAVa', 'IN', 'sellers/9/profile/1765188047_download__1_.jpg', 'Captian', 'captian', '2025-12-02 14:55:43.000', NULL, NULL, 0, 5, '4d946def5485897946d26d7f44432ced9af8baa5ca1df0722178e1f7e5c7c056');
 
 -- --------------------------------------------------------
 
@@ -713,6 +758,13 @@ ALTER TABLE `employees`
   ADD KEY `employees_user_id_fkey` (`user_id`);
 
 --
+-- Indexes for table `events`
+--
+ALTER TABLE `events`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `events_user_id_fkey` (`user_id`);
+
+--
 -- Indexes for table `managers`
 --
 ALTER TABLE `managers`
@@ -737,9 +789,7 @@ ALTER TABLE `plugins`
 --
 ALTER TABLE `services`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `services_service_id_key` (`service_id`),
-  ADD KEY `services_user_id_fkey` (`user_id`),
-  ADD KEY `services_category_id_fkey` (`category_id`);
+  ADD UNIQUE KEY `service_id` (`service_id`);
 
 --
 -- Indexes for table `service_images`
@@ -830,7 +880,7 @@ ALTER TABLE `available_areas`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `configured_plugins`
@@ -866,7 +916,13 @@ ALTER TABLE `discounts`
 -- AUTO_INCREMENT for table `employees`
 --
 ALTER TABLE `employees`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `events`
+--
+ALTER TABLE `events`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `managers`
@@ -896,7 +952,7 @@ ALTER TABLE `services`
 -- AUTO_INCREMENT for table `service_images`
 --
 ALTER TABLE `service_images`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `settings`
@@ -963,7 +1019,7 @@ ALTER TABLE `available_areas`
 -- Constraints for table `categories`
 --
 ALTER TABLE `categories`
-  ADD CONSTRAINT `categories_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `categories_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `configured_plugins`
@@ -994,20 +1050,19 @@ ALTER TABLE `discounts`
 -- Constraints for table `employees`
 --
 ALTER TABLE `employees`
-  ADD CONSTRAINT `employees_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `employees_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `events`
+--
+ALTER TABLE `events`
+  ADD CONSTRAINT `events_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `manual_payment_methods`
 --
 ALTER TABLE `manual_payment_methods`
   ADD CONSTRAINT `manual_payment_methods_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
-
---
--- Constraints for table `services`
---
-ALTER TABLE `services`
-  ADD CONSTRAINT `services_category_id_fkey` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `services_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `service_images`

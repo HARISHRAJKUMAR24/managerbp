@@ -1,8 +1,20 @@
 <?php
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+// Delete cookie
 setcookie(
     "token",
     "",
-    time() - 3600,     // expire in the past
+    time() - 3600,
     "/",
     "localhost",
     false,
@@ -10,6 +22,7 @@ setcookie(
 );
 
 echo json_encode([
-  "success" => true,
-  "message" => "Logged out"
+    "success" => true,
+    "message" => "Logged out"
 ]);
+exit;
