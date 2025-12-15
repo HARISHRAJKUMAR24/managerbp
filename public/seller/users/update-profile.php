@@ -8,41 +8,80 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-$input = json_decode(file_get_contents("php://input"), true);
-
-$user_id = $input["user_id"] ?? 0;
-$name = $input["name"] ?? "";
-$email = $input["email"] ?? "";
-$phone = $input["phone"] ?? "";
-$country = $input["country"] ?? "";
-$image = $input["image"] ?? null;
+/* ===============================
+   READ POST DATA (ONLY user_id)
+================================ */
+$user_id = $_POST["user_id"] ?? 0;
+$name    = $_POST["name"] ?? "";
+$email   = $_POST["email"] ?? "";
+$phone   = $_POST["phone"] ?? "";
+$country = $_POST["country"] ?? "";
 
 if (!$user_id) {
-    echo json_encode(["success" => false, "message" => "User ID missing"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "user_id missing"
+    ]);
     exit;
 }
 
-// FIX: use correct column "id"
-$sql = "UPDATE users SET 
-            name = :name,
-            email = :email,
-            phone = :phone,
+$imagePath = null;
+
+/* ===============================
+   IMAGE UPLOAD
+   /uploads/sellers/52064/profile/2025/12/11/profile_xxx.webp
+================================ */
+if (!empty($_FILES["image"]["name"])) {
+
+    $year  = date("Y");
+    $month = date("m");
+    $day   = date("d");
+
+    $baseDir = "../../../public/uploads/sellers/$user_id/profile/$year/$month/$day";
+
+    if (!is_dir($baseDir)) {
+        mkdir($baseDir, 0777, true);
+    }
+
+    $ext = strtolower(pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION));
+    $fileName = "profile_" . uniqid() . "." . $ext;
+    $targetPath = "$baseDir/$fileName";
+
+    if (!move_uploaded_file($_FILES["image"]["tmp_name"], $targetPath)) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Image upload failed"
+        ]);
+        exit;
+    }
+
+    // 🔥 STORE THIS PATH IN DB
+    $imagePath = "/uploads/sellers/$user_id/profile/$year/$month/$day/$fileName";
+}
+
+/* ===============================
+   UPDATE USER (BY user_id)
+================================ */
+$sql = "UPDATE users SET
+            name    = :name,
+            email   = :email,
+            phone   = :phone,
             country = :country,
-            image = :image
-        WHERE id = :user_id";
+            image   = COALESCE(:image, image)
+        WHERE user_id = :user_id";
 
 $stmt = $pdo->prepare($sql);
 
 $success = $stmt->execute([
-    ":name" => $name,
-    ":email" => $email,
-    ":phone" => $phone,
+    ":name"    => $name,
+    ":email"   => $email,
+    ":phone"   => $phone,
     ":country" => $country,
-    ":image" => $image,
+    ":image"   => $imagePath,
     ":user_id" => $user_id
 ]);
 
 echo json_encode([
     "success" => $success,
-    "message" => $success ? "Profile updated!" : "Update failed"
+    "message" => $success ? "Profile updated successfully!" : "Update failed"
 ]);

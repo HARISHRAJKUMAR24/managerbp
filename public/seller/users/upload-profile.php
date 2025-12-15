@@ -3,7 +3,14 @@ header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json");
 
-// Get user ID
+require_once "../../../config/config.php";
+require_once "../../../src/database.php";
+
+$pdo = getDbConnection();
+
+/* ===============================
+   GET USER ID
+================================ */
 $userId = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
 
 if ($userId <= 0) {
@@ -14,7 +21,9 @@ if ($userId <= 0) {
     exit;
 }
 
-// Check file
+/* ===============================
+   CHECK FILE
+================================ */
 if (!isset($_FILES['file'])) {
     echo json_encode([
         "success" => false,
@@ -23,35 +32,65 @@ if (!isset($_FILES['file'])) {
     exit;
 }
 
-// Build correct upload directory:
-// managerbp/public/uploads/sellers/<userId>/profile/
-$basePath = __DIR__ . "/../../../public/uploads/sellers/$userId/profile/";
+/* ===============================
+   DATE-BASED FOLDER
+   /uploads/sellers/52064/profile/2025/12/11/
+================================ */
+$year  = date("Y");
+$month = date("m");
+$day   = date("d");
 
-// Create folder if needed
+$basePath = __DIR__ . "/../../../public/uploads/sellers/$userId/profile/$year/$month/$day/";
+
 if (!is_dir($basePath)) {
     mkdir($basePath, 0777, true);
 }
 
-// Sanitize filename
+/* ===============================
+   FILE NAME
+================================ */
 $originalName = basename($_FILES["file"]["name"]);
 $cleanName = preg_replace('/[^A-Za-z0-9.\-_]/', '_', $originalName);
-$filename = time() . "_" . $cleanName;
+$filename = "profile_" . uniqid() . "_" . $cleanName;
 
-// Final server path
 $targetFile = $basePath . $filename;
 
-// Move file
-if (move_uploaded_file($_FILES["file"]["tmp_name"], $targetFile)) {
-
-    // Return the path EXACT as your requirement
-    echo json_encode([
-        "success" => true,
-        "filename" => "sellers/$userId/profile/$filename"
-    ]);
-
-} else {
+/* ===============================
+   MOVE FILE
+================================ */
+if (!move_uploaded_file($_FILES["file"]["tmp_name"], $targetFile)) {
     echo json_encode([
         "success" => false,
         "message" => "Upload failed"
     ]);
+    exit;
 }
+
+/* ===============================
+   SAVE PATH IN DB
+================================ */
+$imagePath = "/uploads/sellers/$userId/profile/$year/$month/$day/$filename";
+
+$sql = "UPDATE users SET image = :image WHERE user_id = :user_id";
+$stmt = $pdo->prepare($sql);
+
+$success = $stmt->execute([
+    ":image"   => $imagePath,
+    ":user_id" => $userId
+]);
+
+if (!$success) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Image uploaded but DB update failed"
+    ]);
+    exit;
+}
+
+/* ===============================
+   SUCCESS RESPONSE
+================================ */
+echo json_encode([
+    "success"  => true,
+    "image"    => $imagePath
+]);
