@@ -2,20 +2,6 @@
 <?php
 require_once '../../src/functions.php';
 renderTemplate('header');
-
-$settings = fetchSettings();
-$subscription_histories = getAllSubscriptionHistories();
-
-// Get unique plans for filter dropdown
-$unique_plans = [];
-foreach ($subscription_histories as $history) {
-    if (!empty($history['plan_name']) && !in_array($history['plan_name'], array_column($unique_plans, 'name'))) {
-        $unique_plans[] = [
-            'id' => $history['plan_id'],
-            'name' => $history['plan_name']
-        ];
-    }
-}
 ?>
 <!--end:Header-->
 
@@ -28,7 +14,7 @@ foreach ($subscription_histories as $history) {
             <!--begin::Toolbar wrapper-->
             <div class="app-toolbar-wrapper d-flex flex-stack flex-wrap gap-4 w-100">
                 <!--begin::Page title-->
-                <div class="page-title d-flex flex-column gap-1 me-3 mb-2 w-100">
+                <div class="page-title d-flex flex-column gap-1 me-3 mb-2">
                     <!--begin::Breadcrumb-->
                     <ul class="breadcrumb breadcrumb-separatorless fw-semibold mb-6">
                         <!--begin::Item-->
@@ -63,166 +49,195 @@ foreach ($subscription_histories as $history) {
     <div id="kt_app_content" class="app-content flex-column-fluid">
         <!--begin::Content container-->
         <div id="kt_app_content_container" class="app-container container-fluid">
-            <!--begin::Filters Card-->
-            <div class="card mb-5">
-                <div class="card-body">
-                    <form id="filterForm" class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Plan Name</label>
-                            <select name="plan_filter" class="form-select form-select-solid">
-                                <option value="all">All Plans</option>
-                                <?php foreach ($unique_plans as $plan): ?>
-                                    <option value="<?= $plan['id'] ?>"><?= htmlspecialchars($plan['name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">GST Status</label>
-                            <select name="gst_filter" class="form-select form-select-solid">
-                                <option value="all">All</option>
-                                <option value="with_gst_number">GST Yes</option>
-                                <option value="without_gst_number">GST No</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">Payment Method</label>
-                            <select name="payment_method" class="form-select form-select-solid">
-                                <option value="all">All Methods</option>
-                                <option value="razorpay">Razorpay</option>
-                                <option value="phonepe">Phonepe</option>
-                                <option value="payu">Payu</option>
-                                <option value="manual">Manual</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">Date Range</label>
-                            <div class="input-group input-group-solid">
-                                <input type="date" name="date_from" class="form-control form-control-solid" placeholder="From">
-                                <span class="input-group-text">to</span>
-                                <input type="date" name="date_to" class="form-control form-control-solid" placeholder="To">
-                            </div>
-                        </div>
-
-                        <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-3">
-                            <div class="d-flex gap-3">
-                                <button type="button" id="resetFilters" class="btn btn-light">
-                                    <i class="ki-duotone ki-refresh fs-3 me-1">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                    </i>
-                                    Reset
-                                </button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="ki-duotone ki-filter fs-3 me-1">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                    </i>
-                                    Apply Filters
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <!--end::Filters Card-->
-
-            <!--begin::Subscription Histories Table-->
+            <!--begin::Card-->
             <div class="card">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-row-bordered align-middle" id="historiesTable">
-                            <thead>
-                                <tr class="fw-bold fs-6 text-gray-800 border-bottom border-gray-200">
-                                    <th class="text-center">#</th>
-                                    <th>INVOICE NO</th>
-                                    <th>Plan Name</th>
-                                    <th>Customer Name</th>
-                                    <th class="text-center">GST</th>
-                                    <th class="text-center">Amount</th>
-                                    <th class="text-center">Payment Method</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historiesTableBody">
-                                <?php if (empty($subscription_histories)): ?>
-                                    <tr>
-                                        <td colspan="8" class="text-center py-10">
-                                            <div class="text-gray-600">No subscription histories found.</div>
-                                        </td>
-                                    </tr>
-                                <?php else: ?>
-                                    <?php foreach ($subscription_histories as $index => $history):
-                                        $plan_id = $history['plan_id'] ?? 0;
-                                        $plan_name = $history['plan_name'] ?? '';
-                                        $gst_number = $history['gst_number'] ?? '';
-                                        $payment_method = $history['payment_method'] ?? '';
-                                        $name = $history['name'] ?? '';
-                                        $invoice_number = $history['invoice_number'] ?? '';
-                                        $amount = $history['amount'] ?? 0;
-                                        $currency = $history['currency'] ?? 'INR';
-                                        $created_at = $history['created_at'] ?? date('Y-m-d H:i:s');
-
-                                        // Determine GST status - Yes only if GST number is provided
-                                        $has_gst_number = !empty($gst_number) && trim($gst_number) !== '';
-                                        $gst_status = $has_gst_number ? 'with_gst_number' : 'without_gst_number';
-
-                                        // GST display - Simple Yes/No
-                                        $gst_display = $has_gst_number
-                                            ? '<span class="badge badge-success">Yes</span>'
-                                            : '<span class="badge badge-light">No</span>';
-                                    ?>
-                                        <tr class="history-row"
-                                            data-plan-id="<?= $plan_id ?>"
-                                            data-gst-status="<?= $gst_status ?>"
-                                            data-payment-method="<?= strtolower($payment_method) ?>"
-                                            data-invoice="<?= $invoice_number ?>"
-                                            data-name="<?= strtolower($name) ?>"
-                                            data-date="<?= date('Y-m-d', strtotime($created_at)) ?>">
-                                            <td class="text-center"><?= $index + 1 ?></td>
-                                            <td>
-                                                <span class="badge badge-light text-dark fw-bold">#<?= $invoice_number ?></span>
-                                            </td>
-                                            <td>
-                                                <?php if ($plan_name): ?>
-                                                    <span class="badge badge-info"><?= htmlspecialchars($plan_name) ?></span>
-                                                <?php else: ?>
-                                                    <span class="text-muted">N/A</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <span class="fw-bold"><?= htmlspecialchars($name) ?></span>
-                                            </td>
-                                            <td class="text-center">
-                                                <?= $gst_display ?>
-                                            </td>
-                                            <td class="text-center fw-bold text-primary">
-                                                <?= getCurrencySymbol($currency) . ' ' . number_format($amount, 2) ?>
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge badge-light text-capitalize"><?= htmlspecialchars($payment_method) ?></span>
-                                            </td>
-                                            <td>
-                                                <?= date('d M Y', strtotime($created_at)) ?>
-                                                <small class="d-block text-muted"><?= date('h:i A', strtotime($created_at)) ?></small>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+                <!--begin::Card header-->
+                <div class="card-header border-0 pt-6">
+                    <!--begin::Card title-->
+                    <div class="card-title">
+                        <!--begin::Search Box-->
+                        <div class="d-flex align-items-center position-relative my-1">
+                            <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                            </i>
+                            <input type="text" class="form-control form-control-solid w-350px ps-13" placeholder="Search invoice, payment ID, customer, plan..." id="searchFilter" />
+                        </div>
+                        <!--end::Search Box-->
                     </div>
+                    <!--begin::Card title-->
+                    <!--begin::Card toolbar-->
+                    <div class="card-toolbar">
+                        <!--begin::Toolbar-->
+                        <div class="d-flex justify-content-end align-items-center gap-3" data-kt-user-table-toolbar="base">
+                            <!--begin::Applied Filters (with X buttons)-->
+                            <div class="d-flex align-items-center gap-2" id="appliedFilters">
+                                <!-- Applied filters will appear here -->
+                            </div>
+                            <!--end::Applied Filters-->
+                            
+                            <!--begin::Filter Dropdown Button-->
+                            <button type="button" class="btn btn-light btn-active-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
+                                <i class="ki-duotone ki-filter fs-2 me-1">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                                <span class="d-none d-md-inline">More Filters</span>
+                            </button>
+                            <!--end::Filter Dropdown Button-->
+                            
+                            <!--begin::Filter Menu-->
+                            <div class="menu menu-sub menu-sub-dropdown w-350px w-md-400px" data-kt-menu="true">
+                                <!--begin::Header-->
+                                <div class="px-7 py-5">
+                                    <div class="fs-5 text-dark fw-bold">Filter Options</div>
+                                </div>
+                                <!--end::Header-->
+                                <!--begin::Separator-->
+                                <div class="separator border-gray-200"></div>
+                                <!--end::Separator-->
+                                <!--begin::Content-->
+                                <div class="px-7 py-5" data-kt-user-table-filter="form">
+                                    <!--begin::Grid Container for Filters-->
+                                    <div class="row g-5">
+                                        <!--Plan Filter-->
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label fs-6 fw-semibold">Plan Name</label>
+                                            <select class="form-select form-select-solid fw-bold" id="planFilter">
+                                                <option value="">All</option>
+                                                <?php
+                                                $data = fetchSubscriptionPlans();
+                                                foreach ($data as $row):
+                                                ?>
+                                                    <option value="<?= $row['id'] ?>"><?= $row['name'] ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        
+                                        <!--GST Filter-->
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label fs-6 fw-semibold">GST Status</label>
+                                            <select class="form-select form-select-solid fw-bold" id="gstFilter">
+                                                <option value="">All</option>
+                                                <option value="yes">Yes (GST Provided)</option>
+                                                <option value="no">No (No GST)</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <!--Payment Method Filter-->
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label fs-6 fw-semibold">Payment Method</label>
+                                            <select class="form-select form-select-solid fw-bold" id="paymentMethodFilter">
+                                                <option value="">All</option>
+                                                <option value="razorpay">Razorpay</option>
+                                                <option value="phone pay">Phone Pay</option>
+                                                <option value="payu">PayU</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <!--Date Range Filter - Full Width-->
+                                        <div class="col-12">
+                                            <label class="form-label fs-6 fw-semibold">Date Range</label>
+                                            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2">
+                                                <div class="flex-fill">
+                                                    <input type="date" class="form-control form-control-solid" id="startDateFilter" placeholder="Start Date" />
+                                                </div>
+                                                <span class="text-muted mx-2 d-none d-md-block">to</span>
+                                                <div class="flex-fill">
+                                                    <input type="date" class="form-control form-control-solid" id="endDateFilter" placeholder="End Date" />
+                                                </div>
+                                            </div>
+                                            <div class="form-text text-muted mt-1">Leave empty for all dates</div>
+                                        </div>
+                                    </div>
+                                    <!--end::Grid Container-->
+                                    
+                                    <!--begin::Actions-->
+                                    <div class="d-flex justify-content-between align-items-center mt-8 pt-5 border-top">
+                                        <button type="reset" class="btn btn-light btn-active-light-primary fw-semibold" id="resetAllFiltersBtn">
+                                            Reset All
+                                        </button>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-light btn-active-light-primary fw-semibold" data-kt-menu-dismiss="true">
+                                                Close
+                                            </button>
+                                            <button type="button" class="btn btn-primary fw-semibold" data-kt-menu-dismiss="true" id="applyFiltersBtn">
+                                                Apply Filters
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!--end::Actions-->
+                                </div>
+                                <!--end::Content-->
+                            </div>
+                            <!--end::Filter Menu-->
+                        </div>
+                        <!--end::Toolbar-->
+                    </div>
+                    <!--end::Card toolbar-->
                 </div>
+                <!--end::Card header-->
+                <!--begin::Card body-->
+                <div class="card-body py-4">
+                    <!--begin::Table-->
+                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_table_subscription_histories">
+                        <thead>
+                            <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+                                <th class="w-10px pe-2">
+                                    <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                                        <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_table_subscription_histories .form-check-input" value="1" />
+                                    </div>
+                                </th>
+                                <th class="min-w-125px">Invoice No</th>
+                                <th class="min-w-150px">Plan Name</th>
+                                <th class="min-w-200px">Customer Details</th>
+                                <th class="min-w-125px">Amount</th>
+                                <th class="min-w-125px">Payment Method</th>
+                                <th class="min-w-150px">Payment ID</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600 fw-semibold">
+                        </tbody>
+                    </table>
+                    <!--end::Table-->
+                </div>
+                <!--end::Card body-->
             </div>
-            <!--end::Subscription Histories Table-->
+            <!--end::Card-->
         </div>
         <!--end::Content container-->
     </div>
     <!--end::Content-->
 </div>
 <!--end::Content wrapper-->
+
+<style>
+.applied-filter-badge {
+    padding: 5px 12px;
+    border-radius: 6px;
+    background-color: var(--bs-light);
+    border: 1px solid var(--bs-gray-300);
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.applied-filter-badge .remove-filter {
+    cursor: pointer;
+    color: var(--bs-danger);
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 2px;
+    border-radius: 3px;
+}
+
+.applied-filter-badge .remove-filter:hover {
+    background-color: var(--bs-danger);
+    color: white;
+}
+</style>
 
 <!--include:Footer-->
 <?php renderTemplate('footer'); ?>
@@ -232,7 +247,6 @@ foreach ($subscription_histories as $history) {
 <script src="assets/plugins/custom/jquery/jquery-3.7.1.min.js"></script>
 <script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
-
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="assets/js/custom/subscription-histories/list.js"></script>
 <!--end::Custom Javascript-->
