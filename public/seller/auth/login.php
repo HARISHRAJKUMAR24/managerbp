@@ -15,48 +15,90 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-$raw = file_get_contents("php://input");
-$input = json_decode($raw, true) ?? $_POST;
+/* ===============================
+   READ INPUT (FIXED)
+================================ */
+$input = $_POST;
 
+if (empty($input)) {
+    $raw = file_get_contents("php://input");
+    $input = json_decode($raw, true);
+
+    if (!is_array($input)) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Invalid JSON input"
+        ]);
+        exit;
+    }
+}
+
+/* ===============================
+   VALIDATE INPUT
+================================ */
 $phone = trim($input['phone'] ?? "");
 $password = trim($input['password'] ?? "");
 
-if (!$phone || !$password) {
-    echo json_encode(["success" => false, "message" => "Phone and password required"]);
+if ($phone === "" || $password === "") {
+    echo json_encode([
+        "success" => false,
+        "message" => "Phone and password required"
+    ]);
     exit;
 }
 
-// Get correct seller row
+/* ===============================
+   FETCH USER
+================================ */
 $stmt = $pdo->prepare("SELECT * FROM users WHERE phone = ? LIMIT 1");
 $stmt->execute([$phone]);
-$user = $stmt->fetchObject();
+$user = $stmt->fetch(PDO::FETCH_OBJ);
 
 if (!$user) {
-    echo json_encode(["success" => false, "message" => "User not found"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "User not found"
+    ]);
     exit;
 }
 
+/* ===============================
+   VERIFY PASSWORD
+================================ */
 if (!password_verify($password, $user->password)) {
-    echo json_encode(["success" => false, "message" => "Incorrect password"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Incorrect password"
+    ]);
     exit;
 }
 
-// generate token
+/* ===============================
+   GENERATE TOKEN
+================================ */
 $token = bin2hex(random_bytes(32));
-$update = $pdo->prepare("UPDATE users SET api_token = ? WHERE id = ?");
+
+$update = $pdo->prepare(
+    "UPDATE users SET api_token = ? WHERE id = ?"
+);
 $update->execute([$token, $user->id]);
 
-// response structure FIXED
+/* ===============================
+   SUCCESS RESPONSE (STABLE)
+================================ */
 echo json_encode([
     "success" => true,
     "message" => "Login successful",
     "token" => $token,
     "user" => [
-        "id" => $user->user_id, // ⭐ REAL SELLER USER_ID
-        "name" => $user->name,
-        "phone" => $user->phone,
-        "site_slug" => $user->site_slug,
+        "db_id"    => (int) $user->id,       // internal DB id
+        "user_id"  => (int) $user->user_id,  // public seller id (IMPORTANT)
+        "name"     => $user->name,
+        "email"    => $user->email,
+        "phone"    => $user->phone,
+        "site_slug"=> $user->site_slug,
+        "country"  => $user->country,
     ]
 ]);
+
 exit;
-?>
