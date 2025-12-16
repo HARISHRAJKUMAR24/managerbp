@@ -209,14 +209,20 @@ function fetchPlan($plan_id)
     return $stmt->fetchObject();
 }
 
-function addPlan($name, $amount, $previous_amount, $duration, $description, $feature_lists, $appointments_limit, $customers_limit, $categories_limit, $services_limit, $coupons_limit, $manual_payment_methods_limit, $razorpay, $phonepe, $payu, $gst_type)
+function addPlan($name, $amount, $previous_amount, $duration, $description, $feature_lists, 
+                 $appointments_limit, $events_limit, $customers_limit, $categories_limit, 
+                 $services_limit, $coupons_limit, $manual_payment_methods_limit, 
+                 $razorpay, $phonepe, $payu, $gst_type)
 {
-
     $pdo = getDbConnection();
     $stmt = $pdo->prepare("INSERT INTO subscription_plans
-    (plan_id, name, amount, previous_amount, duration, description, feature_lists, appointments_limit, customers_limit, categories_limit, services_limit, coupons_limit, manual_payment_methods_limit, razorpay, phonepe, payu, gst_type)
+    (plan_id, name, amount, previous_amount, duration, description, feature_lists, 
+     appointments_limit, events_limit, customers_limit, categories_limit, services_limit, 
+     coupons_limit, manual_payment_methods_limit, razorpay, phonepe, payu, gst_type)
     VALUES
-    (:plan_id, :name, :amount, :previous_amount, :duration, :description, :feature_lists, :appointments_limit, :customers_limit, :categories_limit, :services_limit, :coupons_limit, :manual_payment_methods_limit, :razorpay, :phonepe, :payu, :gst_type)");
+    (:plan_id, :name, :amount, :previous_amount, :duration, :description, :feature_lists, 
+     :appointments_limit, :events_limit, :customers_limit, :categories_limit, :services_limit, 
+     :coupons_limit, :manual_payment_methods_limit, :razorpay, :phonepe, :payu, :gst_type)");
 
     $stmt->execute([
         'plan_id' => uuid(),
@@ -227,6 +233,7 @@ function addPlan($name, $amount, $previous_amount, $duration, $description, $fea
         'description' => $description,
         'feature_lists' => $feature_lists,
         'appointments_limit' => $appointments_limit,
+        'events_limit' => $events_limit,
         'customers_limit' => $customers_limit,
         'categories_limit' => $categories_limit,
         'services_limit' => $services_limit,
@@ -239,12 +246,13 @@ function addPlan($name, $amount, $previous_amount, $duration, $description, $fea
     ]);
 }
 
-function updatePlan($plan_id, $name, $amount, $previous_amount, $duration, $description, $feature_lists, $appointments_limit, $customers_limit, $categories_limit, $services_limit, $coupons_limit, $manual_payment_methods_limit, $razorpay, $phonepe, $payu, $gst_type)
+function updatePlan($plan_id, $name, $amount, $previous_amount, $duration, $description, $feature_lists, 
+                    $appointments_limit, $events_limit, $customers_limit, $categories_limit, 
+                    $services_limit, $coupons_limit, $manual_payment_methods_limit, 
+                    $razorpay, $phonepe, $payu, $gst_type)
 {
-
     $pdo = getDbConnection();
-    $stmt = $pdo->prepare("UPDATE subscription_plans
-    SET
+    $stmt = $pdo->prepare("UPDATE subscription_plans SET 
         name = :name,
         amount = :amount,
         previous_amount = :previous_amount,
@@ -252,6 +260,7 @@ function updatePlan($plan_id, $name, $amount, $previous_amount, $duration, $desc
         description = :description,
         feature_lists = :feature_lists,
         appointments_limit = :appointments_limit,
+        events_limit = :events_limit,
         customers_limit = :customers_limit,
         categories_limit = :categories_limit,
         services_limit = :services_limit,
@@ -261,8 +270,7 @@ function updatePlan($plan_id, $name, $amount, $previous_amount, $duration, $desc
         phonepe = :phonepe,
         payu = :payu,
         gst_type = :gst_type
-    WHERE
-        plan_id = :plan_id");
+    WHERE plan_id = :plan_id");
 
     $stmt->execute([
         'plan_id' => $plan_id,
@@ -273,6 +281,7 @@ function updatePlan($plan_id, $name, $amount, $previous_amount, $duration, $desc
         'description' => $description,
         'feature_lists' => $feature_lists,
         'appointments_limit' => $appointments_limit,
+        'events_limit' => $events_limit,
         'customers_limit' => $customers_limit,
         'categories_limit' => $categories_limit,
         'services_limit' => $services_limit,

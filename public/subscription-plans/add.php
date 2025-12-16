@@ -120,6 +120,13 @@ $settings = fetchSettings();
                 </div>
 
                 <div class="col-sm-6 mb-5">
+                    <label class="required form-label">Events Limit</label>
+                    <input type="text" name="events_limit" class="form-control form-control-solid" />
+
+                    <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
+                </div>
+
+                <div class="col-sm-6 mb-5">
                     <label class="required form-label">Customers Limit</label>
                     <input type="text" name="customers_limit" class="form-control form-control-solid" />
 

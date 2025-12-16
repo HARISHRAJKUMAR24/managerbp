@@ -86,3 +86,14 @@ ADD COLUMN `payu_merchant_key` VARCHAR(255) DEFAULT NULL AFTER `razorpay_key_sec
 ADD COLUMN `payu_salt` VARCHAR(255) DEFAULT NULL AFTER `payu_merchant_key`,
 ADD COLUMN `payu_client_id` VARCHAR(255) DEFAULT NULL AFTER `payu_salt`,
 ADD COLUMN `payu_client_secret` VARCHAR(255) DEFAULT NULL AFTER `payu_client_id`;
+
+
+
+16/12/2025
+
+This query for events limit in subscription_plans
+
+-- Add events_limit column to subscription_plans table
+ALTER TABLE `subscription_plans` 
+ADD COLUMN `events_limit` VARCHAR(191) NOT NULL DEFAULT 'unlimited' 
+AFTER `appointments_limit`;
