@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 12, 2025 at 01:48 PM
+-- Generation Time: Dec 16, 2025 at 11:24 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -97,8 +97,10 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `image`, `meta_title`, `meta_description`, `created_at`) VALUES
-(1, 'CAT_693baa0a9ae39', 50339, 'Watchwomen', 'watchwomen', 'sellers/50339/categories/2025/12/12/1765518349_693bac0d4c9f5.webp', 'security ', 'Safe place ', '2025-12-12 11:07:14.634'),
-(2, 'CAT_693baa9930b14', 50339, 'Watchman', 'watchman', 'sellers/50339/categories/2025/12/12/1765517975_693baa9775272.png', 'security', 'safe guard', '2025-12-12 11:09:37.199');
+(4, 'CAT_6940e5bb44484', 85698, 'sdf', 'sdf', 'sellers/85698/categories/2025/12/16/1765860785_6940e5b1d7c88.png', 'ssdf', 'sdf', '2025-12-16 10:23:15.279'),
+(6, 'CAT_6940f0e5d1eb3', 85698, 'Cateog', 'adf', 'sellers/85698/categories/2025/12/16/1765866071_6940fa571cb76.webp', 'sdf', 'sdf', '2025-12-16 11:10:53.859'),
+(7, 'CAT_6940f1415866b', 85698, 'Arun', 'arun', 'sellers/85698/categories/2025/12/16/1765867876_69410164d787c.png', 'dsssssssssssssssssssssssssssssssssssssssss', 'ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss', '2025-12-16 11:12:25.362'),
+(8, 'CAT_6940feb60e8af', 85698, 'dddd', 'dddd', 'sellers/85698/categories/2025/12/16/1765868107_6941024bf3050.png', 'xcv', 'xcv', '2025-12-16 12:09:50.059');
 
 -- --------------------------------------------------------
 
@@ -139,7 +141,7 @@ CREATE TABLE `coupons` (
 --
 
 INSERT INTO `coupons` (`id`, `coupon_id`, `user_id`, `name`, `code`, `discount_type`, `discount`, `start_date`, `end_date`, `usage_limit`, `min_booking_amount`, `created_at`) VALUES
-(16, 'CPN_693bb6e032fd8_6480', 50339, 'Ztorespot', 'ZTORE2026', 'fixed', 133, '2025-12-10 09:30:00.000', '2025-12-18 19:30:00.000', 3, 1000, '2025-12-12 12:02:00.211');
+(18, 'CPN_6941323d61464_6509', 85698, 'dsf', 'DFSFSFSFSDFSDFSDFSDFSDFSDFSDFSD', 'percentage', 5, '2025-12-08 14:00:00.000', '2025-12-17 14:00:00.000', 4, 333, '2025-12-16 15:49:41.399');
 
 -- --------------------------------------------------------
 
@@ -235,10 +237,8 @@ CREATE TABLE `employees` (
 --
 
 INSERT INTO `employees` (`id`, `employee_id`, `user_id`, `name`, `position`, `email`, `phone`, `address`, `joining_date`, `image`, `created_at`) VALUES
-(1, '0bc94c68-5a03-4378-9d06-d09f0f034508', 52064, 'ddd', 'dd', 'deepakchitravel@gmail.com', '+919345604653', '1/60 Middle street ,Cholapandi', '2025-12-31', '/uploads/sellers/52064/employees/2025/12/11/emp_693a88060aeab.webp', '2025-12-11 14:29:52.467'),
-(2, '210d1676-e9d3-440b-8fe5-adfc7dae97e4', 50339, 'Deepak', 'junior Developer', 'deepakchitravel@gmail.com', '+919345604653', '1/60 Middle street ,Solapandi', '2025-12-13', '/uploads/sellers/50339/employees/2025/12/12/emp_693bac6db4c9f.png', '2025-12-12 11:17:27.405'),
-(3, 'f6c12f16-6481-4875-8887-3ae7faa55f22', 50339, 'Harish', 'Junior Developer', 'harish@gmail.com', '+918015021359', 'cccccc', '2025-12-13', '/uploads/sellers/50339/employees/2025/12/12/emp_693bacaa72bfb.webp', '2025-12-12 11:18:27.587'),
-(4, 'cf708d39-3196-47dc-9f3f-da6c2f90450c', 50339, 'Barani', 'Sales Executive', 'barani@gmail.com', '+919345604653', '1/60 Middle street ,Cholapandi', '2025-12-13', '/uploads/sellers/50339/employees/2025/12/12/emp_693bacce184f3.webp', '2025-12-12 11:19:03.765');
+(8, '534b2bf2-4aae-40e0-a41f-28bbac5058e4', 85698, 'ddddsssssewrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr', 'developessssrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr', 'deepakchitravel@gmail.com', '+919999999999', 'America south pole street', '2025-12-17', '/uploads/sellers/85698/employees/2025/12/16/emp_6940fad99c118.png', '2025-12-16 11:53:23.725'),
+(10, 'c570c62f-757b-43d9-812e-c83a31ace1d4', 47365, 'a', 'a', 'deepakchitravel@gmail.com', '+919999999999', 'America south pole street', '2025-12-17', NULL, '2025-12-16 13:48:05.442');
 
 -- --------------------------------------------------------
 
@@ -278,7 +278,7 @@ CREATE TABLE `events` (
 --
 
 INSERT INTO `events` (`id`, `user_id`, `title`, `description`, `date`, `start_time`, `end_time`, `location`, `organizer`, `category`, `banner`, `logo`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `comfort`, `things_to_know`, `terms`, `videos`, `seat_layout`, `created_at`) VALUES
-(2, 52064, 'Ztorespot', '', '2025-12-13', '', '', 'Mannargudi, TN', 'Deepak', 'Singing', '/uploads/sellers/52064/events/banner/1765525547_2045.png', '/uploads/sellers/52064/events/logo/1765525553_7991.webp', 'IN', 'TN', 'Mannargudi', '', '', 'https://www.google.com/maps?q=1%2F60%20Middle%20street%20%2CCholapandi%20Mannargudi%20614016&output=embed', '', '[]', '', '[]', '', '2025-12-12 13:15:57.572');
+(5, 85698, 'sdf', '', '2025-12-17', '', '', 'Aduthurai, TN', 'sd', 'Singing', '/uploads/sellers/85698/events/banner/1765866330_6850.png', '/uploads/sellers/85698/events/logo/1765866333_3488.png', 'IN', 'TN', 'Aduthurai', '', '', 'https://www.google.com/maps?q=1%2F60%20Middle%20street%20%2CCholapandi%20Aduthurai%20614016&output=embed', '', '[]', '', '[]', '', '2025-12-16 11:56:02.251');
 
 -- --------------------------------------------------------
 
@@ -293,13 +293,6 @@ CREATE TABLE `event_seat_layouts` (
   `layout_json` longtext NOT NULL,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `event_seat_layouts`
---
-
-INSERT INTO `event_seat_layouts` (`id`, `event_id`, `user_id`, `layout_json`, `updated_at`) VALUES
-(11, 2, 52064, '{\"tables\":[{\"id\":\"mj2v1sjx40djr\",\"x\":200,\"y\":200,\"seats\":[{\"id\":\"mj2v1sjxfcfm4\",\"label\":\"C1\",\"x\":260,\"y\":140,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxrf9sg\",\"label\":\"C2\",\"x\":260,\"y\":315,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjx9rd8d\",\"label\":\"C3\",\"x\":140,\"y\":225,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjx36251\",\"label\":\"C4\",\"x\":385,\"y\":225,\"color\":\"#E5E7EB\"}]},{\"id\":\"mj2v1sjxsvqc4\",\"x\":550,\"y\":200,\"seats\":[{\"id\":\"mj2v1sjxddbr2\",\"label\":\"C1\",\"x\":610,\"y\":140,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxkgxx0\",\"label\":\"C2\",\"x\":610,\"y\":315,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxkou8m\",\"label\":\"C3\",\"x\":490,\"y\":225,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxxuyz7\",\"label\":\"C4\",\"x\":735,\"y\":225,\"color\":\"#E5E7EB\"}]},{\"id\":\"mj2v1sjxzmn3e\",\"x\":900,\"y\":200,\"seats\":[{\"id\":\"mj2v1sjxly1nq\",\"label\":\"C1\",\"x\":960,\"y\":140,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxwtwsc\",\"label\":\"C2\",\"x\":960,\"y\":315,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjx8aa89\",\"label\":\"C3\",\"x\":840,\"y\":225,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxef7hh\",\"label\":\"C4\",\"x\":1085,\"y\":225,\"color\":\"#E5E7EB\"}]},{\"id\":\"mj2v1sjxz1uj0\",\"x\":200,\"y\":500,\"seats\":[{\"id\":\"mj2v1sjxj5281\",\"label\":\"C1\",\"x\":260,\"y\":440,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxjzd3b\",\"label\":\"C2\",\"x\":260,\"y\":615,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxunadh\",\"label\":\"C3\",\"x\":140,\"y\":525,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxrmjh2\",\"label\":\"C4\",\"x\":385,\"y\":525,\"color\":\"#E5E7EB\"}]},{\"id\":\"mj2v1sjxn3he5\",\"x\":550,\"y\":500,\"seats\":[{\"id\":\"mj2v1sjxc536j\",\"label\":\"C1\",\"x\":610,\"y\":440,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxxlhor\",\"label\":\"C2\",\"x\":610,\"y\":615,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxko5pl\",\"label\":\"C3\",\"x\":490,\"y\":525,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxklv8l\",\"label\":\"C4\",\"x\":735,\"y\":525,\"color\":\"#E5E7EB\"}]},{\"id\":\"mj2v1sjxsnjkl\",\"x\":900,\"y\":500,\"seats\":[{\"id\":\"mj2v1sjxkq7cp\",\"label\":\"C1\",\"x\":960,\"y\":440,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxxvt8k\",\"label\":\"C2\",\"x\":960,\"y\":615,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxsbj60\",\"label\":\"C3\",\"x\":840,\"y\":525,\"color\":\"#E5E7EB\"},{\"id\":\"mj2v1sjxpszlk\",\"label\":\"C4\",\"x\":1085,\"y\":525,\"color\":\"#E5E7EB\"}]}]}', '2025-12-12 12:46:00');
 
 -- --------------------------------------------------------
 
@@ -391,7 +384,8 @@ INSERT INTO `services` (`id`, `service_id`, `user_id`, `name`, `slug`, `amount`,
 (1, 'SRV_693a930157c43', 52064, 'fdg', 'fdg', '34', '43', 'http://localhost/managerbp/public/uploads/sellers/sellers/52064/services/2025/12/11/srv_693a92bb4b9b0.png', NULL, '2', 'minutes', NULL, NULL, NULL, NULL, 0, '2025-12-11 15:16:41.360'),
 (2, 'SRV_693aaca95cf2d', 52064, 'dfg', 'fg', '33', '44', '/uploads/sellers/52064/services/2025/12/11/srv_693ab205bc44c.png', 0, '2', 'minutes', 'sdf', NULL, '', '', 0, '2025-12-11 17:06:09.381'),
 (3, 'SRV_693ab1e9f048d', 52064, 'sdf', 'sdf', '2', '2', '/uploads/sellers/52064/services/2025/12/11/srv_693ab6be40a17.png', 0, '2', 'minutes', '', NULL, '', '', 0, '2025-12-11 17:28:33.984'),
-(4, 'SRV_693badb007345', 50339, 'Developer', 'dev', '255', '400', '/uploads/sellers/50339/services/2025/12/12/srv_693bad9252174.png', 2, '2', 'minutes', NULL, NULL, NULL, NULL, 0, '2025-12-12 11:22:48.029');
+(4, 'SRV_693badb007345', 50339, 'Developer', 'dev', '255', '400', '/uploads/sellers/50339/services/2025/12/12/srv_693bad9252174.png', 2, '2', 'minutes', NULL, NULL, NULL, NULL, 0, '2025-12-12 11:22:48.029'),
+(5, 'SRV_694113c1f10ae', 85698, 'sdf', 'sdf', '33', '44', '/uploads/sellers/85698/services/2025/12/16/srv_694113ced92b6.webp', 7, '2', 'minutes', '', NULL, '', '', 0, '2025-12-16 13:39:37.987');
 
 -- --------------------------------------------------------
 
@@ -417,7 +411,9 @@ INSERT INTO `service_images` (`id`, `service_id`, `image`, `created_at`) VALUES
 (58, 3, '/uploads/sellers/52064/services/additional/2025/12/11/add_693aae255eb6f.webp', '2025-12-11 18:12:17.711'),
 (59, 3, '/uploads/sellers/52064/services/additional/2025/12/11/add_693abc27d69e8.webp', '2025-12-11 18:12:17.714'),
 (60, 4, '/uploads/sellers/50339/services/additional/2025/12/12/add_693bad974b399.png', '2025-12-12 11:22:48.031'),
-(61, 4, '/uploads/sellers/50339/services/additional/2025/12/12/add_693bad974b57f.webp', '2025-12-12 11:22:48.031');
+(61, 4, '/uploads/sellers/50339/services/additional/2025/12/12/add_693bad974b57f.webp', '2025-12-12 11:22:48.031'),
+(66, 5, '/uploads/sellers/85698/services/additional/2025/12/16/add_694130950b756.webp', '2025-12-16 15:42:38.429'),
+(67, 5, '/uploads/sellers/85698/services/additional/2025/12/16/add_694130950c350.webp', '2025-12-16 15:42:38.433');
 
 -- --------------------------------------------------------
 
@@ -512,13 +508,6 @@ CREATE TABLE `site_settings` (
   `saturday_ends` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `site_settings`
---
-
-INSERT INTO `site_settings` (`id`, `user_id`, `logo`, `favicon`, `phone`, `whatsapp`, `email`, `currency`, `country`, `state`, `address`, `meta_title`, `meta_description`, `sharing_image_preview`, `gst_number`, `gst_type`, `tax_percent`, `facebook`, `twitter`, `instagram`, `linkedin`, `youtube`, `pinterest`, `cash_in_hand`, `razorpay_key_id`, `phonepe_salt_key`, `phonepe_salt_index`, `phonepe_merchant_id`, `payu_api_key`, `payu_salt`, `sunday`, `sunday_starts`, `sunday_ends`, `monday`, `monday_starts`, `monday_ends`, `tuesday`, `tuesday_starts`, `tuesday_ends`, `wednesday`, `wednesday_starts`, `wednesday_ends`, `thursday`, `thursday_starts`, `thursday_ends`, `friday`, `friday_starts`, `friday_ends`, `saturday`, `saturday_starts`, `saturday_ends`) VALUES
-(2, 9, 'sellers/9/site-settings/logo/logo_693659b362662.jpg', 'sellers/9/site-settings/favicon/favicon_693659b76b865.png', '8015021359', '8015021359', 'deepak3mama@gmail.com', 'INR', 'AR', 'A', '4/44 Kadai Theru Redipalayalam Ramanathapuram Addl Talk Thanjavur\nPincode - 613004', 'Lorem Mama bb', 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. ss', 'sellers/9/site-settings/seo/seo_6936a03e93819.webp', '23AACCZ2135N1Z7', 'inclusive', 12.00, 'https://youtube.com', 'https://youtube.com', 'https://youtube.com', 'https://youtube.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '09:00', '17:00', 1, '09:00', '17:00', 1, '09:00', '17:00', 1, '09:00', '17:00', 1, '09:00', '17:00', 1, '09:00', '17:00', 1, '09:00', '17:00');
-
 -- --------------------------------------------------------
 
 --
@@ -551,6 +540,13 @@ CREATE TABLE `subscription_histories` (
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `currency_symbol` varchar(10) DEFAULT '₹'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `subscription_histories`
+--
+
+INSERT INTO `subscription_histories` (`id`, `invoice_number`, `plan_id`, `user_id`, `payment_method`, `payment_id`, `currency`, `amount`, `gst_amount`, `gst_type`, `gst_number`, `gst_percentage`, `discount`, `name`, `email`, `phone`, `address_1`, `address_2`, `state`, `city`, `pin_code`, `country`, `created_at`, `currency_symbol`) VALUES
+(36, 1, 8, 85698, 'razorpay', 'pay_RsFEHOxgnvAq9K', 'INR', 407, 62, 'exclusive', '', 18, 0, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', 'Gopalasamudram', '', 'Tamil Nadu', 'Tiruvarur', '614001', 'India', '2025-12-16 15:39:13.000', '₹');
 
 -- --------------------------------------------------------
 
@@ -624,9 +620,9 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (1, 9621, 'Muhammad Muawiyah', 'muawiyahdev@gmail.com', '+8801914513373', '$2b$12$eGO8sJ/beIqQzLLAO/XjE.9y60Zaq9mBaUSm9TAbuujCnZhXWI70O', 'BD', '', 'Auto Care', 'auto-care', '2024-11-14 00:40:52.868', NULL, NULL, 0, NULL, NULL),
-(9, 52064, 'Captian', 'cap@gmail.com', '8015021359', '$2y$10$s0KzfCZefZL2vmGxyFopieT9DTWpEghtPsS3ZFyC5m4Kc.di.wAVa', 'IN', 'sellers/9/profile/1765188047_download__1_.jpg', 'Captian', 'captian', '2025-12-02 14:55:43.000', NULL, NULL, 0, 5, '263e119bdb45b81218b6555b4e3c202325fa72a5321f33bd1be3f8eeb57f81f7'),
-(10, 50339, 'Deepak', '9345604653', '9345604653', '$2y$10$a1pYnmPW3RCI4JgJ3P/5GulpeGXxiYYHynmAWApXSeX7LZkZ3VG8q', 'IN', NULL, 'deepak', 'deepak', '2025-12-12 10:15:55.000', NULL, NULL, 0, NULL, '9be00b23d614d0179a66168a8eba071d1b8ec9cadb56e320b4bbc0cf0643b4d1'),
-(12, 94212, 'test_1', NULL, '9944228439', '$2y$10$j9liQvsrgCkIoQtn0o1HB.EXzx4cwFSNh1twykFugjVJuhP9Uarba', 'IN', NULL, 'test', 'test', '2025-12-12 10:51:33.000', NULL, NULL, 0, NULL, '37b8f9c5f5b749759629b368c0d80921d1f661e798d8b22f0f002d9633e4dcfe');
+(16, 85698, 'Deepak', NULL, '9999999999', '$2y$10$gNGmw0aFISR6YGv1.G4AQexikpO6qDBTxHtwo8IrpMefl5mlSOLyC', 'IN', NULL, 'deepak', 'deepak', '2025-12-15 16:44:37.000', NULL, NULL, 0, NULL, '367ffc2bc52299f87baf66e8607512a02c648625b303fc9bd5506b226fc62564'),
+(17, 73108, 'Arun', NULL, '7777777777', '$2y$10$zDXw9BVMIJhXLxPJ3OTHLeonuX4hQSth0e4UBfT9f5Rg7LoNBkMlS', 'IN', NULL, 'arun', 'arun', '2025-12-15 18:19:40.000', NULL, NULL, 0, NULL, 'e07dfc6e64de5d62b289a0af1804c670124473d3773036d79929914ffef6b4ee'),
+(18, 47365, 'Harish', NULL, '1111111111', '$2y$10$M3V2cKVdJBRfoB9xU95Pk.VVLtvQvxsKy/zBggGlEdgynyj7ZJzhu', 'IN', NULL, 'aa', 'aa', '2025-12-16 13:47:26.000', NULL, NULL, 0, NULL, 'd928a3d1ac4b6ea38c79ea161736dc287e713816a103efad26577c169d1d0782');
 
 -- --------------------------------------------------------
 
@@ -911,7 +907,7 @@ ALTER TABLE `available_areas`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `configured_plugins`
@@ -923,7 +919,7 @@ ALTER TABLE `configured_plugins`
 -- AUTO_INCREMENT for table `coupons`
 --
 ALTER TABLE `coupons`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `customers`
@@ -947,13 +943,13 @@ ALTER TABLE `discounts`
 -- AUTO_INCREMENT for table `employees`
 --
 ALTER TABLE `employees`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `events`
 --
 ALTER TABLE `events`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `event_seat_layouts`
@@ -983,13 +979,13 @@ ALTER TABLE `plugins`
 -- AUTO_INCREMENT for table `services`
 --
 ALTER TABLE `services`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `service_images`
 --
 ALTER TABLE `service_images`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT for table `settings`
@@ -1001,13 +997,13 @@ ALTER TABLE `settings`
 -- AUTO_INCREMENT for table `site_settings`
 --
 ALTER TABLE `site_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `subscription_histories`
 --
 ALTER TABLE `subscription_histories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `subscription_plans`
@@ -1019,7 +1015,7 @@ ALTER TABLE `subscription_plans`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `website_pages`
@@ -1117,7 +1113,7 @@ ALTER TABLE `service_images`
 -- Constraints for table `site_settings`
 --
 ALTER TABLE `site_settings`
-  ADD CONSTRAINT `site_settings_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `site_settings_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `subscription_histories`
