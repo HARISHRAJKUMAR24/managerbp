@@ -1,167 +1,185 @@
 $(document).ready(function () {
-  // Initialize DataTable
-  const table = $('#historiesTable').DataTable({
+  var table = $("#kt_table_subscription_histories").DataTable({
+    processing: true,
+    serverSide: true,
     pageLength: 10,
-    order: [[11, 'desc']], // Sort by date descending
-    dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
-    language: {
-      search: "Search:",
-      lengthMenu: "Show _MENU_ entries",
-      info: "Showing _START_ to _END_ of _TOTAL_ entries",
-    }
+    ordering: false,
+    ajax: {
+      url: `${BASE_URL}ajax/subscription-histories/list.php`,
+      type: "POST",
+      data: function (d) {
+        // Add your custom filters
+        d.planFilter = $("#planFilter").val();
+        d.gstFilter = $("#gstFilter").val();
+        d.paymentMethodFilter = $("#paymentMethodFilter").val();
+        d.startDateFilter = $("#startDateFilter").val();
+        d.endDateFilter = $("#endDateFilter").val();
+      }
+    },
+    columns: [
+      { data: "checkbox" },
+      { data: "invoice_number" },
+      { data: "plan_name" },
+      { data: "customer_info" },
+      { data: "amount" },
+      { data: "payment_method" },
+      { data: "payment_id" }
+    ]
   });
 
-  // Apply filters
-  $('#filterForm').on('submit', function (e) {
-    e.preventDefault();
-    applyFilters();
+  // Search filter (invoice, payment ID, customer, plan)
+  $('#searchFilter').on('keyup', function() {
+    table.search(this.value).draw();
   });
 
-  // Search functionality
-  $('#searchButton').on('click', function () {
-    applyFilters();
-  });
-
-  $('#searchInput').on('keyup', function (e) {
-    if (e.key === 'Enter') {
-      applyFilters();
-    }
-  });
-
-  function applyFilters() {
-    const planFilter = $('select[name="plan_filter"]').val();
-    const gstFilter = $('select[name="gst_filter"]').val();
-    const paymentMethod = $('select[name="payment_method"]').val();
-    const dateFrom = $('input[name="date_from"]').val();
-    const dateTo = $('input[name="date_to"]').val();
-    const searchTerm = $('#searchInput').val().toLowerCase();
-
-    // Custom filtering function
-    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-      const row = table.row(dataIndex).node();
-      const rowPlanId = $(row).data('plan-id');
-      const rowGstStatus = $(row).data('gst-status');
-      const rowPaymentMethod = $(row).data('payment-method');
-      const rowInvoice = $(row).data('invoice').toString();
-      const rowName = $(row).data('name');
-      const rowEmail = $(row).data('email');
-      const rowDate = $(row).data('date');
-
-      // Plan filter
-      if (planFilter !== 'all' && rowPlanId != planFilter) {
-        return false;
-      }
-
-      // GST filter
-      if (gstFilter !== 'all' && rowGstStatus !== gstFilter) {
-        return false;
-      }
-
-      // Payment method filter
-      if (paymentMethod !== 'all' && rowPaymentMethod !== paymentMethod) {
-        return false;
-      }
-
-      // Date filter
-      if (dateFrom && rowDate < dateFrom) {
-        return false;
-      }
-      if (dateTo && rowDate > dateTo) {
-        return false;
-      }
-
-      // Search filter
-      if (searchTerm) {
-        const searchInInvoice = rowInvoice.includes(searchTerm);
-        const searchInName = rowName.includes(searchTerm);
-        const searchInEmail = rowEmail.includes(searchTerm);
-
-        if (!searchInInvoice && !searchInName && !searchInEmail) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-
+  // Apply filters button
+  $('#applyFiltersBtn').on('click', function() {
+    updateAppliedFilters();
     table.draw();
+  });
 
-    // Remove the custom filter function after drawing
-    $.fn.dataTable.ext.search.pop();
+  // Reset all filters button
+  $('#resetAllFiltersBtn').on('click', function() {
+    resetAllFilters();
+    updateAppliedFilters();
+    table.draw();
+  });
+
+  // Function to reset all filters
+  function resetAllFilters() {
+    $("#planFilter, #gstFilter, #paymentMethodFilter").val("");
+    $("#startDateFilter, #endDateFilter").val("");
+    $("#searchFilter").val("");
   }
 
-  // Reset filters
-  $('#resetFilters').on('click', function () {
-    $('#filterForm')[0].reset();
-    $('#searchInput').val('');
-    table.search('').columns().search('').draw();
-  });
-
-  // View details
-  $(document).on('click', '.view-details', function () {
-    const historyId = $(this).data('id');
-
-    $.ajax({
-      url: BASE_URL + 'ajax/subscription-histories/list.php',
-      type: 'POST',
-      data: { id: historyId },
-      beforeSend: function () {
-        $('#detailsContent').html(`
-                    <div class="text-center py-10">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-3">Loading details...</p>
-                    </div>
-                `);
-      },
-      success: function (response) {
-        $('#detailsContent').html(response);
-        $('#viewDetailsModal').modal('show');
-      },
-      error: function () {
-        $('#detailsContent').html(`
-                    <div class="text-center py-10">
-                        <div class="alert alert-danger">
-                            <i class="ki-duotone ki-cross-circle fs-2x me-2"></i>
-                            Error loading details!
-                        </div>
-                    </div>
-                `);
-        $('#viewDetailsModal').modal('show');
+  // Function to update applied filters display
+  function updateAppliedFilters() {
+    const $appliedFilters = $('#appliedFilters');
+    $appliedFilters.empty();
+    
+    const filters = [];
+    
+    // Check each filter
+    const planFilter = $("#planFilter").val();
+    const gstFilter = $("#gstFilter").val();
+    const paymentMethodFilter = $("#paymentMethodFilter").val();
+    const startDate = $("#startDateFilter").val();
+    const endDate = $("#endDateFilter").val();
+    const searchTerm = $("#searchFilter").val();
+    
+    // Get plan name if selected
+    if (planFilter) {
+      const planName = $("#planFilter option:selected").text();
+      filters.push({
+        type: 'plan',
+        value: planFilter,
+        label: `Plan: ${planName}`,
+        icon: 'ki-outline ki-basket'
+      });
+    }
+    
+    // GST filter
+    if (gstFilter === 'yes') {
+      filters.push({
+        type: 'gst',
+        value: gstFilter,
+        label: 'GST: Yes',
+        icon: 'ki-outline ki-verify'
+      });
+    } else if (gstFilter === 'no') {
+      filters.push({
+        type: 'gst',
+        value: gstFilter,
+        label: 'GST: No',
+        icon: 'ki-outline ki-cross'
+      });
+    }
+    
+    // Payment method filter
+    if (paymentMethodFilter) {
+      filters.push({
+        type: 'paymentMethod',
+        value: paymentMethodFilter,
+        label: `Payment: ${paymentMethodFilter.charAt(0).toUpperCase() + paymentMethodFilter.slice(1)}`,
+        icon: 'ki-outline ki-credit-cart'
+      });
+    }
+    
+    // Date range filter
+    if (startDate || endDate) {
+      let dateLabel = 'Date: ';
+      if (startDate && endDate) {
+        dateLabel += `${formatDate(startDate)} to ${formatDate(endDate)}`;
+      } else if (startDate) {
+        dateLabel += `From ${formatDate(startDate)}`;
+      } else if (endDate) {
+        dateLabel += `Until ${formatDate(endDate)}`;
       }
+      filters.push({
+        type: 'dateRange',
+        value: { start: startDate, end: endDate },
+        label: dateLabel,
+        icon: 'ki-outline ki-calendar'
+      });
+    }
+    
+    // Search term filter
+    if (searchTerm) {
+      filters.push({
+        type: 'search',
+        value: searchTerm,
+        label: `Search: "${searchTerm}"`,
+        icon: 'ki-outline ki-magnifier'
+      });
+    }
+    
+    // Display applied filters
+    filters.forEach(filter => {
+      const $badge = $(`
+        <div class="applied-filter-badge">
+          <i class="${filter.icon} fs-4 text-gray-600 me-1"></i>
+          <span>${filter.label}</span>
+          <span class="remove-filter" data-type="${filter.type}">×</span>
+        </div>
+      `);
+      
+      $appliedFilters.append($badge);
     });
+  }
+  
+  // Function to format date
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  
+  // Remove individual filter
+  $(document).on('click', '.remove-filter', function() {
+    const filterType = $(this).data('type');
+    
+    switch(filterType) {
+      case 'plan':
+        $("#planFilter").val("");
+        break;
+      case 'gst':
+        $("#gstFilter").val("");
+        break;
+      case 'paymentMethod':
+        $("#paymentMethodFilter").val("");
+        break;
+      case 'dateRange':
+        $("#startDateFilter").val("");
+        $("#endDateFilter").val("");
+        break;
+      case 'search':
+        $("#searchFilter").val("");
+        break;
+    }
+    
+    updateAppliedFilters();
+    table.draw();
   });
-
-  // Print invoice
-  $(document).on('click', '#printInvoice', function () {
-    const modalContent = $('#detailsContent').html();
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Invoice Print</title>
-                <style>
-                    body { font-family: Arial, sans-serif; padding: 20px; }
-                    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                    th { background-color: #f2f2f2; }
-                    .text-center { text-align: center; }
-                    .fw-bold { font-weight: bold; }
-                    .mt-3 { margin-top: 15px; }
-                </style>
-            </head>
-            <body>
-                <h2>Subscription Invoice</h2>
-                ${modalContent}
-                <div class="mt-3">
-                    <p>Printed on: ${new Date().toLocaleString()}</p>
-                </div>
-            </body>
-            </html>
-        `);
-    printWindow.document.close();
-    printWindow.print();
-  });
+  
+  // Update applied filters on page load
+  updateAppliedFilters();
 });

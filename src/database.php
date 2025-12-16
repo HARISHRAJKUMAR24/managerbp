@@ -284,58 +284,149 @@ function updatePlan($plan_id, $name, $amount, $previous_amount, $duration, $desc
         'gst_type' => $gst_type
     ]);
 }
+// Add these functions to your existing database functions file
 
-function fetchSubscriptionHistories($limit, $offset, $searchValue, $conditions = [])
+function fetchSubscriptionHistories($limit, $offset, $searchValue = '', $conditions = [])
 {
     $pdo = getDbConnection();
 
-    // Prepare the base SQL query with a JOIN
-    $sql = "SELECT * FROM subscription_histories WHERE 1=1"; // Base condition
+    $sql = "SELECT 
+                sh.*,
+                sp.name as plan_name
+            FROM subscription_histories sh
+            LEFT JOIN subscription_plans sp ON sh.plan_id = sp.id
+            WHERE 1=1";
 
-    // Add conditions from the associative array
     $params = [];
-    foreach ($conditions as $key => $value) {
-        if (!empty($value)) { // Check if value is not empty
-            $sql .= " AND $key = :$key"; // Use $key directly
-            $params[":$key"] = $value; // Prepare parameter binding
+
+    // Apply filters
+    if (!empty($conditions['plan_id'])) {
+        $sql .= " AND sh.plan_id = :plan_id";
+        $params[':plan_id'] = $conditions['plan_id'];
+    }
+
+    if (isset($conditions['gst_status'])) {
+        if ($conditions['gst_status'] === 'yes') {
+            $sql .= " AND (sh.gst_number IS NOT NULL AND sh.gst_number != '')";
+        } elseif ($conditions['gst_status'] === 'no') {
+            $sql .= " AND (sh.gst_number IS NULL OR sh.gst_number = '')";
         }
     }
 
-    // Add search value conditions
-    if (!empty($searchValue)) {
-        $sql .= " AND (invoice_number LIKE :search)";
-        $params[':search'] = "%$searchValue%"; // Prepare search parameter
+    if (!empty($conditions['payment_method'])) {
+        $sql .= " AND sh.payment_method = :payment_method";
+        $params[':payment_method'] = $conditions['payment_method'];
     }
 
-    // Add limit and offset
-    $sql .= " ORDER BY id DESC LIMIT :limit OFFSET :offset";
+    if (!empty($conditions['start_date'])) {
+        $sql .= " AND DATE(sh.created_at) >= :start_date";
+        $params[':start_date'] = $conditions['start_date'];
+    }
+
+    if (!empty($conditions['end_date'])) {
+        $sql .= " AND DATE(sh.created_at) <= :end_date";
+        $params[':end_date'] = $conditions['end_date'];
+    }
+
+    // Apply search - FIXED: Added invoice_number search properly
+    if (!empty($searchValue)) {
+        $sql .= " AND (
+                    sh.invoice_number LIKE :search OR
+                    sh.payment_id LIKE :search OR
+                    sh.name LIKE :search OR
+                    sh.email LIKE :search OR
+                    sh.phone LIKE :search OR
+                    sp.name LIKE :search OR
+                    sh.payment_method LIKE :search
+                )";
+        $params[':search'] = "%$searchValue%";
+    }
+
+    $sql .= " ORDER BY sh.created_at DESC LIMIT :limit OFFSET :offset";
 
     $stmt = $pdo->prepare($sql);
 
-    // Bind parameters dynamically
     foreach ($params as $key => $value) {
         $stmt->bindValue($key, $value);
     }
 
-    // Bind limit and offset (using bindValue)
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 
-    // Execute the statement
     $stmt->execute();
-    $data = $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch as an associative array
-
-    return $data;
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getTotalSubscriptionHistories()
+function getTotalSubscriptionHistoryRecords()
 {
     $pdo = getDbConnection();
-    $stmt = $pdo->query("SELECT COUNT(*) as count FROM subscription_histories");
-    $totalRecords = $stmt->fetchColumn();
-    return $totalRecords;
+    $stmt = $pdo->query("SELECT COUNT(*) FROM subscription_histories");
+    return $stmt->fetchColumn();
 }
 
+function getFilteredSubscriptionHistoryRecords($searchValue = '', $conditions = [])
+{
+    $pdo = getDbConnection();
+
+    $sql = "SELECT COUNT(*) as count 
+            FROM subscription_histories sh
+            LEFT JOIN subscription_plans sp ON sh.plan_id = sp.id
+            WHERE 1=1";
+
+    $params = [];
+
+    // Apply same filters as fetch function
+    if (!empty($conditions['plan_id'])) {
+        $sql .= " AND sh.plan_id = :plan_id";
+        $params[':plan_id'] = $conditions['plan_id'];
+    }
+
+    if (isset($conditions['gst_status'])) {
+        if ($conditions['gst_status'] === 'yes') {
+            $sql .= " AND (sh.gst_number IS NOT NULL AND sh.gst_number != '')";
+        } elseif ($conditions['gst_status'] === 'no') {
+            $sql .= " AND (sh.gst_number IS NULL OR sh.gst_number = '')";
+        }
+    }
+
+    if (!empty($conditions['payment_method'])) {
+        $sql .= " AND sh.payment_method = :payment_method";
+        $params[':payment_method'] = $conditions['payment_method'];
+    }
+
+    if (!empty($conditions['start_date'])) {
+        $sql .= " AND DATE(sh.created_at) >= :start_date";
+        $params[':start_date'] = $conditions['start_date'];
+    }
+
+    if (!empty($conditions['end_date'])) {
+        $sql .= " AND DATE(sh.created_at) <= :end_date";
+        $params[':end_date'] = $conditions['end_date'];
+    }
+
+    // Apply search - FIXED: Same as fetch function
+    if (!empty($searchValue)) {
+        $sql .= " AND (
+                    sh.invoice_number LIKE :search OR
+                    sh.payment_id LIKE :search OR
+                    sh.name LIKE :search OR
+                    sh.email LIKE :search OR
+                    sh.phone LIKE :search OR
+                    sp.name LIKE :search OR
+                    sh.payment_method LIKE :search
+                )";
+        $params[':search'] = "%$searchValue%";
+    }
+
+    $stmt = $pdo->prepare($sql);
+
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+    }
+
+    $stmt->execute();
+    return $stmt->fetchColumn();
+}
 function fetchManagers($limit, $offset, $searchValue, $conditions = [])
 {
     $pdo = getDbConnection();
