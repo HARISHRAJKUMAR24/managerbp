@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 16, 2025 at 11:24 AM
+-- Generation Time: Dec 17, 2025 at 01:32 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -92,16 +92,6 @@ CREATE TABLE `categories` (
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `categories`
---
-
-INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `image`, `meta_title`, `meta_description`, `created_at`) VALUES
-(4, 'CAT_6940e5bb44484', 85698, 'sdf', 'sdf', 'sellers/85698/categories/2025/12/16/1765860785_6940e5b1d7c88.png', 'ssdf', 'sdf', '2025-12-16 10:23:15.279'),
-(6, 'CAT_6940f0e5d1eb3', 85698, 'Cateog', 'adf', 'sellers/85698/categories/2025/12/16/1765866071_6940fa571cb76.webp', 'sdf', 'sdf', '2025-12-16 11:10:53.859'),
-(7, 'CAT_6940f1415866b', 85698, 'Arun', 'arun', 'sellers/85698/categories/2025/12/16/1765867876_69410164d787c.png', 'dsssssssssssssssssssssssssssssssssssssssss', 'ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss', '2025-12-16 11:12:25.362'),
-(8, 'CAT_6940feb60e8af', 85698, 'dddd', 'dddd', 'sellers/85698/categories/2025/12/16/1765868107_6941024bf3050.png', 'xcv', 'xcv', '2025-12-16 12:09:50.059');
-
 -- --------------------------------------------------------
 
 --
@@ -135,13 +125,6 @@ CREATE TABLE `coupons` (
   `min_booking_amount` int(11) DEFAULT NULL,
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `coupons`
---
-
-INSERT INTO `coupons` (`id`, `coupon_id`, `user_id`, `name`, `code`, `discount_type`, `discount`, `start_date`, `end_date`, `usage_limit`, `min_booking_amount`, `created_at`) VALUES
-(18, 'CPN_6941323d61464_6509', 85698, 'dsf', 'DFSFSFSFSDFSDFSDFSDFSDFSDFSDFSD', 'percentage', 5, '2025-12-08 14:00:00.000', '2025-12-17 14:00:00.000', 4, 333, '2025-12-16 15:49:41.399');
 
 -- --------------------------------------------------------
 
@@ -232,14 +215,6 @@ CREATE TABLE `employees` (
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `employees`
---
-
-INSERT INTO `employees` (`id`, `employee_id`, `user_id`, `name`, `position`, `email`, `phone`, `address`, `joining_date`, `image`, `created_at`) VALUES
-(8, '534b2bf2-4aae-40e0-a41f-28bbac5058e4', 85698, 'ddddsssssewrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr', 'developessssrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr', 'deepakchitravel@gmail.com', '+919999999999', 'America south pole street', '2025-12-17', '/uploads/sellers/85698/employees/2025/12/16/emp_6940fad99c118.png', '2025-12-16 11:53:23.725'),
-(10, 'c570c62f-757b-43d9-812e-c83a31ace1d4', 47365, 'a', 'a', 'deepakchitravel@gmail.com', '+919999999999', 'America south pole street', '2025-12-17', NULL, '2025-12-16 13:48:05.442');
-
 -- --------------------------------------------------------
 
 --
@@ -272,13 +247,6 @@ CREATE TABLE `events` (
   `seat_layout` varchar(255) DEFAULT NULL,
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `events`
---
-
-INSERT INTO `events` (`id`, `user_id`, `title`, `description`, `date`, `start_time`, `end_time`, `location`, `organizer`, `category`, `banner`, `logo`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `comfort`, `things_to_know`, `terms`, `videos`, `seat_layout`, `created_at`) VALUES
-(5, 85698, 'sdf', '', '2025-12-17', '', '', 'Aduthurai, TN', 'sd', 'Singing', '/uploads/sellers/85698/events/banner/1765866330_6850.png', '/uploads/sellers/85698/events/logo/1765866333_3488.png', 'IN', 'TN', 'Aduthurai', '', '', 'https://www.google.com/maps?q=1%2F60%20Middle%20street%20%2CCholapandi%20Aduthurai%20614016&output=embed', '', '[]', '', '[]', '', '2025-12-16 11:56:02.251');
 
 -- --------------------------------------------------------
 
@@ -381,11 +349,7 @@ CREATE TABLE `services` (
 --
 
 INSERT INTO `services` (`id`, `service_id`, `user_id`, `name`, `slug`, `amount`, `previous_amount`, `image`, `category_id`, `time_slot_interval`, `interval_type`, `description`, `gst_percentage`, `meta_title`, `meta_description`, `status`, `created_at`) VALUES
-(1, 'SRV_693a930157c43', 52064, 'fdg', 'fdg', '34', '43', 'http://localhost/managerbp/public/uploads/sellers/sellers/52064/services/2025/12/11/srv_693a92bb4b9b0.png', NULL, '2', 'minutes', NULL, NULL, NULL, NULL, 0, '2025-12-11 15:16:41.360'),
-(2, 'SRV_693aaca95cf2d', 52064, 'dfg', 'fg', '33', '44', '/uploads/sellers/52064/services/2025/12/11/srv_693ab205bc44c.png', 0, '2', 'minutes', 'sdf', NULL, '', '', 0, '2025-12-11 17:06:09.381'),
-(3, 'SRV_693ab1e9f048d', 52064, 'sdf', 'sdf', '2', '2', '/uploads/sellers/52064/services/2025/12/11/srv_693ab6be40a17.png', 0, '2', 'minutes', '', NULL, '', '', 0, '2025-12-11 17:28:33.984'),
-(4, 'SRV_693badb007345', 50339, 'Developer', 'dev', '255', '400', '/uploads/sellers/50339/services/2025/12/12/srv_693bad9252174.png', 2, '2', 'minutes', NULL, NULL, NULL, NULL, 0, '2025-12-12 11:22:48.029'),
-(5, 'SRV_694113c1f10ae', 85698, 'sdf', 'sdf', '33', '44', '/uploads/sellers/85698/services/2025/12/16/srv_694113ced92b6.webp', 7, '2', 'minutes', '', NULL, '', '', 0, '2025-12-16 13:39:37.987');
+(10, 'SRV_694247d743282', 85698, 'ddd', 'ddd', '999', '999', '/uploads/sellers/85698/services/2025/12/17/srv_69424d4337f04.png', 7, '', 'minutes', 'ssss', 28, 'ssss', 'dddd', 1, '2025-12-17 11:34:07.275');
 
 -- --------------------------------------------------------
 
@@ -405,15 +369,30 @@ CREATE TABLE `service_images` (
 --
 
 INSERT INTO `service_images` (`id`, `service_id`, `image`, `created_at`) VALUES
-(48, 1, 'http://localhost/managerbp/public/uploads/sellers/sellers/52064/services/additional/2025/12/11/add_693a92c081d08.png', '2025-12-11 15:16:41.383'),
-(52, 2, '/uploads/sellers/52064/services/additional/2025/12/11/add_693aac7a9af47.png', '2025-12-11 17:29:03.367'),
-(53, 2, '/uploads/sellers/52064/services/additional/2025/12/11/add_693aac7a9bb36.webp', '2025-12-11 17:29:03.374'),
-(58, 3, '/uploads/sellers/52064/services/additional/2025/12/11/add_693aae255eb6f.webp', '2025-12-11 18:12:17.711'),
-(59, 3, '/uploads/sellers/52064/services/additional/2025/12/11/add_693abc27d69e8.webp', '2025-12-11 18:12:17.714'),
-(60, 4, '/uploads/sellers/50339/services/additional/2025/12/12/add_693bad974b399.png', '2025-12-12 11:22:48.031'),
-(61, 4, '/uploads/sellers/50339/services/additional/2025/12/12/add_693bad974b57f.webp', '2025-12-12 11:22:48.031'),
-(66, 5, '/uploads/sellers/85698/services/additional/2025/12/16/add_694130950b756.webp', '2025-12-16 15:42:38.429'),
-(67, 5, '/uploads/sellers/85698/services/additional/2025/12/16/add_694130950c350.webp', '2025-12-16 15:42:38.433');
+(118, 10, '/uploads/sellers/85698/services/additional/2025/12/17/add_694247cb42188.webp', '2025-12-17 11:57:16.437'),
+(119, 10, '/uploads/sellers/85698/services/additional/2025/12/17/add_694247cb42ebd.png', '2025-12-17 11:57:16.440');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `service_types`
+--
+
+CREATE TABLE `service_types` (
+  `id` int(11) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `service_types`
+--
+
+INSERT INTO `service_types` (`id`, `code`, `name`, `created_at`) VALUES
+(1, 'HOSPITAL', 'Hospital', '2025-12-17 14:29:20'),
+(2, 'HOTEL', 'Hotel', '2025-12-17 14:29:20'),
+(3, 'OTHER', 'Others', '2025-12-17 14:29:20');
 
 -- --------------------------------------------------------
 
@@ -508,6 +487,13 @@ CREATE TABLE `site_settings` (
   `saturday_ends` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `site_settings`
+--
+
+INSERT INTO `site_settings` (`id`, `user_id`, `logo`, `favicon`, `phone`, `whatsapp`, `email`, `currency`, `country`, `state`, `address`, `meta_title`, `meta_description`, `sharing_image_preview`, `gst_number`, `gst_type`, `tax_percent`, `facebook`, `twitter`, `instagram`, `linkedin`, `youtube`, `pinterest`, `cash_in_hand`, `razorpay_key_id`, `phonepe_salt_key`, `phonepe_salt_index`, `phonepe_merchant_id`, `payu_api_key`, `payu_salt`, `sunday`, `sunday_starts`, `sunday_ends`, `monday`, `monday_starts`, `monday_ends`, `tuesday`, `tuesday_starts`, `tuesday_ends`, `wednesday`, `wednesday_starts`, `wednesday_ends`, `thursday`, `thursday_starts`, `thursday_ends`, `friday`, `friday_starts`, `friday_ends`, `saturday`, `saturday_starts`, `saturday_ends`) VALUES
+(14, 27395, NULL, NULL, NULL, NULL, NULL, 'INR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -546,7 +532,7 @@ CREATE TABLE `subscription_histories` (
 --
 
 INSERT INTO `subscription_histories` (`id`, `invoice_number`, `plan_id`, `user_id`, `payment_method`, `payment_id`, `currency`, `amount`, `gst_amount`, `gst_type`, `gst_number`, `gst_percentage`, `discount`, `name`, `email`, `phone`, `address_1`, `address_2`, `state`, `city`, `pin_code`, `country`, `created_at`, `currency_symbol`) VALUES
-(36, 1, 8, 85698, 'razorpay', 'pay_RsFEHOxgnvAq9K', 'INR', 407, 62, 'exclusive', '', 18, 0, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', 'Gopalasamudram', '', 'Tamil Nadu', 'Tiruvarur', '614001', 'India', '2025-12-16 15:39:13.000', '₹');
+(36, 1, 8, NULL, 'razorpay', 'pay_RsFEHOxgnvAq9K', 'INR', 407, 62, 'exclusive', '', 18, 0, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', 'Gopalasamudram', '', 'Tamil Nadu', 'Tiruvarur', '614001', 'India', '2025-12-16 15:39:13.000', '₹');
 
 -- --------------------------------------------------------
 
@@ -563,6 +549,7 @@ CREATE TABLE `subscription_plans` (
   `description` text DEFAULT NULL,
   `feature_lists` longtext NOT NULL,
   `appointments_limit` varchar(191) NOT NULL,
+  `events_limit` varchar(191) NOT NULL DEFAULT 'unlimited',
   `customers_limit` varchar(191) NOT NULL,
   `categories_limit` varchar(191) NOT NULL,
   `services_limit` varchar(191) NOT NULL,
@@ -582,12 +569,12 @@ CREATE TABLE `subscription_plans` (
 -- Dumping data for table `subscription_plans`
 --
 
-INSERT INTO `subscription_plans` (`id`, `name`, `amount`, `previous_amount`, `duration`, `description`, `feature_lists`, `appointments_limit`, `customers_limit`, `categories_limit`, `services_limit`, `coupons_limit`, `manual_payment_methods_limit`, `razorpay`, `phonepe`, `payu`, `created_at`, `plan_id`, `is_disabled`, `is_trial`, `gst_type`) VALUES
-(1, 'Free Trial', 1, 0, 30, 'Start your dream online store for free for 3 days +GST\r\n\r\n', '10 Online Store.,\r\n30 service.,\r\n10 Categories.,\r\nUnlimited Orders.,\r\nUnlimited Customers.,\r\n5 Blog limits.,\r\n5 Page Limits.,\r\n10 Discount Limits.,\r\nAdvanced Reports.,\r\nPush Notification Update\r\n', '15', 'unlimited', 'unlimited', '10', 'unlimited', 'unlimited', 1, 0, 0, '2024-11-14 06:55:02.000', '65b9324d-7a3d-42f1-b4a9-50be0a4a2021', 1, 1, 'exclusive'),
-(4, 'Welcome', 169, 597, 180, 'Start your dream online store for Just ₹199/2 month with GST.\r\n', '1 Online Store.,\r\n30 Products.,\r\n10 Categories.,\r\nUnlimited Orders.,\r\nUnlimited Customers.,\r\n5 Blog limits.,\r\n10 Page Limits.,\r\n10 Discount Limits.,\r\nAdvanced Reports.,\r\nPush Notification Update', 'unlimited', 'unlimited', 'unlimited', 'unlimited', 'unlimited', 'unlimited', 1, 0, 0, '2024-11-16 08:10:42.670', '91272600-4e06-6e9b-d015-f7ed634828c2', 1, 0, 'exclusive'),
-(5, 'Normal', 499, 850, 1095, 'Normal Plan 499/3months', '1 Online Store.,\r\n50 Products.,\r\n10 Categories.,\r\nUnlimited Orders.,\r\nUnlimited Customers.,\r\n5 Blog limits.,\r\n10 Page Limits.,\r\n10 Discount Limits.,\r\nAdvanced Reports.,\r\nPush Notification Update', 'unlimited', 'unlimited', '10', '50', '25', '5', 1, 0, 0, '2024-11-17 14:00:20.721', 'f8b5fc4c-8325-5380-8e99-3ac8f709c7a1', 1, 0, 'exclusive'),
-(8, 'Harish', 345, 456, 1095, 'mass da mama', '1- unlimited,\r\nunlimited,\r\nunlimited,\r\nunlimited,\r\nunlimited,\r\nunlimited\r\n,unlimited', 'unlimited', 'unlimited', 'unlimited', 'unlimited', '5', 'unlimited', 1, 0, 0, '2025-12-03 11:38:37.639', 'b187cf4c-158c-11e0-15cc-b58e78e900d0', 1, 0, 'exclusive'),
-(10, 'Captian ', 4567, 7893, 365, 'Yes we done da oii', 'yotg,\r\nert,\r\nuio,\r\nokli,\r\noplkj,\r\niuhuj,\r\nkilopj,\r\nololo,\r\nkijnm,\r\njhnbm,\r\njuyght,\r\nloki,\r\nkoiyh,\r\nlokhnb,\r\nlopdf,\r\ndd', 'unlimited 234', 'unlimited 34', 'unlimited 2', '50', '25', 'unlimited', 1, 1, 1, '2025-12-05 09:41:27.882', '04513311-c28c-8e2e-f2cd-7d2de8ff75e2', 1, 0, 'exclusive');
+INSERT INTO `subscription_plans` (`id`, `name`, `amount`, `previous_amount`, `duration`, `description`, `feature_lists`, `appointments_limit`, `events_limit`, `customers_limit`, `categories_limit`, `services_limit`, `coupons_limit`, `manual_payment_methods_limit`, `razorpay`, `phonepe`, `payu`, `created_at`, `plan_id`, `is_disabled`, `is_trial`, `gst_type`) VALUES
+(1, 'Free Trial', 1, 0, 30, 'Start your dream online store for free for 3 days +GST\r\n\r\n', '10 Online Store.,\r\n30 service.,\r\n10 Categories.,\r\nUnlimited Orders.,\r\nUnlimited Customers.,\r\n5 Blog limits.,\r\n5 Page Limits.,\r\n10 Discount Limits.,\r\nAdvanced Reports.,\r\nPush Notification Update\r\n', '15', 'unlimited', 'unlimited', 'unlimited', '10', 'unlimited', 'unlimited', 1, 0, 0, '2024-11-14 06:55:02.000', '65b9324d-7a3d-42f1-b4a9-50be0a4a2021', 1, 1, 'exclusive'),
+(4, 'Welcome', 169, 597, 180, 'Start your dream online store for Just ₹199/2 month with GST.\r\n', '1 Online Store.,\r\n30 Products.,\r\n10 Categories.,\r\nUnlimited Orders.,\r\nUnlimited Customers.,\r\n5 Blog limits.,\r\n10 Page Limits.,\r\n10 Discount Limits.,\r\nAdvanced Reports.,\r\nPush Notification Update', 'unlimited', 'unlimited', 'unlimited', 'unlimited', 'unlimited', 'unlimited', 'unlimited', 1, 0, 0, '2024-11-16 08:10:42.670', '91272600-4e06-6e9b-d015-f7ed634828c2', 1, 0, 'exclusive'),
+(5, 'Normal', 499, 850, 1095, 'Normal Plan 499/3months', '1 Online Store.,\r\n50 Products.,\r\n10 Categories.,\r\nUnlimited Orders.,\r\nUnlimited Customers.,\r\n5 Blog limits.,\r\n10 Page Limits.,\r\n10 Discount Limits.,\r\nAdvanced Reports.,\r\nPush Notification Update', 'unlimited', 'unlimited', 'unlimited', '10', '50', '25', '5', 1, 0, 0, '2024-11-17 14:00:20.721', 'f8b5fc4c-8325-5380-8e99-3ac8f709c7a1', 1, 0, 'exclusive'),
+(8, 'Harish', 345, 456, 1095, 'mass da mama', '1- unlimited,\r\nunlimited,\r\nunlimited,\r\nunlimited,\r\nunlimited,\r\nunlimited\r\n,unlimited', 'unlimited', 'unlimited', 'unlimited', 'unlimited', 'unlimited', '5', 'unlimited', 1, 0, 0, '2025-12-03 11:38:37.639', 'b187cf4c-158c-11e0-15cc-b58e78e900d0', 1, 0, 'exclusive'),
+(10, 'Captian ', 4567, 7893, 365, 'Yes we done da oii', 'yotg,\r\nert,\r\nuio,\r\nokli,\r\noplkj,\r\niuhuj,\r\nkilopj,\r\nololo,\r\nkijnm,\r\njhnbm,\r\njuyght,\r\nloki,\r\nkoiyh,\r\nlokhnb,\r\nlopdf,\r\ndd', 'unlimited 234', 'unlimited', 'unlimited 34', 'unlimited 2', '50', '25', 'unlimited', 1, 1, 1, '2025-12-05 09:41:27.882', '04513311-c28c-8e2e-f2cd-7d2de8ff75e2', 1, 0, 'exclusive');
 
 -- --------------------------------------------------------
 
@@ -606,6 +593,7 @@ CREATE TABLE `users` (
   `image` varchar(255) DEFAULT NULL,
   `site_name` varchar(255) NOT NULL,
   `site_slug` varchar(255) NOT NULL,
+  `service_type_id` int(11) DEFAULT NULL,
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `customersId` int(11) DEFAULT NULL,
   `expires_on` datetime(3) DEFAULT NULL,
@@ -618,11 +606,10 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
-(1, 9621, 'Muhammad Muawiyah', 'muawiyahdev@gmail.com', '+8801914513373', '$2b$12$eGO8sJ/beIqQzLLAO/XjE.9y60Zaq9mBaUSm9TAbuujCnZhXWI70O', 'BD', '', 'Auto Care', 'auto-care', '2024-11-14 00:40:52.868', NULL, NULL, 0, NULL, NULL),
-(16, 85698, 'Deepak', NULL, '9999999999', '$2y$10$gNGmw0aFISR6YGv1.G4AQexikpO6qDBTxHtwo8IrpMefl5mlSOLyC', 'IN', NULL, 'deepak', 'deepak', '2025-12-15 16:44:37.000', NULL, NULL, 0, NULL, '367ffc2bc52299f87baf66e8607512a02c648625b303fc9bd5506b226fc62564'),
-(17, 73108, 'Arun', NULL, '7777777777', '$2y$10$zDXw9BVMIJhXLxPJ3OTHLeonuX4hQSth0e4UBfT9f5Rg7LoNBkMlS', 'IN', NULL, 'arun', 'arun', '2025-12-15 18:19:40.000', NULL, NULL, 0, NULL, 'e07dfc6e64de5d62b289a0af1804c670124473d3773036d79929914ffef6b4ee'),
-(18, 47365, 'Harish', NULL, '1111111111', '$2y$10$M3V2cKVdJBRfoB9xU95Pk.VVLtvQvxsKy/zBggGlEdgynyj7ZJzhu', 'IN', NULL, 'aa', 'aa', '2025-12-16 13:47:26.000', NULL, NULL, 0, NULL, 'd928a3d1ac4b6ea38c79ea161736dc287e713816a103efad26577c169d1d0782');
+INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
+(19, 27395, 'Deepak', NULL, '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', NULL, 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, 'bb26a7c0333aba645e48ac9c11c7f2b7f74d2d404b1ec4a8441f1c1ee65d5b54'),
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '415bac599ebb1605b7f6ec4600df1ef7c5b19496ef1b1b9837f2a6382a4379fa'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '03021193c64904e6b1e9380638ccf8337fc35f27d9254e56bb68ec70831f24af');
 
 -- --------------------------------------------------------
 
@@ -826,6 +813,13 @@ ALTER TABLE `service_images`
   ADD KEY `service_images_service_id_fkey` (`service_id`);
 
 --
+-- Indexes for table `service_types`
+--
+ALTER TABLE `service_types`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `code` (`code`);
+
+--
 -- Indexes for table `settings`
 --
 ALTER TABLE `settings`
@@ -864,7 +858,8 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `users_site_name_key` (`site_name`),
   ADD UNIQUE KEY `users_site_slug_key` (`site_slug`),
   ADD UNIQUE KEY `users_email_key` (`email`),
-  ADD KEY `users_plan_id_fkey` (`plan_id`);
+  ADD KEY `users_plan_id_fkey` (`plan_id`),
+  ADD KEY `fk_users_service_type` (`service_type_id`);
 
 --
 -- Indexes for table `website_pages`
@@ -949,13 +944,13 @@ ALTER TABLE `employees`
 -- AUTO_INCREMENT for table `events`
 --
 ALTER TABLE `events`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `event_seat_layouts`
 --
 ALTER TABLE `event_seat_layouts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `managers`
@@ -979,13 +974,19 @@ ALTER TABLE `plugins`
 -- AUTO_INCREMENT for table `services`
 --
 ALTER TABLE `services`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `service_images`
 --
 ALTER TABLE `service_images`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=120;
+
+--
+-- AUTO_INCREMENT for table `service_types`
+--
+ALTER TABLE `service_types`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `settings`
@@ -997,7 +998,7 @@ ALTER TABLE `settings`
 -- AUTO_INCREMENT for table `site_settings`
 --
 ALTER TABLE `site_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `subscription_histories`
@@ -1015,7 +1016,7 @@ ALTER TABLE `subscription_plans`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `website_pages`
@@ -1126,6 +1127,7 @@ ALTER TABLE `subscription_histories`
 -- Constraints for table `users`
 --
 ALTER TABLE `users`
+  ADD CONSTRAINT `fk_users_service_type` FOREIGN KEY (`service_type_id`) REFERENCES `service_types` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `users_plan_id_fkey` FOREIGN KEY (`plan_id`) REFERENCES `subscription_plans` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --

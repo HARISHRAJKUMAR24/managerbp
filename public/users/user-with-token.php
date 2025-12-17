@@ -52,16 +52,23 @@ if ($siteSettings) {
 echo json_encode([
     "success" => true,
     "data" => [
-        "id"        => $user->id,
-        "user_id"   => $user->user_id,  // ⭐ IMPORTANT — THIS FIXES YOUR IMAGE PATH ISSUE!
+        "id"        => (int)$user->id,
+        "user_id"   => (int)$user->user_id,
+
         "name"      => $user->name,
         "email"     => $user->email,
         "phone"     => $user->phone,
         "country"   => $user->country,
         "image"     => $user->image,
+
         "siteSlug"  => $user->site_slug,
         "siteName"  => $user->site_name,
+
+        // 🔥 THIS LINE FIXES EVERYTHING
+        "service_type_id" => (int)$user->service_type_id,
+
         "siteSettings" => $siteSettings ?? []
     ]
 ]);
+
 ?>

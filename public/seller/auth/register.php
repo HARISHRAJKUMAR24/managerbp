@@ -6,25 +6,40 @@ header("Content-Type: application/json");
 require_once '../../../config/config.php';
 require_once '../../../src/database.php';
 
-// Read JSON or POST
+$pdo = getDbConnection();
+
+/* --------------------------------
+   READ INPUT (JSON or FORM)
+--------------------------------- */
 $input = $_POST;
 if (!$input) {
     $input = json_decode(file_get_contents("php://input"), true);
 }
 
-// Read fields safely
-$name       = trim($input['name'] ?? "");
-$email      = trim($input['email'] ?? "");
-$phone      = trim($input['phone'] ?? "");
-$country    = trim($input['country'] ?? "IN");
-$siteName = trim($input['siteName'] ?? "");
-if (!$siteName) {
-    $siteName = $name . "'s Site";   // default value
-}
-$password   = trim($input['password'] ?? "");
-$otp        = trim($input['otp'] ?? "");
+/* --------------------------------
+   READ FIELDS
+--------------------------------- */
+$name        = trim($input['name'] ?? "");
+$email       = trim($input['email'] ?? "");
+$phone       = trim($input['phone'] ?? "");
+$country     = trim($input['country'] ?? "IN");
+$siteName    = trim($input['siteName'] ?? "");
+$password    = trim($input['password'] ?? "");
+$otp         = trim($input['otp'] ?? "");
+$serviceTypeId = isset($input['serviceTypeId'])
+    ? (int)$input['serviceTypeId']
+    : null;
 
-// Validate required fields
+/* --------------------------------
+   DEFAULT SITE NAME
+--------------------------------- */
+if (!$siteName) {
+    $siteName = $name . "'s Site";
+}
+
+/* --------------------------------
+   VALIDATIONS
+--------------------------------- */
 if (!$name || !$phone || !$password || !$otp) {
     echo json_encode([
         "success" => false,
@@ -33,7 +48,14 @@ if (!$name || !$phone || !$password || !$otp) {
     exit;
 }
 
-// OTP must be 111111 (dev mode)
+if (!$serviceTypeId) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Service type is required"
+    ]);
+    exit;
+}
+
 if ($otp !== "111111") {
     echo json_encode([
         "success" => false,
@@ -42,11 +64,12 @@ if ($otp !== "111111") {
     exit;
 }
 
-$pdo = getDbConnection();
-
-// Check duplicate phone
+/* --------------------------------
+   CHECK DUPLICATE PHONE
+--------------------------------- */
 $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ?");
 $stmt->execute([$phone]);
+
 if ($stmt->fetchColumn()) {
     echo json_encode([
         "success" => false,
@@ -55,36 +78,47 @@ if ($stmt->fetchColumn()) {
     exit;
 }
 
-// Safe slug
-if ($siteName) {
-    $siteSlug = strtolower(preg_replace('/\s+/', '-', $siteName));
-} else {
-    // default if empty
-    $siteSlug = strtolower(preg_replace('/\s+/', '-', $name)) . "-" . rand(100,999);
-}
+/* --------------------------------
+   CREATE SLUG
+--------------------------------- */
+$siteSlug = strtolower(preg_replace('/\s+/', '-', $siteName));
 
-// Hash password
-$hashed = password_hash($password, PASSWORD_DEFAULT);
+/* --------------------------------
+   HASH PASSWORD
+--------------------------------- */
+$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-// Insert user
-$stmt = $pdo->prepare("
-    INSERT INTO users (user_id, name, email, phone, password, country, site_name, site_slug, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-");
-
+/* --------------------------------
+   INSERT USER (🔥 FIX HERE)
+--------------------------------- */
 $userId = rand(10000, 99999);
+
+$stmt = $pdo->prepare("
+    INSERT INTO users (
+        user_id,
+        name,
+        email,
+        phone,
+        password,
+        country,
+        site_name,
+        site_slug,
+        service_type_id,
+        created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+");
 
 $ok = $stmt->execute([
     $userId,
     $name,
     $email ?: null,
     $phone,
-    $hashed,
+    $hashedPassword,
     $country ?: "IN",
-    $siteName,     // this must NEVER be null
-    $siteSlug
+    $siteName,
+    $siteSlug,
+    $serviceTypeId
 ]);
-
 
 if (!$ok) {
     echo json_encode([
@@ -94,6 +128,9 @@ if (!$ok) {
     exit;
 }
 
+/* --------------------------------
+   SUCCESS RESPONSE
+--------------------------------- */
 echo json_encode([
     "success" => true,
     "message" => "Registration successful",
@@ -104,6 +141,7 @@ echo json_encode([
         "phone" => $phone,
         "country" => $country,
         "site_name" => $siteName,
-        "site_slug" => $siteSlug
+        "site_slug" => $siteSlug,
+        "service_type_id" => $serviceTypeId
     ]
 ]);
