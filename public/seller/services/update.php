@@ -31,10 +31,12 @@ $categoryId = $_POST["categoryId"] ?? null;
 $timeSlotInterval = $_POST["timeSlotInterval"] ?? "";
 $intervalType = $_POST["intervalType"] ?? "";
 $description = $_POST["description"] ?? "";
-$gstPercentage = $_POST["gstPercentage"] ?? null;
+$gstPercentage = isset($_POST["gstPercentage"]) && $_POST["gstPercentage"] !== ""
+    ? (int)$_POST["gstPercentage"]
+    : null;
 $metaTitle = $_POST["metaTitle"] ?? "";
 $metaDescription = $_POST["metaDescription"] ?? "";
-$status = $_POST["status"] ?? 0;
+$status = isset($_POST["status"]) && $_POST["status"] == "1" ? 1 : 0;
 
 /**********************************************
  * FIX #1 — CLEAN EXISTING MAIN IMAGE
