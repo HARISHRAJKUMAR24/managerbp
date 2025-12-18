@@ -22,9 +22,11 @@ if (!$category_id) {
     exit();
 }
 
-// Base path for images
 $baseImageUrl = "http://localhost/managerbp/public/uploads/";
 
+/* -----------------------------------------
+   FETCH CATEGORY 
+----------------------------------------- */
 $sql = "SELECT 
             id,
             category_id,
@@ -49,16 +51,33 @@ $stmt->execute([
     ':base_url' => $baseImageUrl
 ]);
 
-$data = $stmt->fetch(PDO::FETCH_ASSOC);
+$category = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$data) {
+if (!$category) {
     echo json_encode(["success" => false, "message" => "Category not found"]);
     exit();
 }
 
+$primaryId = $category["id"];
+
+/* -----------------------------------------
+   FETCH DOCTOR DATA (if exists)
+----------------------------------------- */
+$sql2 = "SELECT doctor_name, specialization, qualification, experience, reg_number 
+         FROM doctors 
+         WHERE category_id = :cid
+         LIMIT 1";
+
+$stmt2 = $pdo->prepare($sql2);
+$stmt2->execute([':cid' => $primaryId]);
+$doctor = $stmt2->fetch(PDO::FETCH_ASSOC);
+
+/* return doctor details */
+$category["doctor_details"] = $doctor ?: null;
+
+/* return success */
 echo json_encode([
     "success" => true,
-    "data" => $data
+    "data" => $category
 ]);
 exit();
-?>

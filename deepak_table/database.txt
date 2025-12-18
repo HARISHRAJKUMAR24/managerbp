@@ -27,3 +27,19 @@ CREATE TABLE `employees` (
 =====================================================================
 
 Droping category table (11/12/2025)
+
+
+=================================(18/12/2025)=====================================
+CREATE TABLE doctors (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  category_id INT NOT NULL,
+  doctor_name VARCHAR(255) NOT NULL,
+  specialization VARCHAR(255) NOT NULL,
+  qualification VARCHAR(255),
+  experience INT,
+  reg_number VARCHAR(255),
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+  FOREIGN KEY (category_id) REFERENCES categories(id)
+    ON DELETE CASCADE
+);
