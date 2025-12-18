@@ -21,7 +21,7 @@ try {
     // Fetch service (return ONLY raw relative path!)
     // -----------------------------------------
     $stmt = $pdo->prepare("
-        SELECT * FROM services
+        SELECT * FROM  appointment_settings
         WHERE service_id = :sid
     ");
     $stmt->execute([":sid" => $service_id_param]);

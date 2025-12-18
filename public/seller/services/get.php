@@ -21,7 +21,7 @@ try {
     $sql = "SELECT s.*, 
             CASE WHEN s.image IS NULL OR s.image = '' THEN NULL 
                  ELSE CONCAT('$baseUrl', s.image) END AS image
-            FROM services s
+            FROM  appointment_settings s
             WHERE s.user_id = :uid 
             ORDER BY s.id DESC";
 

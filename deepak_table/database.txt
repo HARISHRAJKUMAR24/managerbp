@@ -43,3 +43,10 @@ CREATE TABLE doctors (
   FOREIGN KEY (category_id) REFERENCES categories(id)
     ON DELETE CASCADE
 );
+ 
+ ==========================
+ RENAME TABLE services TO appointment_settings;
+
+ =========================
+
+ 

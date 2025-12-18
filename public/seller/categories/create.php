@@ -111,19 +111,22 @@ $category_insert_id = $pdo->lastInsertId();
 -----------------------------------------------------*/
 if ($doctorDetails) {
     
-    $sql2 = "INSERT INTO doctors 
-            (category_id, doctor_name, specialization, qualification, experience, reg_number, created_at) 
-            VALUES (:cid, :dname, :spec, :qual, :exp, :reg, NOW(3))";
+$sql2 = "INSERT INTO doctors 
+        (user_id, category_id, doctor_name, specialization, qualification, experience, reg_number, image, created_at) 
+        VALUES (:uid, :cid, :dname, :spec, :qual, :exp, :reg, :img, NOW(3))";
 
-    $stmt2 = $pdo->prepare($sql2);
-    $stmt2->execute([
-        ":cid"  => $category_insert_id,
-        ":dname" => $doctorDetails["doctor_name"] ?? null,
-        ":spec" => $doctorDetails["specialization"] ?? null,
-        ":qual" => $doctorDetails["qualification"] ?? null,
-        ":exp"  => $doctorDetails["experience"] ?? null,
-        ":reg"  => $doctorDetails["reg_number"] ?? null,
-    ]);
+$stmt2 = $pdo->prepare($sql2);
+$stmt2->execute([
+    ":uid"  => $user_id,                           // ⭐ required!
+    ":cid"  => $category_insert_id,
+    ":dname" => $doctorDetails["doctor_name"] ?? null,
+    ":spec" => $doctorDetails["specialization"] ?? null,
+    ":qual" => $doctorDetails["qualification"] ?? null,
+    ":exp"  => $doctorDetails["experience"] ?? null,
+    ":reg"  => $doctorDetails["reg_number"] ?? null,
+    ":img"  => $doctorDetails["image"] ?? null,    // optional
+]);
+
 }
 
 /* ----------------------------------------------------

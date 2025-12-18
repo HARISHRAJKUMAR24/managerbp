@@ -68,7 +68,7 @@ if (!empty($_FILES["main_image"]) && $_FILES["main_image"]["error"] === 0) {
 /**********************************************
  * UPDATE MAIN SERVICE RECORD
  **********************************************/
-$updateSQL = "UPDATE services SET 
+$updateSQL = "UPDATE  appointment_settings SET 
     name = :name,
     slug = :slug,
     amount = :amount,

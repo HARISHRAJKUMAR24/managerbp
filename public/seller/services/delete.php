@@ -23,7 +23,7 @@ if (!$service_uid) {
 }
 
 // 1️⃣ Fetch numeric ID + image paths before deleting
-$stmt = $pdo->prepare("SELECT id, image FROM services WHERE service_id = ?");
+$stmt = $pdo->prepare("SELECT id, image FROM  appointment_settings WHERE service_id = ?");
 $stmt->execute([$service_uid]);
 $service = $stmt->fetch(PDO::FETCH_ASSOC);
 

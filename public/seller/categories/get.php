@@ -15,7 +15,6 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-// GET params
 $user_id = $_GET['user_id'] ?? '';
 $limit   = $_GET['limit'] ?? 10;
 $page    = $_GET['page'] ?? 1;
@@ -31,50 +30,71 @@ if (!$user_id) {
 
 $offset = ($page - 1) * $limit;
 
-// 🔍 Search filter
 $searchSql = "";
 $params = [':user_id' => $user_id];
 
 if (!empty($q)) {
-    $searchSql = " AND (name LIKE :search OR slug LIKE :search) ";
+    $searchSql = " AND (c.name LIKE :search OR c.slug LIKE :search) ";
     $params[':search'] = "%$q%";
 }
 
-// Count total
-$countSql = "SELECT COUNT(*) FROM categories WHERE user_id = :user_id $searchSql";
+$countSql = "SELECT COUNT(*) 
+             FROM categories c
+             WHERE c.user_id = :user_id  
+             $searchSql";
+
 $countStmt = $pdo->prepare($countSql);
-$countStmt->execute($params);
+if (!empty($q)) $countStmt->bindValue(':search', "%$q%", PDO::PARAM_STR);
+$countStmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+$countStmt->execute();
+
 $totalRecords = $countStmt->fetchColumn();
 
-// ⭐ FIXED: Correct URL for stored category images
 $baseImageUrl = "http://localhost/managerbp/public/uploads/";
 
 $sql = "SELECT 
-            id, 
-            category_id, 
-            user_id, 
-            name, 
-            slug, 
-CASE 
-    WHEN image IS NULL OR image = '' 
-        THEN NULL 
-    ELSE CONCAT('$baseImageUrl', image) 
-END AS image,
-            meta_title, 
-            meta_description, 
-            created_at
-        FROM categories
-        WHERE user_id = :user_id $searchSql
-        ORDER BY id DESC
+            c.id,
+            c.category_id,
+            c.user_id,
+            c.name,
+            c.slug,
+
+            CASE 
+                WHEN c.image IS NULL OR c.image = '' 
+                    THEN NULL
+                ELSE CONCAT('$baseImageUrl', c.image) 
+            END AS image,
+
+            c.meta_title,
+            c.meta_description,
+            c.created_at,
+
+            -- doctor details
+            d.doctor_name,
+            d.specialization,
+            d.qualification,
+            d.experience,
+            d.reg_number
+
+        FROM categories c
+        LEFT JOIN doctors d
+        ON d.category_id = c.id
+
+        WHERE c.user_id = :user_id 
+        $searchSql
+
+        ORDER BY c.id DESC
         LIMIT :limit OFFSET :offset";
 
 $stmt = $pdo->prepare($sql);
+
 $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
 if (!empty($q)) $stmt->bindValue(':search', "%$q%", PDO::PARAM_STR);
 $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
 $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
 
 $stmt->execute();
+
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 echo json_encode([
@@ -83,3 +103,5 @@ echo json_encode([
     "totalRecords" => (int)$totalRecords,
     "totalPages" => ceil($totalRecords / $limit)
 ]);
+
+exit();

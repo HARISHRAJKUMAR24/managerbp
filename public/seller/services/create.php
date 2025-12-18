@@ -34,7 +34,7 @@ $service_id_string = "SRV_" . uniqid();
 $pdo->beginTransaction();
 
 try {
-    $sql = "INSERT INTO services 
+    $sql = "INSERT INTO  appointment_settings 
             (service_id, user_id, name, slug, amount, previous_amount, image, category_id,
             time_slot_interval, interval_type, description, gst_percentage, 
             meta_title, meta_description, status, created_at)
