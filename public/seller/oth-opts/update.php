@@ -11,8 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
-require_once "../../../../config/config.php";
-require_once "../../../../src/database.php";
+require_once "../../../config/config.php";
+require_once "../../../src/database.php";
 
 try {
     $pdo = getDbConnection();
