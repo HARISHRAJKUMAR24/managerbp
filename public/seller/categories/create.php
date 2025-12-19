@@ -15,17 +15,17 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-/* ----------------------------------------------------
+/* --------------------------------------
    READ JSON BODY
------------------------------------------------------*/
+---------------------------------------*/
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true);
 
 if (!is_array($data)) $data = [];
 
-/* ----------------------------------------------------
-   GET TOKEN
------------------------------------------------------*/
+/* --------------------------------------
+   GET TOKEN + USER
+---------------------------------------*/
 $token = $data["token"] ?? ($_COOKIE["token"] ?? "");
 
 if (!$token) {
@@ -33,9 +33,6 @@ if (!$token) {
     exit();
 }
 
-/* ----------------------------------------------------
-   VALIDATE USER USING TOKEN
------------------------------------------------------*/
 $stmt = $pdo->prepare("SELECT * FROM users WHERE api_token = ? LIMIT 1");
 $stmt->execute([$token]);
 $user = $stmt->fetchObject();
@@ -47,51 +44,45 @@ if (!$user) {
 
 $user_id = $user->user_id;
 
-/* ----------------------------------------------------
-   VALIDATE REQUIRED FIELDS
------------------------------------------------------*/
+/* --------------------------------------
+   GET CATEGORY FIELDS
+--------------------------------------*/
 $name = trim($data["name"] ?? "");
 $slug = trim($data["slug"] ?? "");
-$image = trim($data["image"] ?? "");
 
 if ($name === "" || $slug === "") {
     echo json_encode(["success" => false, "message" => "Name & slug required"]);
     exit();
 }
 
-/* ----------------------------------------------------
-   OPTIONAL FIELDS
------------------------------------------------------*/
+$image = $data["image"] ?? ""; // category image ONLY if exists
+
 $meta_title = $data["meta_title"] ?? null;
 $meta_desc  = $data["meta_description"] ?? null;
 
-/* ----------------------------------------------------
-   DOCTOR FIELDS (optional)
------------------------------------------------------*/
-$doctorDetails = $data["doctor_details"] ?? null;
-
-/* ----------------------------------------------------
-   GENERATE CATEGORY ID
------------------------------------------------------*/
+/* --------------------------------------
+   AUTO CATEGORY CODE
+--------------------------------------*/
 $category_id = "CAT_" . uniqid();
 
-/* ----------------------------------------------------
-   INSERT INTO CATEGORIES TABLE
------------------------------------------------------*/
+/* --------------------------------------
+   INSERT CATEGORY ONLY
+--------------------------------------*/
 $sql = "INSERT INTO categories 
-        (category_id, user_id, name, slug, image, meta_title, meta_description, created_at)
-        VALUES (:cid, :uid, :name, :slug, :image, :mtitle, :mdesc, NOW(3))";
+(category_id, user_id, name, slug, meta_title, meta_description, created_at)
+VALUES (:cid, :uid, :name, :slug, :mtitle, :mdesc, NOW(3))";
 
 $stmt = $pdo->prepare($sql);
+
 $ok = $stmt->execute([
     ":cid"   => $category_id,
     ":uid"   => $user_id,
     ":name"  => $name,
     ":slug"  => $slug,
-    ":image" => $image,
     ":mtitle" => $meta_title,
     ":mdesc"  => $meta_desc
 ]);
+
 
 if (!$ok) {
     echo json_encode([
@@ -101,40 +92,12 @@ if (!$ok) {
     exit();
 }
 
-/* ----------------------------------------------------
-   GET LAST INSERTED CATEGORY ID (FK for doctors)
------------------------------------------------------*/
-$category_insert_id = $pdo->lastInsertId();
-
-/* ----------------------------------------------------
-   INSERT INTO DOCTORS TABLE (if doctor data exists)
------------------------------------------------------*/
-if ($doctorDetails) {
-    
-$sql2 = "INSERT INTO doctors 
-        (user_id, category_id, doctor_name, specialization, qualification, experience, reg_number, image, created_at) 
-        VALUES (:uid, :cid, :dname, :spec, :qual, :exp, :reg, :img, NOW(3))";
-
-$stmt2 = $pdo->prepare($sql2);
-$stmt2->execute([
-    ":uid"  => $user_id,                           // ⭐ required!
-    ":cid"  => $category_insert_id,
-    ":dname" => $doctorDetails["doctor_name"] ?? null,
-    ":spec" => $doctorDetails["specialization"] ?? null,
-    ":qual" => $doctorDetails["qualification"] ?? null,
-    ":exp"  => $doctorDetails["experience"] ?? null,
-    ":reg"  => $doctorDetails["reg_number"] ?? null,
-    ":img"  => $doctorDetails["image"] ?? null,    // optional
-]);
-
-}
-
-/* ----------------------------------------------------
-   RESPONSE
------------------------------------------------------*/
+/* --------------------------------------
+   SUCCESS RESPONSE
+--------------------------------------*/
 echo json_encode([
     "success" => true,
-    "message" => "Category + Doctor inserted successfully",
+    "message" => "Category created successfully",
     "category_id" => $category_id
 ]);
 exit();
