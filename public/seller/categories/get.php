@@ -44,8 +44,8 @@ $countSql = "SELECT COUNT(*)
              $searchSql";
 
 $countStmt = $pdo->prepare($countSql);
-if (!empty($q)) $countStmt->bindValue(':search', "%$q%", PDO::PARAM_STR);
 $countStmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+if (!empty($q)) $countStmt->bindValue(':search', "%$q%", PDO::PARAM_STR);
 $countStmt->execute();
 
 $totalRecords = $countStmt->fetchColumn();
@@ -53,49 +53,47 @@ $totalRecords = $countStmt->fetchColumn();
 $baseImageUrl = "http://localhost/managerbp/public/uploads/";
 
 $sql = "SELECT 
-            c.id,
-            c.category_id,
-            c.user_id,
-            c.name,
-            c.slug,
+    c.id,
+    c.category_id,
+    c.user_id,
+    c.name,
+    c.slug,
+    c.meta_title,
+    c.meta_description,
+    c.created_at,
 
-            CASE 
-                WHEN c.image IS NULL OR c.image = '' 
-                    THEN NULL
-                ELSE CONCAT('$baseImageUrl', c.image) 
-            END AS image,
+    d.doctor_name,
+    d.specialization,
+    d.qualification,
+    d.experience,
+    d.reg_number,
+    d.doctor_image
 
-            c.meta_title,
-            c.meta_description,
-            c.created_at,
+FROM categories c
+LEFT JOIN doctors d
+ON d.category_id = c.category_id
+WHERE c.user_id = :user_id 
+$searchSql
+ORDER BY c.id DESC
+LIMIT :limit OFFSET :offset";
 
-            -- doctor details
-            d.doctor_name,
-            d.specialization,
-            d.qualification,
-            d.experience,
-            d.reg_number
-
-        FROM categories c
-        LEFT JOIN doctors d
-        ON d.category_id = c.id
-
-        WHERE c.user_id = :user_id 
-        $searchSql
-
-        ORDER BY c.id DESC
-        LIMIT :limit OFFSET :offset";
 
 $stmt = $pdo->prepare($sql);
-
 $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
 if (!empty($q)) $stmt->bindValue(':search', "%$q%", PDO::PARAM_STR);
 $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
 $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-
 $stmt->execute();
 
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+error_log("----- CATEGORY GET.PHP LOG START -----");
+error_log("USER_ID = " . $user_id);
+error_log("RECORD COUNT = " . count($records));
+error_log(print_r($records, true));
+error_log("----- CATEGORY GET.PHP LOG END -----");
+
+error_log("---- CATEGORY GET.PHP OUTPUT ----");
+error_log(print_r($records, true));
 
 echo json_encode([
     "success" => true,
@@ -103,5 +101,4 @@ echo json_encode([
     "totalRecords" => (int)$totalRecords,
     "totalPages" => ceil($totalRecords / $limit)
 ]);
-
 exit();

@@ -95,10 +95,23 @@ if (!$ok) {
 /* --------------------------------------
    SUCCESS RESPONSE
 --------------------------------------*/
+/* --------------------------------------
+   GET AUTO DB ID
+--------------------------------------*/
+$lastId = $pdo->lastInsertId();
+
+/* --------------------------------------
+   SUCCESS RESPONSE
+--------------------------------------*/
+$lastId = $pdo->lastInsertId();
+
 echo json_encode([
     "success" => true,
     "message" => "Category created successfully",
-    "category_id" => $category_id
+    "category_id" => $category_id, // string code
+    "id" => $lastId,               // Auto increment id integer
 ]);
 exit();
+
+
 ?>

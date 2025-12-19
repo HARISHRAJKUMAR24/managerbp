@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 17, 2025 at 01:32 PM
+-- Generation Time: Dec 19, 2025 at 01:51 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -62,6 +62,40 @@ CREATE TABLE `appointments` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `appointment_settings`
+--
+
+CREATE TABLE `appointment_settings` (
+  `id` int(11) NOT NULL,
+  `service_id` varchar(255) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `amount` varchar(255) NOT NULL,
+  `previous_amount` varchar(255) DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `category_id` int(11) DEFAULT NULL,
+  `time_slot_interval` varchar(255) NOT NULL,
+  `interval_type` varchar(255) NOT NULL,
+  `description` longtext DEFAULT NULL,
+  `gst_percentage` int(11) DEFAULT NULL,
+  `meta_title` varchar(255) DEFAULT NULL,
+  `meta_description` varchar(255) DEFAULT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `appointment_settings`
+--
+
+INSERT INTO `appointment_settings` (`id`, `service_id`, `user_id`, `name`, `slug`, `amount`, `previous_amount`, `image`, `category_id`, `time_slot_interval`, `interval_type`, `description`, `gst_percentage`, `meta_title`, `meta_description`, `status`, `created_at`) VALUES
+(10, 'SRV_694247d743282', 85698, 'ddd', 'ddd', '999', '999', '/uploads/sellers/85698/services/2025/12/17/srv_69424d4337f04.png', 7, '', 'minutes', 'ssss', 28, 'ssss', 'dddd', 1, '2025-12-17 11:34:07.275'),
+(11, 'SRV_694383508eb5a', 85960, 'deepak', 'dee', '333', '444', '', NULL, '3', 'minutes', 'sdfsdfsdf', 18, '', '', 0, '2025-12-18 10:00:08.585');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `available_areas`
 --
 
@@ -82,15 +116,24 @@ CREATE TABLE `available_areas` (
 
 CREATE TABLE `categories` (
   `id` int(11) NOT NULL,
-  `category_id` varchar(255) NOT NULL,
+  `category_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `user_id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   `slug` varchar(255) NOT NULL,
-  `image` varchar(255) NOT NULL,
   `meta_title` varchar(255) DEFAULT NULL,
   `meta_description` varchar(255) DEFAULT NULL,
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `categories`
+--
+
+INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `meta_title`, `meta_description`, `created_at`) VALUES
+(15, 'CAT_6943f380d998d', 85960, 'dfg', 'dfg', '', '', '2025-12-18 17:58:48.891'),
+(16, 'CAT_6943f3b015d32', 85960, 'sdf', 'sdf', '', '', '2025-12-18 17:59:36.089'),
+(17, 'CAT_6943f505cf0e6', 85960, 'deee', 'deee', '', '', '2025-12-18 18:05:17.848'),
+(19, 'CAT_694549966caf1', 27395, 'Dental', 'dental', 'sdd', 'dd', '2025-12-19 18:18:22.445');
 
 -- --------------------------------------------------------
 
@@ -175,6 +218,26 @@ INSERT INTO `dashboard_messages` (`id`, `title`, `description`, `expiry_type`, `
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `departments`
+--
+
+CREATE TABLE `departments` (
+  `id` int(11) NOT NULL,
+  `department_id` varchar(255) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `type` varchar(255) DEFAULT NULL,
+  `slug` varchar(255) DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `meta_title` varchar(255) DEFAULT NULL,
+  `meta_description` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `updated_at` datetime(3) DEFAULT NULL ON UPDATE current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `discounts`
 --
 
@@ -194,6 +257,35 @@ CREATE TABLE `discounts` (
 INSERT INTO `discounts` (`id`, `code`, `type`, `discount`, `eligibility`, `created_at`) VALUES
 (12, '123', 'percentage', 10, NULL, '2025-12-09 11:01:18.084'),
 (13, '456', 'fixed', 10, 8, '2025-12-09 11:30:58.539');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctors`
+--
+
+CREATE TABLE `doctors` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `category_id` varchar(255) DEFAULT NULL,
+  `doctor_name` varchar(255) NOT NULL,
+  `specialization` varchar(255) NOT NULL,
+  `qualification` varchar(255) DEFAULT NULL,
+  `experience` int(11) DEFAULT NULL,
+  `reg_number` varchar(255) DEFAULT NULL,
+  `doctor_image` varchar(255) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `doctors`
+--
+
+INSERT INTO `doctors` (`id`, `user_id`, `category_id`, `doctor_name`, `specialization`, `qualification`, `experience`, `reg_number`, `doctor_image`, `created_at`) VALUES
+(7, 85960, '15', 'sdf', 'sfd', 'd', 4, 'v', NULL, '2025-12-18 17:58:48.894'),
+(8, 85960, '16', 'baru', 'sdf', 'sdf', 444, 'sd', NULL, '2025-12-18 17:59:36.111'),
+(9, 85960, '17', 'Deepak', 'Stomach', 'MBBS , HSC ', 3, 'sdf', NULL, '2025-12-18 18:05:17.870'),
+(10, 27395, 'CAT_694549966caf1', 'Deepak', 'thermotologist', 'MBBS', 2, 'sdf', 'sellers/27395/doctors/2025/12/19/1766148330_694548ea434b1.png', '2025-12-19 18:18:22.586');
 
 -- --------------------------------------------------------
 
@@ -317,39 +409,6 @@ CREATE TABLE `plugins` (
   `field_label` varchar(255) NOT NULL,
   `field_placeholder` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `services`
---
-
-CREATE TABLE `services` (
-  `id` int(11) NOT NULL,
-  `service_id` varchar(255) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `slug` varchar(255) NOT NULL,
-  `amount` varchar(255) NOT NULL,
-  `previous_amount` varchar(255) DEFAULT NULL,
-  `image` varchar(255) DEFAULT NULL,
-  `category_id` int(11) DEFAULT NULL,
-  `time_slot_interval` varchar(255) NOT NULL,
-  `interval_type` varchar(255) NOT NULL,
-  `description` longtext DEFAULT NULL,
-  `gst_percentage` int(11) DEFAULT NULL,
-  `meta_title` varchar(255) DEFAULT NULL,
-  `meta_description` varchar(255) DEFAULT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT 0,
-  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `services`
---
-
-INSERT INTO `services` (`id`, `service_id`, `user_id`, `name`, `slug`, `amount`, `previous_amount`, `image`, `category_id`, `time_slot_interval`, `interval_type`, `description`, `gst_percentage`, `meta_title`, `meta_description`, `status`, `created_at`) VALUES
-(10, 'SRV_694247d743282', 85698, 'ddd', 'ddd', '999', '999', '/uploads/sellers/85698/services/2025/12/17/srv_69424d4337f04.png', 7, '', 'minutes', 'ssss', 28, 'ssss', 'dddd', 1, '2025-12-17 11:34:07.275');
 
 -- --------------------------------------------------------
 
@@ -492,7 +551,7 @@ CREATE TABLE `site_settings` (
 --
 
 INSERT INTO `site_settings` (`id`, `user_id`, `logo`, `favicon`, `phone`, `whatsapp`, `email`, `currency`, `country`, `state`, `address`, `meta_title`, `meta_description`, `sharing_image_preview`, `gst_number`, `gst_type`, `tax_percent`, `facebook`, `twitter`, `instagram`, `linkedin`, `youtube`, `pinterest`, `cash_in_hand`, `razorpay_key_id`, `phonepe_salt_key`, `phonepe_salt_index`, `phonepe_merchant_id`, `payu_api_key`, `payu_salt`, `sunday`, `sunday_starts`, `sunday_ends`, `monday`, `monday_starts`, `monday_ends`, `tuesday`, `tuesday_starts`, `tuesday_ends`, `wednesday`, `wednesday_starts`, `wednesday_ends`, `thursday`, `thursday_starts`, `thursday_ends`, `friday`, `friday_starts`, `friday_ends`, `saturday`, `saturday_starts`, `saturday_ends`) VALUES
-(14, 27395, NULL, NULL, NULL, NULL, NULL, 'INR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL);
+(14, 27395, 'sellers/27395/site-settings/logo/2025/12/17/logo_6942a478ae072.png', 'sellers/27395/site-settings/favicon/2025/12/17/favicon_6942a47bb6819.png', '', '', '', 'INR', '', '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -607,9 +666,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
-(19, 27395, 'Deepak', NULL, '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', NULL, 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, 'bb26a7c0333aba645e48ac9c11c7f2b7f74d2d404b1ec4a8441f1c1ee65d5b54'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '415bac599ebb1605b7f6ec4600df1ef7c5b19496ef1b1b9837f2a6382a4379fa'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '03021193c64904e6b1e9380638ccf8337fc35f27d9254e56bb68ec70831f24af');
+(19, 27395, 'Deepak', NULL, '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', NULL, 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '6bc40faccdf840bc8ef5079ddf9602623ed7c8248195c891e44bacf4847822d5'),
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '0e99604bbb28210ca89c230eea088bf6b7a1223ec575153016f510ea087f3210'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '6f317f7c0e8c178b9ff4c1beb491b7f76ab5c1c808d4c4e991554d73c3f3221d');
 
 -- --------------------------------------------------------
 
@@ -704,6 +763,13 @@ ALTER TABLE `appointments`
   ADD KEY `appointments_employee_id_fkey` (`employee_id`);
 
 --
+-- Indexes for table `appointment_settings`
+--
+ALTER TABLE `appointment_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `service_id` (`service_id`);
+
+--
 -- Indexes for table `available_areas`
 --
 ALTER TABLE `available_areas`
@@ -750,11 +816,26 @@ ALTER TABLE `dashboard_messages`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `departments`
+--
+ALTER TABLE `departments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `departments_department_id_key` (`department_id`),
+  ADD KEY `departments_user_id_fkey` (`user_id`);
+
+--
 -- Indexes for table `discounts`
 --
 ALTER TABLE `discounts`
   ADD PRIMARY KEY (`id`),
   ADD KEY `discounts_eligibility_fkey` (`eligibility`);
+
+--
+-- Indexes for table `doctors`
+--
+ALTER TABLE `doctors`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `category_id` (`category_id`);
 
 --
 -- Indexes for table `employees`
@@ -797,13 +878,6 @@ ALTER TABLE `manual_payment_methods`
 --
 ALTER TABLE `plugins`
   ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `services`
---
-ALTER TABLE `services`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `service_id` (`service_id`);
 
 --
 -- Indexes for table `service_images`
@@ -893,6 +967,12 @@ ALTER TABLE `appointments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `appointment_settings`
+--
+ALTER TABLE `appointment_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
 -- AUTO_INCREMENT for table `available_areas`
 --
 ALTER TABLE `available_areas`
@@ -902,7 +982,7 @@ ALTER TABLE `available_areas`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `configured_plugins`
@@ -929,10 +1009,22 @@ ALTER TABLE `dashboard_messages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
 
 --
+-- AUTO_INCREMENT for table `departments`
+--
+ALTER TABLE `departments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `discounts`
 --
 ALTER TABLE `discounts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `doctors`
+--
+ALTER TABLE `doctors`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `employees`
@@ -969,12 +1061,6 @@ ALTER TABLE `manual_payment_methods`
 --
 ALTER TABLE `plugins`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `services`
---
-ALTER TABLE `services`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `service_images`
@@ -1040,7 +1126,7 @@ ALTER TABLE `website_settings`
 ALTER TABLE `appointments`
   ADD CONSTRAINT `appointments_customer_id_fkey` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `appointments_employee_id_fkey` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `appointments_service_id_fkey` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `appointments_service_id_fkey` FOREIGN KEY (`service_id`) REFERENCES `appointment_settings` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `appointments_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 
 --
@@ -1073,6 +1159,12 @@ ALTER TABLE `coupons`
 --
 ALTER TABLE `customers`
   ADD CONSTRAINT `customers_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `departments`
+--
+ALTER TABLE `departments`
+  ADD CONSTRAINT `departments_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `discounts`
@@ -1108,7 +1200,7 @@ ALTER TABLE `manual_payment_methods`
 -- Constraints for table `service_images`
 --
 ALTER TABLE `service_images`
-  ADD CONSTRAINT `service_images_service_id_fkey` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `service_images_service_id_fkey` FOREIGN KEY (`service_id`) REFERENCES `appointment_settings` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `site_settings`
