@@ -5,6 +5,7 @@ header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
 
+/* Handle preflight */
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
@@ -15,64 +16,94 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
+/* --------------------------------
+   GET DEPARTMENT ID
+-------------------------------- */
 $department_uid = $_GET['department_id'] ?? '';
-$user_id = $_GET['user_id'] ?? '';
 
 if (!$department_uid) {
-    echo json_encode(["success" => false, "message" => "Department ID required"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Department ID required"
+    ]);
     exit();
 }
 
-if (!$user_id) {
-    echo json_encode(["success" => false, "message" => "User ID required"]);
-    exit();
-}
-
+/* --------------------------------
+   READ JSON BODY
+-------------------------------- */
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (!is_array($data)) {
-    echo json_encode(["success" => false, "message" => "Invalid JSON"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid JSON data"
+    ]);
     exit();
 }
 
-/* remove restricted fields */
-unset($data["token"]);
-unset($data["created_at"]);
-unset($data["updated_at"]);
-unset($data["department_id"]);
-unset($data["user_id"]);
+/* --------------------------------
+   REMOVE PROTECTED FIELDS
+-------------------------------- */
+unset($data['id']);
+unset($data['department_id']);
+unset($data['user_id']);
+unset($data['created_at']);
+unset($data['updated_at']);
+unset($data['token']);
 
-/* find department */
-$stmt = $pdo->prepare("SELECT id FROM departments WHERE department_id = ? AND user_id = ? LIMIT 1");
-$stmt->execute([$department_uid, $user_id]);
+/* --------------------------------
+   CHECK IF DEPARTMENT EXISTS
+-------------------------------- */
+$stmt = $pdo->prepare(
+    "SELECT id, user_id FROM departments WHERE department_id = ? LIMIT 1"
+);
+$stmt->execute([$department_uid]);
 $department = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$department) {
-    echo json_encode(["success" => false, "message" => "Department not found"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Department not found"
+    ]);
     exit();
 }
 
-/* -----------------------------
-    UPDATE DEPARTMENTS TABLE
-------------------------------*/
+/* --------------------------------
+   PREPARE UPDATE QUERY
+-------------------------------- */
 $fields = [];
 $params = [];
 
 foreach ($data as $key => $value) {
-    $fields[] = "$key = ?";
-    $params[] = $value ?? null;
+    $fields[] = "`$key` = ?";
+    $params[] = $value;
+}
+
+if (empty($fields)) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Nothing to update"
+    ]);
+    exit();
 }
 
 $params[] = $department_uid;
-$params[] = $user_id;
 
-$sql = "UPDATE departments SET " . implode(", ", $fields) . " WHERE department_id = ? AND user_id = ?";
+$sql = "UPDATE departments 
+        SET " . implode(", ", $fields) . " 
+        WHERE department_id = ?";
+
 $stmt = $pdo->prepare($sql);
-$ok = $stmt->execute($params);
+$success = $stmt->execute($params);
 
+/* --------------------------------
+   RESPONSE
+-------------------------------- */
 echo json_encode([
-    "success" => $ok,
-    "message" => $ok ? "Department updated successfully" : "Update failed"
+    "success" => $success,
+    "message" => $success 
+        ? "Department updated successfully" 
+        : "Update failed"
 ]);
 exit();
-?>
