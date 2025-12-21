@@ -33,11 +33,6 @@ $sql = "SELECT
             user_id,
             name,
             slug,
-            CASE 
-                WHEN image IS NULL OR image = '' 
-                    THEN NULL
-                ELSE CONCAT(:base_url, image)
-            END AS image,
             meta_title,
             meta_description,
             created_at
@@ -47,9 +42,12 @@ $sql = "SELECT
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute([
-    ':cid'      => $category_id,
-    ':base_url' => $baseImageUrl
+    ':cid' => $category_id
 ]);
+
+
+
+
 
 $category = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -58,26 +56,32 @@ if (!$category) {
     exit();
 }
 
-$primaryId = $category["id"];
-
 /* -----------------------------------------
-   FETCH DOCTOR DATA (if exists)
+   FETCH DOCTOR DATA
 ----------------------------------------- */
-$sql2 = "SELECT doctor_name, specialization, qualification, experience, reg_number 
-         FROM doctors 
+$sql2 = "SELECT
+            doctor_name,
+            specialization,
+            qualification,
+            experience,
+            reg_number,
+            doctor_image
+         FROM doctors
          WHERE category_id = :cid
          LIMIT 1";
 
 $stmt2 = $pdo->prepare($sql2);
-$stmt2->execute([':cid' => $primaryId]);
+$stmt2->execute([':cid' => $category_id]);
+
 $doctor = $stmt2->fetch(PDO::FETCH_ASSOC);
 
-/* return doctor details */
+/* merge doctor */
 $category["doctor_details"] = $doctor ?: null;
 
-/* return success */
+/* success response */
 echo json_encode([
     "success" => true,
     "data" => $category
 ]);
+
 exit();

@@ -15,9 +15,9 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-$category_uid = $_GET['category_id'] ?? '';
+$category_id = $_GET['category_id'] ?? '';
 
-if (!$category_uid) {
+if (!$category_id) {
     echo json_encode(["success" => false, "message" => "Category ID required"]);
     exit();
 }
@@ -37,18 +37,6 @@ unset($data["token"]);
 unset($data["doctor_details"]);
 unset($data["created_at"]);
 
-/* find category primary key id */
-$stmt = $pdo->prepare("SELECT id FROM categories WHERE category_id = ? LIMIT 1");
-$stmt->execute([$category_uid]);
-$category = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$category) {
-    echo json_encode(["success" => false, "message" => "Category not found"]);
-    exit();
-}
-
-$category_primary_id = $category["id"];
-
 /* -----------------------------
     UPDATE CATEGORY TABLE
 ------------------------------*/
@@ -60,11 +48,11 @@ foreach ($data as $key => $value) {
     $params[] = $value ?? null;
 }
 
-$params[] = $category_uid;
+$params[] = $category_id;
 
 $sql = "UPDATE categories SET " . implode(", ", $fields) . " WHERE category_id = ?";
 $stmt = $pdo->prepare($sql);
-$ok = $stmt->execute($params);
+$stmt->execute($params);
 
 /* -----------------------------
    UPDATE DOCTOR TABLE
@@ -73,12 +61,13 @@ if ($doctorDetails) {
 
     // check doctor exists
     $check = $pdo->prepare("SELECT id FROM doctors WHERE category_id = ? LIMIT 1");
-    $check->execute([$category_primary_id]);
+    $check->execute([$category_id]);
     $doctorExists = $check->fetchColumn();
 
     if ($doctorExists) {
-        // update doctor
-        $sql2 = "UPDATE doctors SET doctor_name=?, specialization=?, qualification=?, experience=?, reg_number=? WHERE category_id=?";
+        $sql2 = "UPDATE doctors 
+                 SET doctor_name=?, specialization=?, qualification=?, experience=?, reg_number=?, doctor_image=?
+                 WHERE category_id=?";
         $stmt2 = $pdo->prepare($sql2);
         $stmt2->execute([
             $doctorDetails["doctor_name"] ?? null,
@@ -86,26 +75,29 @@ if ($doctorDetails) {
             $doctorDetails["qualification"] ?? null,
             $doctorDetails["experience"] ?? null,
             $doctorDetails["reg_number"] ?? null,
-            $category_primary_id
+            $doctorDetails["doctor_image"] ?? null,
+            $category_id                           // FIXED foreign key
         ]);
+
     } else {
-        // insert doctor if not exists
-        $sql3 = "INSERT INTO doctors (category_id,doctor_name,specialization,qualification,experience,reg_number) VALUES (?,?,?,?,?,?)";
+        $sql3 = "INSERT INTO doctors 
+                (category_id, doctor_name, specialization, qualification, experience, reg_number, doctor_image)
+                VALUES (?,?,?,?,?,?,?)";
         $stmt3 = $pdo->prepare($sql3);
         $stmt3->execute([
-            $category_primary_id,
+            $category_id,
             $doctorDetails["doctor_name"] ?? null,
             $doctorDetails["specialization"] ?? null,
             $doctorDetails["qualification"] ?? null,
             $doctorDetails["experience"] ?? null,
-            $doctorDetails["reg_number"] ?? null
+            $doctorDetails["reg_number"] ?? null,
+            $doctorDetails["doctor_image"] ?? null
         ]);
     }
 }
 
 echo json_encode([
     "success" => true,
-    "message" => "Category + Doctor updated successfully"
+    "message" => "Category & Doctor updated successfully"
 ]);
 exit();
-?>
