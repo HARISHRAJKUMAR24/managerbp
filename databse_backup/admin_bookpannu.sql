@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 19, 2025 at 01:51 PM
+-- Generation Time: Dec 21, 2025 at 05:03 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -130,10 +130,8 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `meta_title`, `meta_description`, `created_at`) VALUES
-(15, 'CAT_6943f380d998d', 85960, 'dfg', 'dfg', '', '', '2025-12-18 17:58:48.891'),
-(16, 'CAT_6943f3b015d32', 85960, 'sdf', 'sdf', '', '', '2025-12-18 17:59:36.089'),
-(17, 'CAT_6943f505cf0e6', 85960, 'deee', 'deee', '', '', '2025-12-18 18:05:17.848'),
-(19, 'CAT_694549966caf1', 27395, 'Dental', 'dental', 'sdd', 'dd', '2025-12-19 18:18:22.445');
+(19, 'CAT_694549966caf1', 27395, 'Dental', 'dental', 'sdd', 'dd', '2025-12-19 18:18:22.445'),
+(20, 'CAT_6947600cc2251', 85960, 'sdfdee', 'sdfdee', '', '', '2025-12-21 08:18:44.795');
 
 -- --------------------------------------------------------
 
@@ -285,7 +283,8 @@ INSERT INTO `doctors` (`id`, `user_id`, `category_id`, `doctor_name`, `specializ
 (7, 85960, '15', 'sdf', 'sfd', 'd', 4, 'v', NULL, '2025-12-18 17:58:48.894'),
 (8, 85960, '16', 'baru', 'sdf', 'sdf', 444, 'sd', NULL, '2025-12-18 17:59:36.111'),
 (9, 85960, '17', 'Deepak', 'Stomach', 'MBBS , HSC ', 3, 'sdf', NULL, '2025-12-18 18:05:17.870'),
-(10, 27395, 'CAT_694549966caf1', 'Deepak', 'thermotologist', 'MBBS', 2, 'sdf', 'sellers/27395/doctors/2025/12/19/1766148330_694548ea434b1.png', '2025-12-19 18:18:22.586');
+(10, 27395, 'CAT_694549966caf1', 'Deepak', 'thermotologist', 'MBBS', 2, 'sdf', 'sellers/27395/doctors/2025/12/19/1766148330_694548ea434b1.png', '2025-12-19 18:18:22.586'),
+(11, 85960, 'CAT_6947600cc2251', 'deee', 'sdf', 'sdf', 4, 'dsfdsf', NULL, '2025-12-21 08:18:44.933');
 
 -- --------------------------------------------------------
 
@@ -666,9 +665,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
-(19, 27395, 'Deepak', NULL, '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', NULL, 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '6bc40faccdf840bc8ef5079ddf9602623ed7c8248195c891e44bacf4847822d5'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '0e99604bbb28210ca89c230eea088bf6b7a1223ec575153016f510ea087f3210'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '6f317f7c0e8c178b9ff4c1beb491b7f76ab5c1c808d4c4e991554d73c3f3221d');
+(19, 27395, 'Deepak', NULL, '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', NULL, 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '63885c2a7e7f23c25b544e273a90de446d7b9a81147ec3a772cca839955e858f'),
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, 'a68396f48534eed2e8fa95d35732dcb99be8f1a0afb2a1331da134c549b5416f'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '562fa6b33dcfec9b0db3b422d1d3acd5a2174b3820da1f22a7c033a2fbce5f62');
 
 -- --------------------------------------------------------
 
@@ -982,7 +981,7 @@ ALTER TABLE `available_areas`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `configured_plugins`
@@ -1024,7 +1023,7 @@ ALTER TABLE `discounts`
 -- AUTO_INCREMENT for table `doctors`
 --
 ALTER TABLE `doctors`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `employees`
