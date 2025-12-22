@@ -58,46 +58,79 @@ if ($name === "") {
 }
 
 /* ----------------------------------------------------
-   COLLECT ALL FIELDS
+   DEBUG: Log incoming data
+-----------------------------------------------------*/
+error_log("CREATE DEPARTMENT DATA: " . print_r($data, true));
+
+/* ----------------------------------------------------
+   COLLECT ALL FIELDS - NO TYPE FIELD
 -----------------------------------------------------*/
 $fields = [
     'department_id' => "DEPT_" . uniqid(),
     'user_id' => $user_id,
     'name' => $name,
-    'type' => trim($data["type"] ?? ""),
     'slug' => trim($data["slug"] ?? ""),
     'image' => trim($data["image"] ?? ""),
     'meta_title' => $data["meta_title"] ?? null,
     'meta_description' => $data["meta_description"] ?? null,
     'type_main_name' => $data["type_main_name"] ?? null,
-    'type_main_amount' => $data["type_main_amount"] ?? null,
+    'type_main_amount' => isset($data["type_main_amount"]) && $data["type_main_amount"] !== "" ? floatval($data["type_main_amount"]) : null,
 ];
 
 // Add type fields 1-25
 for ($i = 1; $i <= 25; $i++) {
-    $fields["type_{$i}_name"] = $data["type_{$i}_name"] ?? null;
-    $fields["type_{$i}_amount"] = $data["type_{$i}_amount"] ?? null;
+    $typeNameKey = "type_{$i}_name";
+    $typeAmountKey = "type_{$i}_amount";
+    
+    $fields[$typeNameKey] = $data[$typeNameKey] ?? null;
+    
+    if (isset($data[$typeAmountKey]) && $data[$typeAmountKey] !== "") {
+        // Convert to decimal value
+        $fields[$typeAmountKey] = floatval($data[$typeAmountKey]);
+    } else {
+        $fields[$typeAmountKey] = null;
+    }
 }
+
+/* ----------------------------------------------------
+   DEBUG: Log fields before insert
+-----------------------------------------------------*/
+error_log("FIELDS TO INSERT: " . print_r($fields, true));
 
 /* ----------------------------------------------------
    BUILD INSERT QUERY
 -----------------------------------------------------*/
-$columns = implode(", ", array_keys($fields));
-$placeholders = ":" . implode(", :", array_keys($fields));
+$columns = [];
+$placeholders = [];
+$bindValues = [];
 
-$sql = "INSERT INTO departments ($columns, created_at) VALUES ($placeholders, NOW(3))";
+foreach ($fields as $key => $value) {
+    $columns[] = "`$key`";
+    $placeholders[] = ":$key";
+    $bindValues[":$key"] = $value;
+}
+
+$columnsStr = implode(", ", $columns);
+$placeholdersStr = implode(", ", $placeholders);
+
+$sql = "INSERT INTO departments ($columnsStr, created_at) VALUES ($placeholdersStr, NOW(3))";
 
 try {
     $stmt = $pdo->prepare($sql);
     
     // Bind all values
-    foreach ($fields as $key => $value) {
-        $stmt->bindValue(":$key", $value);
+    foreach ($bindValues as $param => $value) {
+        if (is_null($value)) {
+            $stmt->bindValue($param, null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue($param, $value);
+        }
     }
     
     $ok = $stmt->execute();
     
     if (!$ok) {
+        error_log("SQL ERROR: " . print_r($stmt->errorInfo(), true));
         echo json_encode([
             "success" => false,
             "message" => "Department insert failed",
@@ -113,6 +146,7 @@ try {
     ]);
     
 } catch (Exception $e) {
+    error_log("EXCEPTION: " . $e->getMessage());
     echo json_encode([
         "success" => false,
         "message" => "Database error: " . $e->getMessage()

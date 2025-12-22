@@ -1,7 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Methods: POST, PUT, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
 
@@ -25,7 +25,9 @@ if (!$department_uid) {
     exit();
 }
 
-$data = json_decode(file_get_contents("php://input"), true);
+$rawData = file_get_contents("php://input");
+error_log("UPDATE RAW DATA: " . $rawData);
+$data = json_decode($rawData, true);
 
 if (!is_array($data)) {
     echo json_encode([
@@ -34,6 +36,11 @@ if (!is_array($data)) {
     ]);
     exit();
 }
+
+/* ----------------------------------------------------
+   DEBUG: Log incoming data
+-----------------------------------------------------*/
+error_log("UPDATE DEPARTMENT DATA: " . print_r($data, true));
 
 /* ----------------------------------------------------
    REMOVE PROTECTED FIELDS
@@ -64,11 +71,22 @@ if (!$department) {
    PREPARE UPDATE QUERY
 -----------------------------------------------------*/
 $fields = [];
+$bindValues = [];
 $params = [];
 
 foreach ($data as $key => $value) {
-    $fields[] = "`$key` = ?";
-    $params[] = $value;
+    // Skip empty string values that should be null
+    if ($value === '') {
+        $value = null;
+    }
+    
+    // Convert amount fields to float
+    if (strpos($key, '_amount') !== false && $value !== null) {
+        $value = floatval($value);
+    }
+    
+    $fields[] = "`$key` = :$key";
+    $bindValues[":$key"] = $value;
 }
 
 if (empty($fields)) {
@@ -79,20 +97,46 @@ if (empty($fields)) {
     exit();
 }
 
-$params[] = $department_uid;
+$bindValues[':department_id'] = $department_uid;
 
 $sql = "UPDATE departments 
-        SET " . implode(", ", $fields) . " 
-        WHERE department_id = ?";
+        SET " . implode(", ", $fields) . ", updated_at = NOW(3)
+        WHERE department_id = :department_id";
 
-$stmt = $pdo->prepare($sql);
-$success = $stmt->execute($params);
+error_log("UPDATE SQL: " . $sql);
+error_log("UPDATE BIND VALUES: " . print_r($bindValues, true));
 
-echo json_encode([
-    "success" => $success,
-    "message" => $success 
-        ? "Department updated successfully" 
-        : "Update failed"
-]);
+try {
+    $stmt = $pdo->prepare($sql);
+    
+    // Bind all values
+    foreach ($bindValues as $param => $value) {
+        if (is_null($value)) {
+            $stmt->bindValue($param, null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue($param, $value);
+        }
+    }
+    
+    $success = $stmt->execute();
+    
+    if (!$success) {
+        error_log("UPDATE ERROR: " . print_r($stmt->errorInfo(), true));
+    }
+    
+    echo json_encode([
+        "success" => $success,
+        "message" => $success 
+            ? "Department updated successfully" 
+            : "Update failed"
+    ]);
+    
+} catch (Exception $e) {
+    error_log("UPDATE EXCEPTION: " . $e->getMessage());
+    echo json_encode([
+        "success" => false,
+        "message" => "Database error: " . $e->getMessage()
+    ]);
+}
 exit();
 ?>

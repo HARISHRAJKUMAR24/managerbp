@@ -34,7 +34,7 @@ $searchSql = "";
 $params = [':user_id' => $user_id];
 
 if (!empty($q)) {
-    $searchSql = " AND (d.name LIKE :search OR d.slug LIKE :search OR d.type LIKE :search) ";
+    $searchSql = " AND (d.name LIKE :search OR d.slug LIKE :search) ";
     $params[':search'] = "%$q%";
 }
 
@@ -52,13 +52,12 @@ $totalRecords = $countStmt->fetchColumn();
 
 $baseImageUrl = "http://localhost/managerbp/public/uploads/";
 
-// Build column list including all type fields
+// Build column list including all type fields (NO type column)
 $columns = "
     d.id,
     d.department_id,
     d.user_id,
     d.name,
-    d.type,
     d.slug,
     d.type_main_name,
     d.type_main_amount,
