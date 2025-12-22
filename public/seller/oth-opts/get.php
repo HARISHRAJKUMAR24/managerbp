@@ -52,29 +52,81 @@ $totalRecords = $countStmt->fetchColumn();
 
 $baseImageUrl = "http://localhost/managerbp/public/uploads/";
 
-$sql = "SELECT 
-            d.id,
-            d.department_id,
-            d.user_id,
-            d.name,
-            d.type,
-            d.slug,
+// Build column list including all type fields
+$columns = "
+    d.id,
+    d.department_id,
+    d.user_id,
+    d.name,
+    d.type,
+    d.slug,
+    d.type_main_name,
+    d.type_main_amount,
+    d.type_1_name,
+    d.type_1_amount,
+    d.type_2_name,
+    d.type_2_amount,
+    d.type_3_name,
+    d.type_3_amount,
+    d.type_4_name,
+    d.type_4_amount,
+    d.type_5_name,
+    d.type_5_amount,
+    d.type_6_name,
+    d.type_6_amount,
+    d.type_7_name,
+    d.type_7_amount,
+    d.type_8_name,
+    d.type_8_amount,
+    d.type_9_name,
+    d.type_9_amount,
+    d.type_10_name,
+    d.type_10_amount,
+    d.type_11_name,
+    d.type_11_amount,
+    d.type_12_name,
+    d.type_12_amount,
+    d.type_13_name,
+    d.type_13_amount,
+    d.type_14_name,
+    d.type_14_amount,
+    d.type_15_name,
+    d.type_15_amount,
+    d.type_16_name,
+    d.type_16_amount,
+    d.type_17_name,
+    d.type_17_amount,
+    d.type_18_name,
+    d.type_18_amount,
+    d.type_19_name,
+    d.type_19_amount,
+    d.type_20_name,
+    d.type_20_amount,
+    d.type_21_name,
+    d.type_21_amount,
+    d.type_22_name,
+    d.type_22_amount,
+    d.type_23_name,
+    d.type_23_amount,
+    d.type_24_name,
+    d.type_24_amount,
+    d.type_25_name,
+    d.type_25_amount,
+    CASE 
+        WHEN d.image IS NULL OR d.image = '' 
+            THEN NULL
+        ELSE CONCAT('$baseImageUrl', d.image) 
+    END AS image,
+    d.meta_title,
+    d.meta_description,
+    d.created_at,
+    d.updated_at
+";
 
-            CASE 
-                WHEN d.image IS NULL OR d.image = '' 
-                    THEN NULL
-                ELSE CONCAT('$baseImageUrl', d.image) 
-            END AS image,
-
-            d.meta_title,
-            d.meta_description,
-            d.created_at,
-            d.updated_at
-
+$sql = "SELECT $columns
         FROM departments d
         WHERE d.user_id = :user_id 
         $searchSql
-
         ORDER BY d.id DESC
         LIMIT :limit OFFSET :offset";
 

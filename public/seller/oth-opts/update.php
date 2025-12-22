@@ -5,7 +5,6 @@ header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
 
-/* Handle preflight */
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
@@ -16,9 +15,6 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-/* --------------------------------
-   GET DEPARTMENT ID
--------------------------------- */
 $department_uid = $_GET['department_id'] ?? '';
 
 if (!$department_uid) {
@@ -29,9 +25,6 @@ if (!$department_uid) {
     exit();
 }
 
-/* --------------------------------
-   READ JSON BODY
--------------------------------- */
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (!is_array($data)) {
@@ -42,19 +35,17 @@ if (!is_array($data)) {
     exit();
 }
 
-/* --------------------------------
+/* ----------------------------------------------------
    REMOVE PROTECTED FIELDS
--------------------------------- */
-unset($data['id']);
-unset($data['department_id']);
-unset($data['user_id']);
-unset($data['created_at']);
-unset($data['updated_at']);
-unset($data['token']);
+-----------------------------------------------------*/
+$protected = ['id', 'department_id', 'user_id', 'created_at', 'updated_at', 'token'];
+foreach ($protected as $field) {
+    unset($data[$field]);
+}
 
-/* --------------------------------
+/* ----------------------------------------------------
    CHECK IF DEPARTMENT EXISTS
--------------------------------- */
+-----------------------------------------------------*/
 $stmt = $pdo->prepare(
     "SELECT id, user_id FROM departments WHERE department_id = ? LIMIT 1"
 );
@@ -69,9 +60,9 @@ if (!$department) {
     exit();
 }
 
-/* --------------------------------
+/* ----------------------------------------------------
    PREPARE UPDATE QUERY
--------------------------------- */
+-----------------------------------------------------*/
 $fields = [];
 $params = [];
 
@@ -97,9 +88,6 @@ $sql = "UPDATE departments
 $stmt = $pdo->prepare($sql);
 $success = $stmt->execute($params);
 
-/* --------------------------------
-   RESPONSE
--------------------------------- */
 echo json_encode([
     "success" => $success,
     "message" => $success 
@@ -107,3 +95,4 @@ echo json_encode([
         : "Update failed"
 ]);
 exit();
+?>

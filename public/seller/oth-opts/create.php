@@ -58,53 +58,66 @@ if ($name === "") {
 }
 
 /* ----------------------------------------------------
-   OPTIONAL FIELDS
+   COLLECT ALL FIELDS
 -----------------------------------------------------*/
-$type = trim($data["type"] ?? "");
-$slug = trim($data["slug"] ?? "");
-$image = trim($data["image"] ?? "");
-$meta_title = $data["meta_title"] ?? null;
-$meta_description = $data["meta_description"] ?? null;
+$fields = [
+    'department_id' => "DEPT_" . uniqid(),
+    'user_id' => $user_id,
+    'name' => $name,
+    'type' => trim($data["type"] ?? ""),
+    'slug' => trim($data["slug"] ?? ""),
+    'image' => trim($data["image"] ?? ""),
+    'meta_title' => $data["meta_title"] ?? null,
+    'meta_description' => $data["meta_description"] ?? null,
+    'type_main_name' => $data["type_main_name"] ?? null,
+    'type_main_amount' => $data["type_main_amount"] ?? null,
+];
 
-/* ----------------------------------------------------
-   GENERATE DEPARTMENT ID
------------------------------------------------------*/
-$department_id = "DEPT_" . uniqid();
-
-/* ----------------------------------------------------
-   INSERT INTO DEPARTMENTS TABLE
------------------------------------------------------*/
-$sql = "INSERT INTO departments 
-        (department_id, user_id, name, type, slug, image, meta_title, meta_description, created_at)
-        VALUES (:did, :uid, :name, :type, :slug, :image, :mtitle, :mdesc, NOW(3))";
-
-$stmt = $pdo->prepare($sql);
-$ok = $stmt->execute([
-    ":did"    => $department_id,
-    ":uid"    => $user_id,
-    ":name"   => $name,
-    ":type"   => $type ?: null,
-    ":slug"   => $slug ?: null,
-    ":image"  => $image ?: null,
-    ":mtitle" => $meta_title,
-    ":mdesc"  => $meta_description
-]);
-
-if (!$ok) {
-    echo json_encode([
-        "success" => false,
-        "message" => "Department insert failed"
-    ]);
-    exit();
+// Add type fields 1-25
+for ($i = 1; $i <= 25; $i++) {
+    $fields["type_{$i}_name"] = $data["type_{$i}_name"] ?? null;
+    $fields["type_{$i}_amount"] = $data["type_{$i}_amount"] ?? null;
 }
 
 /* ----------------------------------------------------
-   RESPONSE
+   BUILD INSERT QUERY
 -----------------------------------------------------*/
-echo json_encode([
-    "success" => true,
-    "message" => "Department created successfully",
-    "department_id" => $department_id
-]);
+$columns = implode(", ", array_keys($fields));
+$placeholders = ":" . implode(", :", array_keys($fields));
+
+$sql = "INSERT INTO departments ($columns, created_at) VALUES ($placeholders, NOW(3))";
+
+try {
+    $stmt = $pdo->prepare($sql);
+    
+    // Bind all values
+    foreach ($fields as $key => $value) {
+        $stmt->bindValue(":$key", $value);
+    }
+    
+    $ok = $stmt->execute();
+    
+    if (!$ok) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Department insert failed",
+            "error" => $stmt->errorInfo()
+        ]);
+        exit();
+    }
+    
+    echo json_encode([
+        "success" => true,
+        "message" => "Department created successfully",
+        "department_id" => $fields['department_id']
+    ]);
+    
+} catch (Exception $e) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Database error: " . $e->getMessage()
+    ]);
+}
+
 exit();
 ?>
