@@ -71,7 +71,7 @@ $sql = "SELECT
 
 FROM categories c
 LEFT JOIN doctors d
-ON d.category_id = c.category_id
+ON d.category_id = c.id
 WHERE c.user_id = :user_id 
 $searchSql
 ORDER BY c.id DESC
