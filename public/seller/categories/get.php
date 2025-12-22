@@ -86,6 +86,15 @@ $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
 $stmt->execute();
 
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+foreach ($records as &$row) {
+    if (!empty($row['doctor_image'])) {
+        $row['doctor_image'] = $baseImageUrl . $row['doctor_image'];
+    }
+}
+unset($row);
+
+
 error_log("----- CATEGORY GET.PHP LOG START -----");
 error_log("USER_ID = " . $user_id);
 error_log("RECORD COUNT = " . count($records));
