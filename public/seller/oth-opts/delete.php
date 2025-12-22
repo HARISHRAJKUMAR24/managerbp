@@ -15,21 +15,22 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-$department_id = $_GET['department_id'] ?? '';
+$category_id = $_GET['category_id'] ?? '';
+$user_id     = $_GET['user_id'] ?? '';
 
-error_log("DELETE REQUESTED department_id: " . $department_id);
+// ⭐ ADD THIS LOG
+error_log("DELETE REQUESTED category_id: " . $category_id);
 
-if (!$department_id) {
-    echo json_encode(["success" => false, "message" => "Department ID missing"]);
+if (!$category_id) {
+    echo json_encode(["success" => false, "message" => "Category ID missing"]);
     exit();
 }
 
-$sql = "DELETE FROM departments WHERE department_id = :did";
+$sql = "DELETE FROM categories WHERE category_id = :cid";
 $stmt = $pdo->prepare($sql);
-$stmt->execute([':did' => $department_id]);
+$stmt->execute([':cid' => $category_id]);
 
 echo json_encode([
     "success" => $stmt->rowCount() > 0,
-    "message" => $stmt->rowCount() > 0 ? "Department deleted" : "Department not found"
+    "message" => $stmt->rowCount() > 0 ? "Category deleted" : "Category not found"
 ]);
-?>

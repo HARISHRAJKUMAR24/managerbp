@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 21, 2025 at 05:03 AM
+-- Generation Time: Dec 22, 2025 at 01:48 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -71,8 +71,7 @@ CREATE TABLE `appointment_settings` (
   `user_id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   `slug` varchar(255) NOT NULL,
-  `amount` varchar(255) NOT NULL,
-  `previous_amount` varchar(255) DEFAULT NULL,
+  `doctor_fee` decimal(10,2) DEFAULT NULL,
   `image` varchar(255) DEFAULT NULL,
   `category_id` int(11) DEFAULT NULL,
   `time_slot_interval` varchar(255) NOT NULL,
@@ -89,9 +88,9 @@ CREATE TABLE `appointment_settings` (
 -- Dumping data for table `appointment_settings`
 --
 
-INSERT INTO `appointment_settings` (`id`, `service_id`, `user_id`, `name`, `slug`, `amount`, `previous_amount`, `image`, `category_id`, `time_slot_interval`, `interval_type`, `description`, `gst_percentage`, `meta_title`, `meta_description`, `status`, `created_at`) VALUES
-(10, 'SRV_694247d743282', 85698, 'ddd', 'ddd', '999', '999', '/uploads/sellers/85698/services/2025/12/17/srv_69424d4337f04.png', 7, '', 'minutes', 'ssss', 28, 'ssss', 'dddd', 1, '2025-12-17 11:34:07.275'),
-(11, 'SRV_694383508eb5a', 85960, 'deepak', 'dee', '333', '444', '', NULL, '3', 'minutes', 'sdfsdfsdf', 18, '', '', 0, '2025-12-18 10:00:08.585');
+INSERT INTO `appointment_settings` (`id`, `service_id`, `user_id`, `name`, `slug`, `doctor_fee`, `image`, `category_id`, `time_slot_interval`, `interval_type`, `description`, `gst_percentage`, `meta_title`, `meta_description`, `status`, `created_at`) VALUES
+(10, 'SRV_694247d743282', 85698, 'ddd', 'ddd', NULL, '/uploads/sellers/85698/services/2025/12/17/srv_69424d4337f04.png', 7, '', 'minutes', 'ssss', 28, 'ssss', 'dddd', 1, '2025-12-17 11:34:07.275'),
+(11, 'SRV_694383508eb5a', 85960, 'deepak', 'dee', NULL, '', NULL, '3', 'minutes', 'sdfsdfsdf', 18, '', '', 0, '2025-12-18 10:00:08.585');
 
 -- --------------------------------------------------------
 
@@ -130,8 +129,7 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `meta_title`, `meta_description`, `created_at`) VALUES
-(19, 'CAT_694549966caf1', 27395, 'Dental', 'dental', 'sdd', 'dd', '2025-12-19 18:18:22.445'),
-(20, 'CAT_6947600cc2251', 85960, 'sdfdee', 'sdfdee', '', '', '2025-12-21 08:18:44.795');
+(45, 'CAT_69490dff565f4', 85960, 'sdfsdf', 'sdfsdf', '', '', '2025-12-22 14:53:11.353');
 
 -- --------------------------------------------------------
 
@@ -224,7 +222,58 @@ CREATE TABLE `departments` (
   `department_id` varchar(255) NOT NULL,
   `user_id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `type` varchar(255) DEFAULT NULL,
+  `type_main_name` varchar(255) DEFAULT NULL,
+  `type_main_amount` decimal(10,2) DEFAULT NULL,
+  `type_1_name` varchar(255) DEFAULT NULL,
+  `type_1_amount` decimal(10,2) DEFAULT NULL,
+  `type_2_name` varchar(255) DEFAULT NULL,
+  `type_2_amount` decimal(10,2) DEFAULT NULL,
+  `type_3_name` varchar(255) DEFAULT NULL,
+  `type_3_amount` decimal(10,2) DEFAULT NULL,
+  `type_4_name` varchar(255) DEFAULT NULL,
+  `type_4_amount` decimal(10,2) DEFAULT NULL,
+  `type_5_name` varchar(255) DEFAULT NULL,
+  `type_5_amount` decimal(10,2) DEFAULT NULL,
+  `type_6_name` varchar(255) DEFAULT NULL,
+  `type_6_amount` decimal(10,2) DEFAULT NULL,
+  `type_7_name` varchar(255) DEFAULT NULL,
+  `type_7_amount` decimal(10,2) DEFAULT NULL,
+  `type_8_name` varchar(255) DEFAULT NULL,
+  `type_8_amount` decimal(10,2) DEFAULT NULL,
+  `type_9_name` varchar(255) DEFAULT NULL,
+  `type_9_amount` decimal(10,2) DEFAULT NULL,
+  `type_10_name` varchar(255) DEFAULT NULL,
+  `type_10_amount` decimal(10,2) DEFAULT NULL,
+  `type_11_name` varchar(255) DEFAULT NULL,
+  `type_11_amount` decimal(10,2) DEFAULT NULL,
+  `type_12_name` varchar(255) DEFAULT NULL,
+  `type_12_amount` decimal(10,2) DEFAULT NULL,
+  `type_13_name` varchar(255) DEFAULT NULL,
+  `type_13_amount` decimal(10,2) DEFAULT NULL,
+  `type_14_name` varchar(255) DEFAULT NULL,
+  `type_14_amount` decimal(10,2) DEFAULT NULL,
+  `type_15_name` varchar(255) DEFAULT NULL,
+  `type_15_amount` decimal(10,2) DEFAULT NULL,
+  `type_16_name` varchar(255) DEFAULT NULL,
+  `type_16_amount` decimal(10,2) DEFAULT NULL,
+  `type_17_name` varchar(255) DEFAULT NULL,
+  `type_17_amount` decimal(10,2) DEFAULT NULL,
+  `type_18_name` varchar(255) DEFAULT NULL,
+  `type_18_amount` decimal(10,2) DEFAULT NULL,
+  `type_19_name` varchar(255) DEFAULT NULL,
+  `type_19_amount` decimal(10,2) DEFAULT NULL,
+  `type_20_name` varchar(255) DEFAULT NULL,
+  `type_20_amount` decimal(10,2) DEFAULT NULL,
+  `type_21_name` varchar(255) DEFAULT NULL,
+  `type_21_amount` decimal(10,2) DEFAULT NULL,
+  `type_22_name` varchar(255) DEFAULT NULL,
+  `type_22_amount` decimal(10,2) DEFAULT NULL,
+  `type_23_name` varchar(255) DEFAULT NULL,
+  `type_23_amount` decimal(10,2) DEFAULT NULL,
+  `type_24_name` varchar(255) DEFAULT NULL,
+  `type_24_amount` decimal(10,2) DEFAULT NULL,
+  `type_25_name` varchar(255) DEFAULT NULL,
+  `type_25_amount` decimal(10,2) DEFAULT NULL,
   `slug` varchar(255) DEFAULT NULL,
   `image` varchar(255) DEFAULT NULL,
   `meta_title` varchar(255) DEFAULT NULL,
@@ -232,6 +281,16 @@ CREATE TABLE `departments` (
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) DEFAULT NULL ON UPDATE current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `departments`
+--
+
+INSERT INTO `departments` (`id`, `department_id`, `user_id`, `name`, `type_main_name`, `type_main_amount`, `type_1_name`, `type_1_amount`, `type_2_name`, `type_2_amount`, `type_3_name`, `type_3_amount`, `type_4_name`, `type_4_amount`, `type_5_name`, `type_5_amount`, `type_6_name`, `type_6_amount`, `type_7_name`, `type_7_amount`, `type_8_name`, `type_8_amount`, `type_9_name`, `type_9_amount`, `type_10_name`, `type_10_amount`, `type_11_name`, `type_11_amount`, `type_12_name`, `type_12_amount`, `type_13_name`, `type_13_amount`, `type_14_name`, `type_14_amount`, `type_15_name`, `type_15_amount`, `type_16_name`, `type_16_amount`, `type_17_name`, `type_17_amount`, `type_18_name`, `type_18_amount`, `type_19_name`, `type_19_amount`, `type_20_name`, `type_20_amount`, `type_21_name`, `type_21_amount`, `type_22_name`, `type_22_amount`, `type_23_name`, `type_23_amount`, `type_24_name`, `type_24_amount`, `type_25_name`, `type_25_amount`, `slug`, `image`, `meta_title`, `meta_description`, `created_at`, `updated_at`) VALUES
+(1, 'DEPT_6949300b04ac9', 32128, 'Saloon', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'saloon', 'sellers/32128/departments/2025/12/22/1766404102_694930065d9dc.png', 'sdf', 'sdf', '2025-12-22 17:18:27.019', NULL),
+(2, 'DEPT_69493286b8059', 32128, 'sdf', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'sdf', '', NULL, NULL, '2025-12-22 17:29:02.754', NULL),
+(3, 'DEPT_694937986e89a', 32128, 'dsf', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsf', '', NULL, NULL, '2025-12-22 17:50:40.453', NULL),
+(4, 'DEPT_69493abea1b9f', 32128, 'Test', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'test', '', NULL, NULL, '2025-12-22 18:04:06.663', NULL);
 
 -- --------------------------------------------------------
 
@@ -265,7 +324,7 @@ INSERT INTO `discounts` (`id`, `code`, `type`, `discount`, `eligibility`, `creat
 CREATE TABLE `doctors` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `category_id` varchar(255) DEFAULT NULL,
+  `category_id` int(11) DEFAULT NULL,
   `doctor_name` varchar(255) NOT NULL,
   `specialization` varchar(255) NOT NULL,
   `qualification` varchar(255) DEFAULT NULL,
@@ -280,11 +339,7 @@ CREATE TABLE `doctors` (
 --
 
 INSERT INTO `doctors` (`id`, `user_id`, `category_id`, `doctor_name`, `specialization`, `qualification`, `experience`, `reg_number`, `doctor_image`, `created_at`) VALUES
-(7, 85960, '15', 'sdf', 'sfd', 'd', 4, 'v', NULL, '2025-12-18 17:58:48.894'),
-(8, 85960, '16', 'baru', 'sdf', 'sdf', 444, 'sd', NULL, '2025-12-18 17:59:36.111'),
-(9, 85960, '17', 'Deepak', 'Stomach', 'MBBS , HSC ', 3, 'sdf', NULL, '2025-12-18 18:05:17.870'),
-(10, 27395, 'CAT_694549966caf1', 'Deepak', 'thermotologist', 'MBBS', 2, 'sdf', 'sellers/27395/doctors/2025/12/19/1766148330_694548ea434b1.png', '2025-12-19 18:18:22.586'),
-(11, 85960, 'CAT_6947600cc2251', 'deee', 'sdf', 'sdf', 4, 'dsfdsf', NULL, '2025-12-21 08:18:44.933');
+(35, 85960, 45, 'sdf', 'sdf', 'sdf', 3, 'xcv', 'sellers/85960/doctors/2025/12/22/1766395390_69490dfe44c26.webp', '2025-12-22 14:53:11.479');
 
 -- --------------------------------------------------------
 
@@ -666,8 +721,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (19, 27395, 'Deepak', NULL, '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', NULL, 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '63885c2a7e7f23c25b544e273a90de446d7b9a81147ec3a772cca839955e858f'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, 'a68396f48534eed2e8fa95d35732dcb99be8f1a0afb2a1331da134c549b5416f'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '562fa6b33dcfec9b0db3b422d1d3acd5a2174b3820da1f22a7c033a2fbce5f62');
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '42c41c31af00be15385ce06d5bebddb4ffa93cf25ce8461c9106fd1b3bebe699'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '7c5e130c28cf6cb468e1c4e99ce2b6a9f98dd51c8e41da8b2d6b3867784b9da5');
 
 -- --------------------------------------------------------
 
@@ -981,7 +1036,7 @@ ALTER TABLE `available_areas`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT for table `configured_plugins`
@@ -1011,7 +1066,7 @@ ALTER TABLE `dashboard_messages`
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `discounts`
@@ -1023,7 +1078,7 @@ ALTER TABLE `discounts`
 -- AUTO_INCREMENT for table `doctors`
 --
 ALTER TABLE `doctors`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `employees`
@@ -1170,6 +1225,12 @@ ALTER TABLE `departments`
 --
 ALTER TABLE `discounts`
   ADD CONSTRAINT `discounts_eligibility_fkey` FOREIGN KEY (`eligibility`) REFERENCES `subscription_plans` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `doctors`
+--
+ALTER TABLE `doctors`
+  ADD CONSTRAINT `fk_doctors_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `employees`
