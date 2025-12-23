@@ -1,77 +1,46 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:3000");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-// read raw body for debug
-$rawBody = file_get_contents("php://input");
-error_log("RAW BODY = " . $rawBody);
+$input = json_decode(file_get_contents("php://input"), true);
 
-$input = json_decode($rawBody, true);
-$user_id = $input["user_id"] ?? null;
+$category_id = $input["category_id"] ?? null;
+$user_id     = $input["user_id"] ?? null;
 
-error_log("parsed user_id=" . print_r($user_id, true));
-
-if (!$user_id) {
-    error_log("❌ missing user_id in request");
+if (!$category_id || !$user_id) {
     echo json_encode([
         "success" => false,
-        "message" => "user_id required"
+        "message" => "category_id and user_id required"
     ]);
-    exit();
+    exit;
 }
 
 try {
-
-    $sql = "SELECT 
-              id,
-              user_id,
-              category_id,
-              doctor_name,
-              specialization,
-              qualification,
-              experience,
-              reg_number,
-              doctor_image,
-              created_at
-            FROM doctors
-            WHERE user_id = :uid
-            ORDER BY id DESC";
-
-    error_log("Executing SQL for uid=" . $user_id);
+    $sql = "SELECT * FROM doctors 
+            WHERE category_id = :category_id 
+            AND user_id = :user_id
+            LIMIT 1";
 
     $stmt = $pdo->prepare($sql);
-    $stmt->bindValue(":uid", $user_id, PDO::PARAM_INT);
-    $stmt->execute();
+    $stmt->execute([
+        ':category_id' => $category_id,
+        ':user_id' => $user_id
+    ]);
 
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    error_log("Doctor rows returned = " . print_r($rows, true));
+    $doctor = $stmt->fetch(PDO::FETCH_ASSOC);
 
     echo json_encode([
         "success" => true,
-        "data" => $rows
+        "data" => $doctor
     ]);
-    exit();
 
 } catch (PDOException $e) {
-    error_log("SQL ERROR = " . $e->getMessage());
-
     echo json_encode([
         "success" => false,
         "error" => $e->getMessage()
     ]);
-    exit();
 }

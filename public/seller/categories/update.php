@@ -15,10 +15,11 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-$category_id = $_GET['category_id'] ?? '';
+// ******** NUMERIC PRIMARY ID ********
+$catId = $_GET['id'] ?? null;
 
-if (!$category_id) {
-    echo json_encode(["success" => false, "message" => "Category ID required"]);
+if (!$catId) {
+    echo json_encode(["success" => false, "message" => "Numeric ID required"]);
     exit();
 }
 
@@ -29,10 +30,9 @@ if (!is_array($data)) {
     exit();
 }
 
-/* doctor values */
 $doctorDetails = $data["doctor_details"] ?? null;
 
-/* remove restricted fields */
+/* remove fields not allowed */
 unset($data["token"]);
 unset($data["doctor_details"]);
 unset($data["created_at"]);
@@ -48,26 +48,29 @@ foreach ($data as $key => $value) {
     $params[] = $value ?? null;
 }
 
-$params[] = $category_id;
+$params[] = $catId;
 
-$sql = "UPDATE categories SET " . implode(", ", $fields) . " WHERE category_id = ?";
+$sql = "UPDATE categories SET " . implode(", ", $fields) . " WHERE id = ?";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 
+
 /* -----------------------------
-   UPDATE DOCTOR TABLE
+    UPDATE DOCTOR TABLE
 ------------------------------*/
 if ($doctorDetails) {
 
     // check doctor exists
     $check = $pdo->prepare("SELECT id FROM doctors WHERE category_id = ? LIMIT 1");
-    $check->execute([$category_id]);
+    $check->execute([$catId]);
     $doctorExists = $check->fetchColumn();
 
     if ($doctorExists) {
+
         $sql2 = "UPDATE doctors 
                  SET doctor_name=?, specialization=?, qualification=?, experience=?, reg_number=?, doctor_image=?
                  WHERE category_id=?";
+
         $stmt2 = $pdo->prepare($sql2);
         $stmt2->execute([
             $doctorDetails["doctor_name"] ?? null,
@@ -76,16 +79,18 @@ if ($doctorDetails) {
             $doctorDetails["experience"] ?? null,
             $doctorDetails["reg_number"] ?? null,
             $doctorDetails["doctor_image"] ?? null,
-            $category_id                           // FIXED foreign key
+            $catId
         ]);
 
     } else {
+
         $sql3 = "INSERT INTO doctors 
                 (category_id, doctor_name, specialization, qualification, experience, reg_number, doctor_image)
                 VALUES (?,?,?,?,?,?,?)";
+
         $stmt3 = $pdo->prepare($sql3);
         $stmt3->execute([
-            $category_id,
+            $catId,
             $doctorDetails["doctor_name"] ?? null,
             $doctorDetails["specialization"] ?? null,
             $doctorDetails["qualification"] ?? null,

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 22, 2025 at 01:48 PM
+-- Generation Time: Dec 23, 2025 at 01:01 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -129,7 +129,8 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `meta_title`, `meta_description`, `created_at`) VALUES
-(45, 'CAT_69490dff565f4', 85960, 'sdfsdf', 'sdfsdf', '', '', '2025-12-22 14:53:11.353');
+(47, 'CAT_694a276adaaa3', 85960, 'Deepak', 'deepak', 'sdf', 'ssd', '2025-12-23 10:53:54.895'),
+(48, 'CAT_694a7ab3487d1', 85960, 'Dental', 'dental', 'sdd', 'dds', '2025-12-23 16:49:15.297');
 
 -- --------------------------------------------------------
 
@@ -339,7 +340,53 @@ CREATE TABLE `doctors` (
 --
 
 INSERT INTO `doctors` (`id`, `user_id`, `category_id`, `doctor_name`, `specialization`, `qualification`, `experience`, `reg_number`, `doctor_image`, `created_at`) VALUES
-(35, 85960, 45, 'sdf', 'sdf', 'sdf', 3, 'xcv', 'sellers/85960/doctors/2025/12/22/1766395390_69490dfe44c26.webp', '2025-12-22 14:53:11.479');
+(40, 85960, 47, 'deepak', 'Kidney', 'MBBS', 4, '', 'sellers/85960/doctors/2025/12/23/1766467433_694a2769788ab.png', '2025-12-23 10:53:54.988'),
+(41, 85960, 48, 'Arun', 'Dermotologist', 'MBBS', 3, 'DD33RR33DD', 'sellers/85960/doctors/2025/12/23/1766488753_694a7ab1b9fb7.webp', '2025-12-23 16:49:15.389');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_schedule`
+--
+
+CREATE TABLE `doctor_schedule` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `category_id` int(11) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `slug` varchar(255) DEFAULT NULL,
+  `amount` int(11) DEFAULT 0,
+  `previous_amount` int(11) DEFAULT 0,
+  `description` text DEFAULT NULL,
+  `specialization` varchar(255) DEFAULT NULL,
+  `qualification` varchar(255) DEFAULT NULL,
+  `experience` int(11) DEFAULT NULL,
+  `doctor_image` varchar(255) DEFAULT NULL,
+  `gst_percentage` int(11) DEFAULT NULL,
+  `meta_title` varchar(255) DEFAULT NULL,
+  `meta_description` text DEFAULT NULL,
+  `country` varchar(10) DEFAULT NULL,
+  `state` varchar(10) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `pincode` varchar(20) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `map_link` text DEFAULT NULL,
+  `weekly_schedule` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`weekly_schedule`)),
+  `additional_images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`additional_images`)),
+  `status` tinyint(1) DEFAULT 1,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `doctor_schedule`
+--
+
+INSERT INTO `doctor_schedule` (`id`, `user_id`, `category_id`, `name`, `slug`, `amount`, `previous_amount`, `description`, `specialization`, `qualification`, `experience`, `doctor_image`, `gst_percentage`, `meta_title`, `meta_description`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `weekly_schedule`, `additional_images`, `status`, `created_at`, `updated_at`) VALUES
+(27, 85960, 40, '', 'deepak-kidney', 0, 0, '', '', '', 0, '', NULL, 'dfg', 'sdf', '', '', '', '', '', '', '[]', '[]', 0, '2025-12-23 16:28:16', '2025-12-23 16:28:16'),
+(28, 85960, NULL, '', '', 0, 0, '', '', '', 0, '', NULL, '', '', 'IN', 'TN', 'Mannargudi', '', '', 'https://www.google.com/maps?q=%20Mannargudi%20&output=embed', '[]', '[]', 0, '2025-12-23 16:29:14', '2025-12-23 16:29:14'),
+(29, 85960, 40, '', 'deepak-kidney', 0, 0, '', '', '', 0, '', NULL, 'xss', 'ssss', 'DZ', '16', 'Aïn Taya', '', '', 'https://www.google.com/maps?q=%20A%C3%AFn%20Taya%20&output=embed', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"05:30\",\"to\":\"06:30\",\"breakFrom\":\"18:31\",\"breakTo\":\"17:32\",\"token\":\"15\"}]}}', '[]', 0, '2025-12-23 16:30:42', '2025-12-23 16:30:42'),
+(30, 85960, 41, '', 'arun-dermotologist', 0, 0, '', '', '', 0, '', NULL, 'sdf', 'sdfsdf', '', '', '', '', '', '', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"\",\"to\":\"\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"\"}]}}', '[]', 0, '2025-12-23 16:49:48', '2025-12-23 16:49:48');
 
 -- --------------------------------------------------------
 
@@ -721,8 +768,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (19, 27395, 'Deepak', NULL, '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', NULL, 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '63885c2a7e7f23c25b544e273a90de446d7b9a81147ec3a772cca839955e858f'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '42c41c31af00be15385ce06d5bebddb4ffa93cf25ce8461c9106fd1b3bebe699'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '7c5e130c28cf6cb468e1c4e99ce2b6a9f98dd51c8e41da8b2d6b3867784b9da5');
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '4fc6be35c235537d7e04d9927aa42bb50ed693b503659f34bf1346242b55b801'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, 'cd8f758dd8071c5b806bb4862a5bcef8ecb2fd81c52f1a3b43f42a65c205039e');
 
 -- --------------------------------------------------------
 
@@ -892,6 +939,12 @@ ALTER TABLE `doctors`
   ADD KEY `category_id` (`category_id`);
 
 --
+-- Indexes for table `doctor_schedule`
+--
+ALTER TABLE `doctor_schedule`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `employees`
 --
 ALTER TABLE `employees`
@@ -1036,7 +1089,7 @@ ALTER TABLE `available_areas`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT for table `configured_plugins`
@@ -1078,7 +1131,13 @@ ALTER TABLE `discounts`
 -- AUTO_INCREMENT for table `doctors`
 --
 ALTER TABLE `doctors`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+
+--
+-- AUTO_INCREMENT for table `doctor_schedule`
+--
+ALTER TABLE `doctor_schedule`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `employees`
