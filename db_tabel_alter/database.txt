@@ -209,3 +209,50 @@ ADD COLUMN `type_24_name` VARCHAR(255) DEFAULT NULL AFTER `type_23_amount`,
 ADD COLUMN `type_24_amount` DECIMAL(10,2) DEFAULT NULL AFTER `type_24_name`,
 ADD COLUMN `type_25_name` VARCHAR(255) DEFAULT NULL AFTER `type_24_amount`,
 ADD COLUMN `type_25_amount` DECIMAL(10,2) DEFAULT NULL AFTER `type_25_name`;
+
+
+ALTER TABLE departments DROP COLUMN `type`;
+
+
+
+24/12/2025
+
+This query for database change for categories
+
+ALTER TABLE categories
+ADD COLUMN doctor_name VARCHAR(255) DEFAULT NULL,
+ADD COLUMN specialization VARCHAR(255) DEFAULT NULL,
+ADD COLUMN qualification VARCHAR(255) DEFAULT NULL,
+ADD COLUMN experience INT DEFAULT NULL,
+ADD COLUMN reg_number VARCHAR(255) DEFAULT NULL,
+ADD COLUMN doctor_image VARCHAR(255) DEFAULT NULL;
+
+
+This query for doctor_schedule un wanted data remove
+ALTER TABLE doctor_schedule 
+DROP COLUMN name,
+DROP COLUMN status,
+DROP COLUMN previous_amount,
+DROP COLUMN specialization,
+DROP COLUMN qualification,
+DROP COLUMN experience,
+DROP COLUMN doctor_image,
+DROP COLUMN gst_percentage;
+
+
+
+ALTER TABLE `doctor_schedule` 
+ADD COLUMN `status` TINYINT(1) DEFAULT 1 AFTER `additional_images`;
+
+
+
+-- Add missing columns to doctor_schedule table
+ALTER TABLE `doctor_schedule` 
+ADD COLUMN `name` VARCHAR(255) DEFAULT NULL AFTER `category_id`,
+ADD COLUMN `specialization` VARCHAR(255) DEFAULT NULL,
+ADD COLUMN `qualification` VARCHAR(255) DEFAULT NULL,
+ADD COLUMN `experience` INT(11) DEFAULT NULL,
+ADD COLUMN `doctor_image` VARCHAR(255) DEFAULT NULL;
+
+-- Make amount field accept decimal values (optional)
+ALTER TABLE `doctor_schedule` MODIFY COLUMN `amount` DECIMAL(10,2) DEFAULT 0.00;

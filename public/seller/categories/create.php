@@ -18,13 +18,13 @@ $pdo = getDbConnection();
 /* --------------------------------------
    READ JSON BODY
 ---------------------------------------*/
-$raw = file_get_contents("php://input");
+$raw  = file_get_contents("php://input");
 $data = json_decode($raw, true);
 
 if (!is_array($data)) $data = [];
 
 /* --------------------------------------
-   GET TOKEN + USER
+   AUTH TOKEN → USER
 ---------------------------------------*/
 $token = $data["token"] ?? ($_COOKIE["token"] ?? "");
 
@@ -45,8 +45,8 @@ if (!$user) {
 $user_id = $user->user_id;
 
 /* --------------------------------------
-   GET CATEGORY FIELDS
---------------------------------------*/
+   CATEGORY FIELDS
+---------------------------------------*/
 $name = trim($data["name"] ?? "");
 $slug = trim($data["slug"] ?? "");
 
@@ -55,34 +55,76 @@ if ($name === "" || $slug === "") {
     exit();
 }
 
-$image = $data["image"] ?? ""; // category image ONLY if exists
-
 $meta_title = $data["meta_title"] ?? null;
 $meta_desc  = $data["meta_description"] ?? null;
 
 /* --------------------------------------
-   AUTO CATEGORY CODE
---------------------------------------*/
-$category_id = "CAT_" . uniqid();
+   DOCTOR FIELDS (INSIDE CATEGORY)
+---------------------------------------*/
+$doctor_name    = $data["doctor_name"] ?? null;
+$specialization = $data["specialization"] ?? null;
+$qualification  = $data["qualification"] ?? null;
+$experience     = $data["experience"] ?? null;
+$reg_number     = $data["reg_number"] ?? null;
+$doctor_image   = $data["doctor_image"] ?? null;
 
 /* --------------------------------------
-   INSERT CATEGORY ONLY
---------------------------------------*/
-$sql = "INSERT INTO categories 
-(category_id, user_id, name, slug, meta_title, meta_description, created_at)
-VALUES (:cid, :uid, :name, :slug, :mtitle, :mdesc, NOW(3))";
+   AUTO CATEGORY CODE
+---------------------------------------*/
+$category_code = "CAT_" . uniqid();
+
+/* --------------------------------------
+   INSERT INTO CATEGORIES (WITH DOCTOR)
+---------------------------------------*/
+$sql = "INSERT INTO categories
+(
+    category_id,
+    user_id,
+    name,
+    slug,
+    meta_title,
+    meta_description,
+    doctor_name,
+    specialization,
+    qualification,
+    experience,
+    reg_number,
+    doctor_image,
+    created_at
+)
+VALUES
+(
+    :cid,
+    :uid,
+    :name,
+    :slug,
+    :mtitle,
+    :mdesc,
+    :dname,
+    :spec,
+    :qual,
+    :exp,
+    :reg,
+    :img,
+    NOW(3)
+)";
 
 $stmt = $pdo->prepare($sql);
 
 $ok = $stmt->execute([
-    ":cid"   => $category_id,
+    ":cid"   => $category_code,
     ":uid"   => $user_id,
     ":name"  => $name,
     ":slug"  => $slug,
-    ":mtitle" => $meta_title,
-    ":mdesc"  => $meta_desc
+    ":mtitle"=> $meta_title,
+    ":mdesc" => $meta_desc,
+    ":dname" => $doctor_name,
+    ":spec"  => $specialization,
+    ":qual"  => $qualification,
+    ":exp"   => $experience,
+    ":reg"   => $reg_number,
+    ":img"   => $doctor_image
 ]);
-
 
 if (!$ok) {
     echo json_encode([
@@ -94,24 +136,11 @@ if (!$ok) {
 
 /* --------------------------------------
    SUCCESS RESPONSE
---------------------------------------*/
-/* --------------------------------------
-   GET AUTO DB ID
---------------------------------------*/
-$lastId = $pdo->lastInsertId();
-
-/* --------------------------------------
-   SUCCESS RESPONSE
---------------------------------------*/
-$lastId = $pdo->lastInsertId();
-
+---------------------------------------*/
 echo json_encode([
     "success" => true,
-    "message" => "Category created successfully",
-    "category_id" => $category_id, // string code
-    "id" => $lastId,               // Auto increment id integer
+    "message" => "Category + Doctor saved successfully",
+    "category_id" => $category_code,
+    "id" => $pdo->lastInsertId()
 ]);
 exit();
-
-
-?>

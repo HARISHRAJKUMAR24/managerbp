@@ -1,7 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
 
@@ -15,6 +15,9 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
+/* --------------------------------------
+   INPUT PARAMS
+--------------------------------------*/
 $user_id = $_GET['user_id'] ?? '';
 $limit   = $_GET['limit'] ?? 10;
 $page    = $_GET['page'] ?? 1;
@@ -28,65 +31,84 @@ if (!$user_id) {
     exit();
 }
 
+$limit  = (int)$limit;
+$page   = (int)$page;
 $offset = ($page - 1) * $limit;
 
+/* --------------------------------------
+   SEARCH CONDITION
+--------------------------------------*/
 $searchSql = "";
 $params = [':user_id' => $user_id];
 
 if (!empty($q)) {
-    $searchSql = " AND (c.name LIKE :search OR c.slug LIKE :search) ";
+    $searchSql = " AND (name LIKE :search OR slug LIKE :search) ";
     $params[':search'] = "%$q%";
 }
 
+/* --------------------------------------
+   COUNT TOTAL RECORDS
+--------------------------------------*/
 $countSql = "SELECT COUNT(*) 
-             FROM categories c
-             WHERE c.user_id = :user_id  
+             FROM categories
+             WHERE user_id = :user_id
              $searchSql";
 
 $countStmt = $pdo->prepare($countSql);
 $countStmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
-if (!empty($q)) $countStmt->bindValue(':search', "%$q%", PDO::PARAM_STR);
+if (!empty($q)) {
+    $countStmt->bindValue(':search', "%$q%", PDO::PARAM_STR);
+}
 $countStmt->execute();
 
-$totalRecords = $countStmt->fetchColumn();
+$totalRecords = (int)$countStmt->fetchColumn();
 
+/* --------------------------------------
+   BASE IMAGE URL
+--------------------------------------*/
 $baseImageUrl = "http://localhost/managerbp/public/uploads/";
 
-$sql = "SELECT 
-    c.id,
-    c.category_id,
-    c.user_id,
-    c.name,
-    c.slug,
-    c.meta_title,
-    c.meta_description,
-    c.created_at,
+/* --------------------------------------
+   FETCH CATEGORY + DOCTOR FIELDS
+--------------------------------------*/
+$sql = "SELECT
+    id,
+    category_id,
+    user_id,
+    name,
+    slug,
+    meta_title,
+    meta_description,
 
-    d.doctor_name,
-    d.specialization,
-    d.qualification,
-    d.experience,
-    d.reg_number,
-    d.doctor_image
+    -- doctor fields inside category
+    doctor_name,
+    specialization,
+    qualification,
+    experience,
+    reg_number,
+    doctor_image,
 
-FROM categories c
-LEFT JOIN doctors d
-ON d.category_id = c.id
-WHERE c.user_id = :user_id 
+    created_at
+FROM categories
+WHERE user_id = :user_id
 $searchSql
-ORDER BY c.id DESC
+ORDER BY id DESC
 LIMIT :limit OFFSET :offset";
-
 
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
-if (!empty($q)) $stmt->bindValue(':search', "%$q%", PDO::PARAM_STR);
-$stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-$stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+if (!empty($q)) {
+    $stmt->bindValue(':search', "%$q%", PDO::PARAM_STR);
+}
+$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+/* --------------------------------------
+   IMAGE URL FIX
+--------------------------------------*/
 foreach ($records as &$row) {
     if (!empty($row['doctor_image'])) {
         $row['doctor_image'] = $baseImageUrl . $row['doctor_image'];
@@ -94,20 +116,13 @@ foreach ($records as &$row) {
 }
 unset($row);
 
-
-error_log("----- CATEGORY GET.PHP LOG START -----");
-error_log("USER_ID = " . $user_id);
-error_log("RECORD COUNT = " . count($records));
-error_log(print_r($records, true));
-error_log("----- CATEGORY GET.PHP LOG END -----");
-
-error_log("---- CATEGORY GET.PHP OUTPUT ----");
-error_log(print_r($records, true));
-
+/* --------------------------------------
+   RESPONSE
+--------------------------------------*/
 echo json_encode([
     "success" => true,
     "records" => $records,
-    "totalRecords" => (int)$totalRecords,
+    "totalRecords" => $totalRecords,
     "totalPages" => ceil($totalRecords / $limit)
 ]);
 exit();

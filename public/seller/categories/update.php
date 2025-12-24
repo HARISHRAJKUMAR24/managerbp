@@ -15,94 +15,94 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-// ******** NUMERIC PRIMARY ID ********
-$catId = $_GET['id'] ?? null;
+/* --------------------------------------
+   CATEGORY NUMERIC ID
+--------------------------------------*/
+$catId = $_GET["id"] ?? null;
 
 if (!$catId) {
-    echo json_encode(["success" => false, "message" => "Numeric ID required"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Category numeric id required"
+    ]);
     exit();
 }
 
+/* --------------------------------------
+   READ JSON BODY
+--------------------------------------*/
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (!is_array($data)) {
-    echo json_encode(["success" => false, "message" => "Invalid JSON"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid JSON"
+    ]);
     exit();
 }
 
-$doctorDetails = $data["doctor_details"] ?? null;
-
-/* remove fields not allowed */
+/* --------------------------------------
+   REMOVE NOT ALLOWED FIELDS
+--------------------------------------*/
 unset($data["token"]);
-unset($data["doctor_details"]);
 unset($data["created_at"]);
 
-/* -----------------------------
-    UPDATE CATEGORY TABLE
-------------------------------*/
+/* --------------------------------------
+   ALLOWED CATEGORY + DOCTOR FIELDS
+--------------------------------------*/
+$allowedFields = [
+    "name",
+    "slug",
+    "meta_title",
+    "meta_description",
+
+    // doctor fields inside category
+    "doctor_name",
+    "specialization",
+    "qualification",
+    "experience",
+    "reg_number",
+    "doctor_image"
+];
+
+/* --------------------------------------
+   BUILD UPDATE QUERY
+--------------------------------------*/
 $fields = [];
 $params = [];
 
 foreach ($data as $key => $value) {
-    $fields[] = "$key = ?";
-    $params[] = $value ?? null;
+    if (in_array($key, $allowedFields)) {
+        $fields[] = "`$key` = ?";
+        $params[] = $value;
+    }
+}
+
+if (empty($fields)) {
+    echo json_encode([
+        "success" => false,
+        "message" => "No valid fields to update"
+    ]);
+    exit();
 }
 
 $params[] = $catId;
 
-$sql = "UPDATE categories SET " . implode(", ", $fields) . " WHERE id = ?";
+/* --------------------------------------
+   UPDATE CATEGORY TABLE
+--------------------------------------*/
+$sql = "UPDATE categories 
+        SET " . implode(", ", $fields) . "
+        WHERE id = ?";
+
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 
-
-/* -----------------------------
-    UPDATE DOCTOR TABLE
-------------------------------*/
-if ($doctorDetails) {
-
-    // check doctor exists
-    $check = $pdo->prepare("SELECT id FROM doctors WHERE category_id = ? LIMIT 1");
-    $check->execute([$catId]);
-    $doctorExists = $check->fetchColumn();
-
-    if ($doctorExists) {
-
-        $sql2 = "UPDATE doctors 
-                 SET doctor_name=?, specialization=?, qualification=?, experience=?, reg_number=?, doctor_image=?
-                 WHERE category_id=?";
-
-        $stmt2 = $pdo->prepare($sql2);
-        $stmt2->execute([
-            $doctorDetails["doctor_name"] ?? null,
-            $doctorDetails["specialization"] ?? null,
-            $doctorDetails["qualification"] ?? null,
-            $doctorDetails["experience"] ?? null,
-            $doctorDetails["reg_number"] ?? null,
-            $doctorDetails["doctor_image"] ?? null,
-            $catId
-        ]);
-
-    } else {
-
-        $sql3 = "INSERT INTO doctors 
-                (category_id, doctor_name, specialization, qualification, experience, reg_number, doctor_image)
-                VALUES (?,?,?,?,?,?,?)";
-
-        $stmt3 = $pdo->prepare($sql3);
-        $stmt3->execute([
-            $catId,
-            $doctorDetails["doctor_name"] ?? null,
-            $doctorDetails["specialization"] ?? null,
-            $doctorDetails["qualification"] ?? null,
-            $doctorDetails["experience"] ?? null,
-            $doctorDetails["reg_number"] ?? null,
-            $doctorDetails["doctor_image"] ?? null
-        ]);
-    }
-}
-
+/* --------------------------------------
+   SUCCESS RESPONSE
+--------------------------------------*/
 echo json_encode([
     "success" => true,
-    "message" => "Category & Doctor updated successfully"
+    "message" => "Category & Doctor details updated successfully"
 ]);
 exit();

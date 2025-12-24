@@ -15,19 +15,53 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
+/* -----------------------------------------
+   INPUT
+----------------------------------------- */
 $category_id = $_GET['category_id'] ?? '';
 
 if (!$category_id) {
-    echo json_encode(["success" => false, "message" => "Category ID missing"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "category_id missing"
+    ]);
     exit();
 }
 
 $baseImageUrl = "http://localhost/managerbp/public/uploads/";
 
 /* -----------------------------------------
-   FETCH CATEGORY 
+   TOKEN AUTHENTICATION (Optional but recommended)
 ----------------------------------------- */
-$sql = "SELECT 
+$token = $_GET['token'] ?? ($_COOKIE['token'] ?? '');
+$user_id = $_GET['user_id'] ?? '';
+
+if (!$token) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Authentication required"
+    ]);
+    exit();
+}
+
+// Verify token
+$stmt = $pdo->prepare("SELECT user_id FROM users WHERE api_token = ? LIMIT 1");
+$stmt->execute([$token]);
+$user = $stmt->fetchObject();
+
+if (!$user) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid token"
+    ]);
+    exit();
+}
+
+/* -----------------------------------------
+   FETCH CATEGORY + DOCTOR FIELDS
+   Check if user owns this category (security)
+----------------------------------------- */
+$sql = "SELECT
             id,
             category_id,
             user_id,
@@ -35,53 +69,76 @@ $sql = "SELECT
             slug,
             meta_title,
             meta_description,
-            created_at
-        FROM categories
-        WHERE category_id = :cid
-        LIMIT 1";
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute([
-    ':cid' => $category_id
-]);
-
-
-
-
-
-$category = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$category) {
-    echo json_encode(["success" => false, "message" => "Category not found"]);
-    exit();
-}
-
-/* -----------------------------------------
-   FETCH DOCTOR DATA
------------------------------------------ */
-$sql2 = "SELECT
+            -- doctor fields inside categories
             doctor_name,
             specialization,
             qualification,
             experience,
             reg_number,
-            doctor_image
-         FROM doctors
-         WHERE category_id = :cid
-         LIMIT 1";
+            doctor_image,
 
-$stmt2 = $pdo->prepare($sql2);
-$stmt2->execute([':cid' => $category_id]);
+            created_at
+        FROM categories
+        WHERE category_id = :cid
+        AND user_id = :uid
+        LIMIT 1";
 
-$doctor = $stmt2->fetch(PDO::FETCH_ASSOC);
-
-/* merge doctor */
-$category["doctor_details"] = $doctor ?: null;
-
-/* success response */
-echo json_encode([
-    "success" => true,
-    "data" => $category
+$stmt = $pdo->prepare($sql);
+$stmt->execute([
+    ':cid' => $category_id,
+    ':uid' => $user->user_id
 ]);
 
+$category = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$category) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Category not found or unauthorized"
+    ]);
+    exit();
+}
+
+/* -----------------------------------------
+   IMAGE URL FIX
+----------------------------------------- */
+if (!empty($category['doctor_image'])) {
+    $category['doctor_image'] = $baseImageUrl . $category['doctor_image'];
+}
+
+/* -----------------------------------------
+   RESPONSE FORMAT
+----------------------------------------- */
+echo json_encode([
+    "success" => true,
+    "data" => [
+        "id" => $category["id"],
+        "category_id" => $category["category_id"],
+        "user_id" => $category["user_id"],
+        "name" => $category["name"],
+        "slug" => $category["slug"],
+        "meta_title" => $category["meta_title"],
+        "meta_description" => $category["meta_description"],
+        "created_at" => $category["created_at"],
+
+        // Direct doctor fields (for compatibility)
+        "doctor_name"    => $category["doctor_name"],
+        "specialization" => $category["specialization"],
+        "qualification"  => $category["qualification"],
+        "experience"     => $category["experience"],
+        "reg_number"     => $category["reg_number"],
+        "doctor_image"   => $category["doctor_image"],
+
+        // Nested doctor_details (for your frontend structure)
+        "doctor_details" => [
+            "doctor_name"    => $category["doctor_name"],
+            "specialization" => $category["specialization"],
+            "qualification"  => $category["qualification"],
+            "experience"     => $category["experience"],
+            "reg_number"     => $category["reg_number"],
+            "doctor_image"   => $category["doctor_image"]
+        ]
+    ]
+]);
 exit();
