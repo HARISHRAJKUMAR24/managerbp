@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 23, 2025 at 01:01 PM
+-- Generation Time: Dec 24, 2025 at 06:01 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -121,16 +121,22 @@ CREATE TABLE `categories` (
   `slug` varchar(255) NOT NULL,
   `meta_title` varchar(255) DEFAULT NULL,
   `meta_description` varchar(255) DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `doctor_name` varchar(255) DEFAULT NULL,
+  `specialization` varchar(255) DEFAULT NULL,
+  `qualification` varchar(255) DEFAULT NULL,
+  `experience` int(11) DEFAULT NULL,
+  `reg_number` varchar(255) DEFAULT NULL,
+  `doctor_image` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `categories`
 --
 
-INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `meta_title`, `meta_description`, `created_at`) VALUES
-(47, 'CAT_694a276adaaa3', 85960, 'Deepak', 'deepak', 'sdf', 'ssd', '2025-12-23 10:53:54.895'),
-(48, 'CAT_694a7ab3487d1', 85960, 'Dental', 'dental', 'sdd', 'dds', '2025-12-23 16:49:15.297');
+INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `meta_title`, `meta_description`, `created_at`, `doctor_name`, `specialization`, `qualification`, `experience`, `reg_number`, `doctor_image`) VALUES
+(47, 'CAT_694a276adaaa3', 85960, 'Deepak', 'deepak', 'sdf', 'ssd', '2025-12-23 10:53:54.895', NULL, NULL, NULL, NULL, NULL, NULL),
+(48, 'CAT_694a7ab3487d1', 85960, 'Dental', 'dental', 'sdd', 'dds', '2025-12-23 16:49:15.297', NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -280,18 +286,43 @@ CREATE TABLE `departments` (
   `meta_title` varchar(255) DEFAULT NULL,
   `meta_description` text DEFAULT NULL,
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
-  `updated_at` datetime(3) DEFAULT NULL ON UPDATE current_timestamp(3)
+  `updated_at` datetime(3) DEFAULT NULL ON UPDATE current_timestamp(3),
+  `appointment_settings` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`appointment_settings`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `departments`
 --
 
-INSERT INTO `departments` (`id`, `department_id`, `user_id`, `name`, `type_main_name`, `type_main_amount`, `type_1_name`, `type_1_amount`, `type_2_name`, `type_2_amount`, `type_3_name`, `type_3_amount`, `type_4_name`, `type_4_amount`, `type_5_name`, `type_5_amount`, `type_6_name`, `type_6_amount`, `type_7_name`, `type_7_amount`, `type_8_name`, `type_8_amount`, `type_9_name`, `type_9_amount`, `type_10_name`, `type_10_amount`, `type_11_name`, `type_11_amount`, `type_12_name`, `type_12_amount`, `type_13_name`, `type_13_amount`, `type_14_name`, `type_14_amount`, `type_15_name`, `type_15_amount`, `type_16_name`, `type_16_amount`, `type_17_name`, `type_17_amount`, `type_18_name`, `type_18_amount`, `type_19_name`, `type_19_amount`, `type_20_name`, `type_20_amount`, `type_21_name`, `type_21_amount`, `type_22_name`, `type_22_amount`, `type_23_name`, `type_23_amount`, `type_24_name`, `type_24_amount`, `type_25_name`, `type_25_amount`, `slug`, `image`, `meta_title`, `meta_description`, `created_at`, `updated_at`) VALUES
-(1, 'DEPT_6949300b04ac9', 32128, 'Saloon', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'saloon', 'sellers/32128/departments/2025/12/22/1766404102_694930065d9dc.png', 'sdf', 'sdf', '2025-12-22 17:18:27.019', NULL),
-(2, 'DEPT_69493286b8059', 32128, 'sdf', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'sdf', '', NULL, NULL, '2025-12-22 17:29:02.754', NULL),
-(3, 'DEPT_694937986e89a', 32128, 'dsf', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsf', '', NULL, NULL, '2025-12-22 17:50:40.453', NULL),
-(4, 'DEPT_69493abea1b9f', 32128, 'Test', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'test', '', NULL, NULL, '2025-12-22 18:04:06.663', NULL);
+INSERT INTO `departments` (`id`, `department_id`, `user_id`, `name`, `type_main_name`, `type_main_amount`, `type_1_name`, `type_1_amount`, `type_2_name`, `type_2_amount`, `type_3_name`, `type_3_amount`, `type_4_name`, `type_4_amount`, `type_5_name`, `type_5_amount`, `type_6_name`, `type_6_amount`, `type_7_name`, `type_7_amount`, `type_8_name`, `type_8_amount`, `type_9_name`, `type_9_amount`, `type_10_name`, `type_10_amount`, `type_11_name`, `type_11_amount`, `type_12_name`, `type_12_amount`, `type_13_name`, `type_13_amount`, `type_14_name`, `type_14_amount`, `type_15_name`, `type_15_amount`, `type_16_name`, `type_16_amount`, `type_17_name`, `type_17_amount`, `type_18_name`, `type_18_amount`, `type_19_name`, `type_19_amount`, `type_20_name`, `type_20_amount`, `type_21_name`, `type_21_amount`, `type_22_name`, `type_22_amount`, `type_23_name`, `type_23_amount`, `type_24_name`, `type_24_amount`, `type_25_name`, `type_25_amount`, `slug`, `image`, `meta_title`, `meta_description`, `created_at`, `updated_at`, `appointment_settings`) VALUES
+(23, 'DEPT_694bdf9d1cab2', 32128, 'test mama', '123', 123.00, '234', 234.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'test-mama', 'sellers/32128/departments/2025/12/24/1766580124_694bdf9c253b8.webp', NULL, NULL, '2025-12-24 18:12:05.117', NULL, NULL),
+(24, 'DEPT_694c16d7126f9', 32128, 'sdf', 'sdf', 34223.00, 'sdf', 32432.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'sdf', 'sellers/32128/departments/2025/12/24/1766594252_694c16ccd5b8b.png', NULL, NULL, '2025-12-24 22:07:43.078', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `department_additional_images`
+--
+
+CREATE TABLE `department_additional_images` (
+  `id` int(11) NOT NULL,
+  `department_id` varchar(255) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `image` varchar(255) NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `department_additional_images`
+--
+
+INSERT INTO `department_additional_images` (`id`, `department_id`, `user_id`, `image`, `created_at`) VALUES
+(73, 'DEPT_694b91471ef90', 0, 'sellers/32128/departments/2025/12/24/1766560069_694b9145dcabf.webp', '2025-12-24 12:41:49'),
+(74, 'DEPT_694b91471ef90', 0, 'sellers/32128/departments/2025/12/24/1766560069_694b9145e07f4.webp', '2025-12-24 12:41:49'),
+(87, 'DEPT_694c16d7126f9', 32128, 'sellers/32128/departments/2025/12/24/1766594256_694c16d0eb17a.webp', '2025-12-24 22:07:43'),
+(88, 'DEPT_694c16d7126f9', 32128, 'sellers/32128/departments/2025/12/24/1766594256_694c16d0edfe4.webp', '2025-12-24 22:07:43'),
+(89, 'DEPT_694c16d7126f9', 32128, 'sellers/32128/departments/2025/12/24/1766594256_694c16d0f03f5.webp', '2025-12-24 22:07:43'),
+(90, 'DEPT_694c16d7126f9', 32128, 'sellers/32128/departments/2025/12/24/1766594256_694c16d0f2cc5.png', '2025-12-24 22:07:43');
 
 -- --------------------------------------------------------
 
@@ -355,14 +386,13 @@ CREATE TABLE `doctor_schedule` (
   `category_id` int(11) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
   `slug` varchar(255) DEFAULT NULL,
-  `amount` int(11) DEFAULT 0,
-  `previous_amount` int(11) DEFAULT 0,
+  `amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `description` text DEFAULT NULL,
   `specialization` varchar(255) DEFAULT NULL,
   `qualification` varchar(255) DEFAULT NULL,
   `experience` int(11) DEFAULT NULL,
   `doctor_image` varchar(255) DEFAULT NULL,
-  `gst_percentage` int(11) DEFAULT NULL,
+  `weekly_schedule` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`weekly_schedule`)),
   `meta_title` varchar(255) DEFAULT NULL,
   `meta_description` text DEFAULT NULL,
   `country` varchar(10) DEFAULT NULL,
@@ -371,22 +401,9 @@ CREATE TABLE `doctor_schedule` (
   `pincode` varchar(20) DEFAULT NULL,
   `address` text DEFAULT NULL,
   `map_link` text DEFAULT NULL,
-  `weekly_schedule` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`weekly_schedule`)),
-  `additional_images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`additional_images`)),
-  `status` tinyint(1) DEFAULT 1,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `doctor_schedule`
---
-
-INSERT INTO `doctor_schedule` (`id`, `user_id`, `category_id`, `name`, `slug`, `amount`, `previous_amount`, `description`, `specialization`, `qualification`, `experience`, `doctor_image`, `gst_percentage`, `meta_title`, `meta_description`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `weekly_schedule`, `additional_images`, `status`, `created_at`, `updated_at`) VALUES
-(27, 85960, 40, '', 'deepak-kidney', 0, 0, '', '', '', 0, '', NULL, 'dfg', 'sdf', '', '', '', '', '', '', '[]', '[]', 0, '2025-12-23 16:28:16', '2025-12-23 16:28:16'),
-(28, 85960, NULL, '', '', 0, 0, '', '', '', 0, '', NULL, '', '', 'IN', 'TN', 'Mannargudi', '', '', 'https://www.google.com/maps?q=%20Mannargudi%20&output=embed', '[]', '[]', 0, '2025-12-23 16:29:14', '2025-12-23 16:29:14'),
-(29, 85960, 40, '', 'deepak-kidney', 0, 0, '', '', '', 0, '', NULL, 'xss', 'ssss', 'DZ', '16', 'Aïn Taya', '', '', 'https://www.google.com/maps?q=%20A%C3%AFn%20Taya%20&output=embed', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"05:30\",\"to\":\"06:30\",\"breakFrom\":\"18:31\",\"breakTo\":\"17:32\",\"token\":\"15\"}]}}', '[]', 0, '2025-12-23 16:30:42', '2025-12-23 16:30:42'),
-(30, 85960, 41, '', 'arun-dermotologist', 0, 0, '', '', '', 0, '', NULL, 'sdf', 'sdfsdf', '', '', '', '', '', '', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"\",\"to\":\"\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"\"}]}}', '[]', 0, '2025-12-23 16:49:48', '2025-12-23 16:49:48');
 
 -- --------------------------------------------------------
 
@@ -768,8 +785,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (19, 27395, 'Deepak', NULL, '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', NULL, 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '63885c2a7e7f23c25b544e273a90de446d7b9a81147ec3a772cca839955e858f'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '4fc6be35c235537d7e04d9927aa42bb50ed693b503659f34bf1346242b55b801'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, 'cd8f758dd8071c5b806bb4862a5bcef8ecb2fd81c52f1a3b43f42a65c205039e');
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '542a8dd8a7fb94d52857db721d43b25f3c34d113a6bbcc273b57fb25e13c62f5'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, 'c1cff683599ac16deeb8ac6ba07dd918e09c889b724706db7ca73798b01b3f54');
 
 -- --------------------------------------------------------
 
@@ -923,6 +940,12 @@ ALTER TABLE `departments`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `departments_department_id_key` (`department_id`),
   ADD KEY `departments_user_id_fkey` (`user_id`);
+
+--
+-- Indexes for table `department_additional_images`
+--
+ALTER TABLE `department_additional_images`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `discounts`
@@ -1119,7 +1142,13 @@ ALTER TABLE `dashboard_messages`
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+
+--
+-- AUTO_INCREMENT for table `department_additional_images`
+--
+ALTER TABLE `department_additional_images`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
 
 --
 -- AUTO_INCREMENT for table `discounts`
@@ -1137,7 +1166,7 @@ ALTER TABLE `doctors`
 -- AUTO_INCREMENT for table `doctor_schedule`
 --
 ALTER TABLE `doctor_schedule`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `employees`
