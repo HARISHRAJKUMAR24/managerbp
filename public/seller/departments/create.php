@@ -1,10 +1,12 @@
 <?php
+// CORS
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
 
+// Handle preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
@@ -20,11 +22,10 @@ $pdo = getDbConnection();
 -----------------------------------------------------*/
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true);
-
 if (!is_array($data)) $data = [];
 
 /* ----------------------------------------------------
-   GET TOKEN
+   TOKEN CHECK
 -----------------------------------------------------*/
 $token = $data["token"] ?? ($_COOKIE["token"] ?? "");
 
@@ -34,7 +35,7 @@ if (!$token) {
 }
 
 /* ----------------------------------------------------
-   VALIDATE USER USING TOKEN
+   VALIDATE USER
 -----------------------------------------------------*/
 $stmt = $pdo->prepare("SELECT * FROM users WHERE api_token = ? LIMIT 1");
 $stmt->execute([$token]);
@@ -48,7 +49,7 @@ if (!$user) {
 $user_id = $user->user_id;
 
 /* ----------------------------------------------------
-   VALIDATE REQUIRED FIELDS
+   REQUIRED FIELD
 -----------------------------------------------------*/
 $name = trim($data["name"] ?? "");
 
@@ -58,100 +59,96 @@ if ($name === "") {
 }
 
 /* ----------------------------------------------------
-   DEBUG: Log incoming data
+   CREATE UNIQUE DEPARTMENT ID
 -----------------------------------------------------*/
-error_log("CREATE DEPARTMENT DATA: " . print_r($data, true));
+$department_id = "DEPT_" . uniqid();
 
 /* ----------------------------------------------------
-   COLLECT ALL FIELDS - NO TYPE FIELD
+   PREPARE INSERT FIELDS
 -----------------------------------------------------*/
 $fields = [
-    'department_id' => "DEPT_" . uniqid(),
-    'user_id' => $user_id,
-    'name' => $name,
-    'slug' => trim($data["slug"] ?? ""),
-    'image' => trim($data["image"] ?? ""),
-    'meta_title' => $data["meta_title"] ?? null,
-    'meta_description' => $data["meta_description"] ?? null,
-    'type_main_name' => $data["type_main_name"] ?? null,
-    'type_main_amount' => isset($data["type_main_amount"]) && $data["type_main_amount"] !== "" ? floatval($data["type_main_amount"]) : null,
+    "department_id"       => $department_id,
+    "user_id"             => $user_id,
+    "name"                => $name,
+    "slug"                => trim($data["slug"] ?? ""),
+    "image"               => trim($data["image"] ?? ""),
+    "meta_title"          => $data["meta_title"] ?? null,
+    "meta_description"    => $data["meta_description"] ?? null,
+    "type_main_name"      => $data["type_main_name"] ?? null,
+    "type_main_amount"    => ($data["type_main_amount"] !== "" ? floatval($data["type_main_amount"]) : null),
 ];
 
-// Add type fields 1-25
+/* ----------------------------------------------------
+   ADD 25 DYNAMIC TYPES
+-----------------------------------------------------*/
 for ($i = 1; $i <= 25; $i++) {
-    $typeNameKey = "type_{$i}_name";
-    $typeAmountKey = "type_{$i}_amount";
-    
-    $fields[$typeNameKey] = $data[$typeNameKey] ?? null;
-    
-    if (isset($data[$typeAmountKey]) && $data[$typeAmountKey] !== "") {
-        // Convert to decimal value
-        $fields[$typeAmountKey] = floatval($data[$typeAmountKey]);
-    } else {
-        $fields[$typeAmountKey] = null;
-    }
+    $fields["type_{$i}_name"] = $data["type_{$i}_name"] ?? null;
+    $fields["type_{$i}_amount"] = ($data["type_{$i}_amount"] !== "" && isset($data["type_{$i}_amount"]))
+        ? floatval($data["type_{$i}_amount"])
+        : null;
 }
 
 /* ----------------------------------------------------
-   DEBUG: Log fields before insert
+   INSERT INTO DATABASE
 -----------------------------------------------------*/
-error_log("FIELDS TO INSERT: " . print_r($fields, true));
+$columns = array_keys($fields);
+$placeholders = array_map(fn ($c) => ":$c", $columns);
 
-/* ----------------------------------------------------
-   BUILD INSERT QUERY
------------------------------------------------------*/
-$columns = [];
-$placeholders = [];
-$bindValues = [];
-
-foreach ($fields as $key => $value) {
-    $columns[] = "`$key`";
-    $placeholders[] = ":$key";
-    $bindValues[":$key"] = $value;
-}
-
-$columnsStr = implode(", ", $columns);
-$placeholdersStr = implode(", ", $placeholders);
-
-$sql = "INSERT INTO departments ($columnsStr, created_at) VALUES ($placeholdersStr, NOW(3))";
+$sql = "INSERT INTO departments (" . implode(", ", $columns) . ", created_at)
+        VALUES (" . implode(", ", $placeholders) . ", NOW(3))";
 
 try {
     $stmt = $pdo->prepare($sql);
-    
-    // Bind all values
-    foreach ($bindValues as $param => $value) {
-        if (is_null($value)) {
-            $stmt->bindValue($param, null, PDO::PARAM_NULL);
-        } else {
-            $stmt->bindValue($param, $value);
-        }
+
+    foreach ($fields as $key => $value) {
+        $stmt->bindValue(":$key", $value);
     }
-    
-    $ok = $stmt->execute();
-    
-    if (!$ok) {
-        error_log("SQL ERROR: " . print_r($stmt->errorInfo(), true));
-        echo json_encode([
-            "success" => false,
-            "message" => "Department insert failed",
-            "error" => $stmt->errorInfo()
-        ]);
-        exit();
-    }
-    
-    echo json_encode([
-        "success" => true,
-        "message" => "Department created successfully",
-        "department_id" => $fields['department_id']
-    ]);
-    
+
+    $stmt->execute();
+
 } catch (Exception $e) {
-    error_log("EXCEPTION: " . $e->getMessage());
+    error_log("DEPT INSERT ERROR: " . $e->getMessage());
     echo json_encode([
         "success" => false,
-        "message" => "Database error: " . $e->getMessage()
+        "message" => "Database insert failed",
+        "error"   => $e->getMessage()
     ]);
+    exit();
 }
+
+/* ----------------------------------------------------
+   SAVE ADDITIONAL IMAGES
+-----------------------------------------------------*/
+$additionalImages = $data["additionalImages"] ?? [];
+
+if (is_array($additionalImages) && count($additionalImages) > 0) {
+    foreach ($additionalImages as $img) {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO department_additional_images (department_id, user_id, image, created_at)
+                VALUES (:department_id, :user_id, :image, NOW())
+            ");
+
+            $stmt->execute([
+                ":department_id" => $department_id,
+                ":user_id"       => $user_id,
+                ":image"         => trim($img)
+            ]);
+
+        } catch (Exception $e) {
+            error_log("ADDITIONAL IMG ERR: " . $e->getMessage());
+        }
+    }
+}
+
+/* ----------------------------------------------------
+   SUCCESS RESPONSE
+-----------------------------------------------------*/
+echo json_encode([
+    "success"        => true,
+    "message"        => "Department created successfully",
+    "department_id"  => $department_id
+]);
 
 exit();
 ?>

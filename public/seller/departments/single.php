@@ -25,7 +25,7 @@ if (!$department_id) {
 $baseImageUrl = "http://localhost/managerbp/public/uploads/";
 
 /* -----------------------------------------
-   FETCH DEPARTMENT WITH ALL TYPE FIELDS (NO type column)
+   FETCH MAIN DEPARTMENT DATA
 ----------------------------------------- */
 $columns = "
     id,
@@ -93,6 +93,7 @@ $columns = "
     meta_title,
     meta_description,
     created_at,
+     appointment_settings,
     updated_at
 ";
 
@@ -114,9 +115,46 @@ if (!$department) {
     exit();
 }
 
+/* -----------------------------------------
+   FETCH ADDITIONAL IMAGES
+----------------------------------------- */
+$imgQuery = $pdo->prepare("
+    SELECT image 
+    FROM department_additional_images 
+    WHERE department_id = ?
+");
+$imgQuery->execute([$department_id]);
+
+$additionalImages = $imgQuery->fetchAll(PDO::FETCH_COLUMN);
+
+// Convert to full URL
+$additionalImages = array_map(function($img) use ($baseImageUrl) {
+    return $baseImageUrl . $img;
+}, $additionalImages);
+
+/* -----------------------------------------
+   CONVERT snake_case → camelCase
+----------------------------------------- */
+function toCamel($str) {
+    return lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $str))));
+}
+
+$final = [];
+
+foreach ($department as $key => $value) {
+    $camel = toCamel($key);
+    $final[$camel] = $value;
+}
+
+$final["additionalImages"] = $additionalImages;
+
+/* -----------------------------------------
+   SEND RESPONSE
+----------------------------------------- */
 echo json_encode([
     "success" => true,
-    "data" => $department
-]);
+    "data" => $final
+], JSON_UNESCAPED_SLASHES);
+
 exit();
 ?>
