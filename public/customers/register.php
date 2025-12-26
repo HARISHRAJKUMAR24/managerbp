@@ -1,61 +1,117 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:3001");
-header("Access-Control-Allow-Headers: Content-Type");
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Content-Type: application/json");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  http_response_code(200);
+  exit;
+}
 
 require_once "../../config/config.php";
 require_once "../../src/database.php";
 
+$pdo = getDbConnection();
+
+/* ===============================
+   READ & VALIDATE INPUT
+================================ */
 $data = json_decode(file_get_contents("php://input"), true);
+
+if (!$data) {
+  echo json_encode([
+    "success" => false,
+    "message" => "Invalid JSON payload"
+  ]);
+  exit;
+}
 
 $name     = trim($data["name"] ?? "");
 $email    = trim($data["email"] ?? "");
 $phone    = trim($data["phone"] ?? "");
 $password = $data["password"] ?? "";
-$slug     = $data["slug"] ?? "";
+$slug     = trim($data["slug"] ?? "");
 
 if (!$name || !$phone || !$password || !$slug) {
-  echo json_encode(["success" => false, "message" => "Missing required fields"]);
+  echo json_encode([
+    "success" => false,
+    "message" => "Missing required fields"
+  ]);
   exit;
 }
 
-$pdo = getDbConnection();
-
-/* 🔥 1. FIND SELLER BY SLUG */
-$st = $pdo->prepare("SELECT user_id FROM users WHERE site_slug = ? LIMIT 1");
-$st->execute([$slug]);
-$seller = $st->fetch(PDO::FETCH_ASSOC);
+/* ===============================
+   1️⃣ FIND SELLER BY SLUG (FIXED)
+================================ */
+$stmt = $pdo->prepare("
+  SELECT id 
+  FROM users 
+  WHERE site_slug = ? 
+  LIMIT 1
+");
+$stmt->execute([$slug]);
+$seller = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$seller) {
-  echo json_encode(["success" => false, "message" => "Invalid seller"]);
+  echo json_encode([
+    "success" => false,
+    "message" => "Invalid seller"
+  ]);
   exit;
 }
 
-$user_id = $seller["user_id"];
+$user_id = (int)$seller["id"]; // ✅ FIXED (FK SAFE)
 
-/* 🔥 2. HASH PASSWORD */
-$hashed = password_hash($password, PASSWORD_BCRYPT);
+/* ===============================
+   2️⃣ PREVENT DUPLICATE PHONE
+================================ */
+$chk = $pdo->prepare("
+  SELECT id 
+  FROM customers 
+  WHERE phone = ? AND user_id = ?
+");
+$chk->execute([$phone, $user_id]);
 
-/* 🔥 3. GENERATE CUSTOMER ID */
-$customer_id = rand(100000, 999999);
+if ($chk->fetch()) {
+  echo json_encode([
+    "success" => false,
+    "message" => "Phone already registered"
+  ]);
+  exit;
+}
 
-/* 🔥 4. INSERT CUSTOMER */
+/* ===============================
+   3️⃣ CREATE CUSTOMER
+================================ */
+$customer_id = random_int(100000, 999999);
+$hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
 $stmt = $pdo->prepare("
-  INSERT INTO customers
-  (customer_id, user_id, name, email, phone, password)
-  VALUES (?, ?, ?, ?, ?, ?)
+  INSERT INTO customers 
+    (customer_id, user_id, name, email, phone, password)
+  VALUES 
+    (?, ?, ?, ?, ?, ?)
 ");
 
 $stmt->execute([
   $customer_id,
   $user_id,
   $name,
-  $email,
+  $email ?: null,
   $phone,
-  $hashed
+  $hashedPassword
 ]);
 
+/* ===============================
+   SUCCESS RESPONSE
+================================ */
 echo json_encode([
   "success" => true,
-  "message" => "Registration successful"
+  "message" => "Registration successful",
+  "customer_id" => $customer_id
 ]);
+exit;
