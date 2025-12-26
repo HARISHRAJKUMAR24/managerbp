@@ -93,18 +93,18 @@ $columns = "
     meta_title,
     meta_description,
     created_at,
-     appointment_settings,
+    appointment_settings,
     updated_at
 ";
 
 $sql = "SELECT $columns
         FROM departments
-        WHERE department_id = :did
+        WHERE department_id = :department_id
         LIMIT 1";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute([
-    ':did'      => $department_id,
+    ':department_id' => $department_id,
     ':base_url' => $baseImageUrl
 ]);
 
@@ -147,6 +147,13 @@ foreach ($department as $key => $value) {
 }
 
 $final["additionalImages"] = $additionalImages;
+
+/* -----------------------------------------
+   DEBUG: Check appointment_settings
+----------------------------------------- */
+if (isset($final['appointmentSettings'])) {
+    error_log("Appointment settings found: " . json_encode($final['appointmentSettings']));
+}
 
 /* -----------------------------------------
    SEND RESPONSE
