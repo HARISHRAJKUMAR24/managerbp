@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 24, 2025 at 06:01 PM
+-- Generation Time: Dec 27, 2025 at 05:46 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -136,7 +136,8 @@ CREATE TABLE `categories` (
 
 INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `meta_title`, `meta_description`, `created_at`, `doctor_name`, `specialization`, `qualification`, `experience`, `reg_number`, `doctor_image`) VALUES
 (47, 'CAT_694a276adaaa3', 85960, 'Deepak', 'deepak', 'sdf', 'ssd', '2025-12-23 10:53:54.895', NULL, NULL, NULL, NULL, NULL, NULL),
-(48, 'CAT_694a7ab3487d1', 85960, 'Dental', 'dental', 'sdd', 'dds', '2025-12-23 16:49:15.297', NULL, NULL, NULL, NULL, NULL, NULL);
+(48, 'CAT_694a7ab3487d1', 85960, 'Dental', 'dental', 'sdd', 'dds', '2025-12-23 16:49:15.297', NULL, NULL, NULL, NULL, NULL, NULL),
+(49, 'CAT_694e0cf7aa550', 85960, 'dddddd', 'dddddd', 'fdff', 'ddd', '2025-12-26 09:50:07.697', 'vf', 'fd', 'df', 1, 'dfs', 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png');
 
 -- --------------------------------------------------------
 
@@ -172,6 +173,13 @@ CREATE TABLE `coupons` (
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `coupons`
+--
+
+INSERT INTO `coupons` (`id`, `coupon_id`, `user_id`, `name`, `code`, `discount_type`, `discount`, `start_date`, `end_date`, `usage_limit`, `min_booking_amount`, `created_at`) VALUES
+(20, 'CPN_694e5e747109b_8950', 85960, 'dfw', 'SDFWE', 'percentage', 4, '2025-12-10 18:30:00.000', '2025-12-26 18:30:00.000', 4, 3, '2025-12-26 15:37:48.463');
+
 -- --------------------------------------------------------
 
 --
@@ -189,6 +197,13 @@ CREATE TABLE `customers` (
   `photo` varchar(255) DEFAULT NULL,
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `customers`
+--
+
+INSERT INTO `customers` (`id`, `customer_id`, `user_id`, `name`, `email`, `phone`, `password`, `photo`, `created_at`) VALUES
+(16, 879456, 27395, 'Deepak C', NULL, '+919345604653', '$2y$10$QPL9d82JH/LNZHoQtKV9.eHxV51h8gC9IGTVP4dgbUmKPv7Rb3Nwi', NULL, '2025-12-27 06:10:11.098');
 
 -- --------------------------------------------------------
 
@@ -295,8 +310,8 @@ CREATE TABLE `departments` (
 --
 
 INSERT INTO `departments` (`id`, `department_id`, `user_id`, `name`, `type_main_name`, `type_main_amount`, `type_1_name`, `type_1_amount`, `type_2_name`, `type_2_amount`, `type_3_name`, `type_3_amount`, `type_4_name`, `type_4_amount`, `type_5_name`, `type_5_amount`, `type_6_name`, `type_6_amount`, `type_7_name`, `type_7_amount`, `type_8_name`, `type_8_amount`, `type_9_name`, `type_9_amount`, `type_10_name`, `type_10_amount`, `type_11_name`, `type_11_amount`, `type_12_name`, `type_12_amount`, `type_13_name`, `type_13_amount`, `type_14_name`, `type_14_amount`, `type_15_name`, `type_15_amount`, `type_16_name`, `type_16_amount`, `type_17_name`, `type_17_amount`, `type_18_name`, `type_18_amount`, `type_19_name`, `type_19_amount`, `type_20_name`, `type_20_amount`, `type_21_name`, `type_21_amount`, `type_22_name`, `type_22_amount`, `type_23_name`, `type_23_amount`, `type_24_name`, `type_24_amount`, `type_25_name`, `type_25_amount`, `slug`, `image`, `meta_title`, `meta_description`, `created_at`, `updated_at`, `appointment_settings`) VALUES
-(23, 'DEPT_694bdf9d1cab2', 32128, 'test mama', '123', 123.00, '234', 234.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'test-mama', 'sellers/32128/departments/2025/12/24/1766580124_694bdf9c253b8.webp', NULL, NULL, '2025-12-24 18:12:05.117', NULL, NULL),
-(24, 'DEPT_694c16d7126f9', 32128, 'sdf', 'sdf', 34223.00, 'sdf', 32432.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'sdf', 'sellers/32128/departments/2025/12/24/1766594252_694c16ccd5b8b.png', NULL, NULL, '2025-12-24 22:07:43.078', NULL, NULL);
+(23, 'DEPT_694bdf9d1cab2', 32128, 'test mama', '123', 123.00, '234', 234.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'test-mama', 'sellers/32128/departments/2025/12/24/1766580124_694bdf9c253b8.webp', NULL, NULL, '2025-12-24 18:12:05.117', '2025-12-26 15:11:53.488', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"05:10\",\"to\":\"07:10\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":7}]},\"Mon\":{\"enabled\":true,\"slots\":[{\"from\":\"05:11\",\"to\":\"08:14\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":44},{\"from\":\"02:22\",\"to\":\"05:55\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":44}]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}'),
+(29, 'DEPT_694e7e0c8ea29', 32128, 'qqq', 'hair cut', 100.00, 'shave', 200.01, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'qqq', 'sellers/32128/departments/2025/12/26/1766751755_694e7e0b4e395.webp', NULL, NULL, '2025-12-26 17:52:36.585', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -318,11 +333,7 @@ CREATE TABLE `department_additional_images` (
 
 INSERT INTO `department_additional_images` (`id`, `department_id`, `user_id`, `image`, `created_at`) VALUES
 (73, 'DEPT_694b91471ef90', 0, 'sellers/32128/departments/2025/12/24/1766560069_694b9145dcabf.webp', '2025-12-24 12:41:49'),
-(74, 'DEPT_694b91471ef90', 0, 'sellers/32128/departments/2025/12/24/1766560069_694b9145e07f4.webp', '2025-12-24 12:41:49'),
-(87, 'DEPT_694c16d7126f9', 32128, 'sellers/32128/departments/2025/12/24/1766594256_694c16d0eb17a.webp', '2025-12-24 22:07:43'),
-(88, 'DEPT_694c16d7126f9', 32128, 'sellers/32128/departments/2025/12/24/1766594256_694c16d0edfe4.webp', '2025-12-24 22:07:43'),
-(89, 'DEPT_694c16d7126f9', 32128, 'sellers/32128/departments/2025/12/24/1766594256_694c16d0f03f5.webp', '2025-12-24 22:07:43'),
-(90, 'DEPT_694c16d7126f9', 32128, 'sellers/32128/departments/2025/12/24/1766594256_694c16d0f2cc5.png', '2025-12-24 22:07:43');
+(74, 'DEPT_694b91471ef90', 0, 'sellers/32128/departments/2025/12/24/1766560069_694b9145e07f4.webp', '2025-12-24 12:41:49');
 
 -- --------------------------------------------------------
 
@@ -404,6 +415,19 @@ CREATE TABLE `doctor_schedule` (
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `doctor_schedule`
+--
+
+INSERT INTO `doctor_schedule` (`id`, `user_id`, `category_id`, `name`, `slug`, `amount`, `description`, `specialization`, `qualification`, `experience`, `doctor_image`, `weekly_schedule`, `meta_title`, `meta_description`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `created_at`, `updated_at`) VALUES
+(1, 85960, 49, 'vf', 'vf-fd', 443.00, 'xcvsdsdff', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"04:11\",\"to\":\"06:13\",\"breakFrom\":\"06:13\",\"breakTo\":\"20:14\",\"token\":\"433\"}]}}', 'sdf', 'wer', 'IN', 'TN', 'Mannargudi', '614001', '', 'https://maps.google.com/maps?q=Mannargudi%20614001&z=15&output=embed', '2025-12-26 16:17:50', '2025-12-26 16:17:50'),
+(2, 85960, 49, 'vf', 'vf-fd', 443.00, 'xcvsdsdff', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"04:11\",\"to\":\"06:13\",\"breakFrom\":\"06:13\",\"breakTo\":\"20:14\",\"token\":\"433\"}]}}', 'sdf', 'wer', 'IN', 'TN', 'Mannargudi', '614001', '', 'https://maps.google.com/maps?q=Mannargudi%20614001&z=15&output=embed', '2025-12-26 16:17:55', '2025-12-26 16:17:55'),
+(3, 85960, 49, 'vf', 'vf-fd', 555.00, 'dfgdgdfg', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"\",\"to\":\"\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"\"}]}}', 'dfg', 'fdg', '', '', '', '', 'mann', 'https://maps.google.com/maps?q=mann&z=15&output=embed', '2025-12-26 16:19:06', '2025-12-26 16:19:06'),
+(4, 85960, 49, 'vf', 'vf-fd', 333.00, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '[]', 'dsf', '', 'IN', 'TN', 'Mannargudi', '614001', 'mannargudi', 'https://maps.google.com/maps?q=mannargudi%20Mannargudi%20614001&z=15&output=embed', '2025-12-26 17:05:00', '2025-12-26 17:05:00'),
+(5, 85960, 49, 'vf', 'vf-fd', 777.00, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '[]', '', '', 'IN', 'TN', 'Mannargudi', '614001', 'MANNAI', 'https://maps.google.com/maps?q=MANNAI%20Mannargudi%20614001&z=15&output=embed', '2025-12-26 17:06:24', '2025-12-26 17:06:24'),
+(6, 85960, 49, 'vf', 'vf-fd', 32.00, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"\",\"to\":\"\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"\"}]}}', '', '', 'IN', 'TN', 'Mannargudi', '614001', 'mannai', 'https://maps.google.com/maps?q=mannai%20Mannargudi%20614001&z=15&output=embed', '2025-12-26 17:13:10', '2025-12-26 17:13:10'),
+(7, 85960, 49, 'vf', 'vf-fd', 444.00, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"06:15\",\"to\":\"07:15\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"33\"}]}}', 'sdf', 'sdf', 'IN', 'TN', 'Mannargudi', '614001', 'ddsdf', 'https://maps.google.com/maps?q=ddsdf%20Mannargudi%20614001&z=15&output=embed', '2025-12-26 17:15:52', '2025-12-26 17:15:52');
 
 -- --------------------------------------------------------
 
@@ -784,9 +808,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
-(19, 27395, 'Deepak', NULL, '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', NULL, 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '63885c2a7e7f23c25b544e273a90de446d7b9a81147ec3a772cca839955e858f'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '542a8dd8a7fb94d52857db721d43b25f3c34d113a6bbcc273b57fb25e13c62f5'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, 'c1cff683599ac16deeb8ac6ba07dd918e09c889b724706db7ca73798b01b3f54');
+(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, 'f82e440489748c4f01bf4026b0ea2dbe1d6da6a512871fc1779b663aa0b716d3'),
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, 'f8373d9ca7640108b22d3e9f92c155fe6d352b5344ec7bc3381896566f92000f'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '28bbab71bc433e465be9718e629f848568b74897c83da40163c17301bb5a3931');
 
 -- --------------------------------------------------------
 
@@ -1112,7 +1136,7 @@ ALTER TABLE `available_areas`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `configured_plugins`
@@ -1124,13 +1148,13 @@ ALTER TABLE `configured_plugins`
 -- AUTO_INCREMENT for table `coupons`
 --
 ALTER TABLE `coupons`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `dashboard_messages`
@@ -1142,7 +1166,7 @@ ALTER TABLE `dashboard_messages`
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `department_additional_images`
@@ -1166,7 +1190,7 @@ ALTER TABLE `doctors`
 -- AUTO_INCREMENT for table `doctor_schedule`
 --
 ALTER TABLE `doctor_schedule`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `employees`
@@ -1300,7 +1324,7 @@ ALTER TABLE `coupons`
 -- Constraints for table `customers`
 --
 ALTER TABLE `customers`
-  ADD CONSTRAINT `customers_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_customers_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
 
 --
 -- Constraints for table `departments`
