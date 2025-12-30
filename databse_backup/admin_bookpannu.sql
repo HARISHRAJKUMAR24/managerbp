@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 29, 2025 at 02:01 PM
+-- Generation Time: Dec 30, 2025 at 01:57 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -518,6 +518,30 @@ CREATE TABLE `hotel_settings` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `item_categories`
+--
+
+CREATE TABLE `item_categories` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `item_categories`
+--
+
+INSERT INTO `item_categories` (`id`, `user_id`, `name`, `created_at`) VALUES
+(2, 27395, 'Deepak', '2025-12-30 06:01:29'),
+(7, 27395, 'Arun', '2025-12-30 06:48:25'),
+(9, 27395, 'sdf', '2025-12-30 09:24:27'),
+(10, 27395, 'sdfdf', '2025-12-30 12:35:13'),
+(12, 27395, 'www', '2025-12-30 12:56:03');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `managers`
 --
 
@@ -575,10 +599,11 @@ CREATE TABLE `menus` (
 --
 
 INSERT INTO `menus` (`id`, `user_id`, `name`, `active`, `created_at`) VALUES
-(3, 27395, 'sdf', 1, '2025-12-29 12:29:52'),
-(4, 27395, 'sdsdfsd', 1, '2025-12-29 12:39:36'),
 (5, 27395, 'dddd', 1, '2025-12-29 12:39:50'),
-(6, 27395, 'sdf', 1, '2025-12-29 12:40:07');
+(6, 27395, 'sdf', 1, '2025-12-29 12:40:07'),
+(21, 27395, 'dfffdff', 1, '2025-12-30 08:31:55'),
+(22, 27395, 'sdfsdf', 1, '2025-12-30 08:32:07'),
+(23, 27395, 'wer', 1, '2025-12-30 12:56:13');
 
 -- --------------------------------------------------------
 
@@ -588,11 +613,43 @@ INSERT INTO `menus` (`id`, `user_id`, `name`, `active`, `created_at`) VALUES
 
 CREATE TABLE `menu_items` (
   `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
   `menu_id` int(11) NOT NULL,
+  `category_id` int(11) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
   `price` decimal(10,2) NOT NULL,
   `type` enum('veg','nonveg') DEFAULT 'veg',
   `active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `food_type` enum('veg','nonveg') NOT NULL DEFAULT 'veg',
+  `halal` tinyint(1) NOT NULL DEFAULT 0,
+  `stock_type` enum('unlimited','limited','out') NOT NULL DEFAULT 'unlimited',
+  `stock_qty` int(11) DEFAULT NULL,
+  `stock_unit` varchar(50) DEFAULT NULL,
+  `customer_limit` int(11) DEFAULT NULL,
+  `customer_limit_period` enum('per_order','per_day','per_week','per_month') DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `menu_item_variations`
+--
+
+CREATE TABLE `menu_item_variations` (
+  `id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `mrp_price` decimal(10,2) NOT NULL,
+  `selling_price` decimal(10,2) NOT NULL,
+  `discount_percent` int(11) DEFAULT 0,
+  `dine_in_price` decimal(10,2) DEFAULT NULL,
+  `takeaway_price` decimal(10,2) DEFAULT NULL,
+  `delivery_price` decimal(10,2) DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -868,7 +925,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
-(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '53dc2e8f392553bee09b28c4dca136aaa6580f0e6114c74a1b80132502df52e5'),
+(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '840ef59e9b39f2a1c96ef9c1a25b5cba62063eb7b2494db1ec1d2008d820f93c'),
 (20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, 'ed80cb719ff6cffdf88fd4cf9565d48a22f00e8f239974a054cf5c03e9463ffa'),
 (21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '9617cca3beb3d3014c03c0d57e8a2fb4ee33152c798c02bb7c72e4532db76ad8');
 
@@ -1083,6 +1140,12 @@ ALTER TABLE `hotel_settings`
   ADD KEY `time_slot` (`time_slot`);
 
 --
+-- Indexes for table `item_categories`
+--
+ALTER TABLE `item_categories`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `managers`
 --
 ALTER TABLE `managers`
@@ -1108,6 +1171,13 @@ ALTER TABLE `menus`
 ALTER TABLE `menu_items`
   ADD PRIMARY KEY (`id`),
   ADD KEY `menu_id` (`menu_id`);
+
+--
+-- Indexes for table `menu_item_variations`
+--
+ALTER TABLE `menu_item_variations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `item_id` (`item_id`);
 
 --
 -- Indexes for table `plugins`
@@ -1299,6 +1369,12 @@ ALTER TABLE `hotel_settings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `item_categories`
+--
+ALTER TABLE `item_categories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
 -- AUTO_INCREMENT for table `managers`
 --
 ALTER TABLE `managers`
@@ -1314,12 +1390,18 @@ ALTER TABLE `manual_payment_methods`
 -- AUTO_INCREMENT for table `menus`
 --
 ALTER TABLE `menus`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `menu_items`
 --
 ALTER TABLE `menu_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `menu_item_variations`
+--
+ALTER TABLE `menu_item_variations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -1473,6 +1555,12 @@ ALTER TABLE `manual_payment_methods`
 --
 ALTER TABLE `menu_items`
   ADD CONSTRAINT `menu_items_ibfk_1` FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `menu_item_variations`
+--
+ALTER TABLE `menu_item_variations`
+  ADD CONSTRAINT `fk_variation_item` FOREIGN KEY (`item_id`) REFERENCES `menu_items` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `service_images`
