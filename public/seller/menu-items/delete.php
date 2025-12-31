@@ -1,50 +1,45 @@
 <?php
-// api/menu-items/delete.php
-require "../../config/db.php";
-require "../../config/auth.php";
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 
-header('Content-Type: application/json');
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
+require_once "../../../config/config.php";
+require_once "../../../src/database.php";
+
+$pdo = getDbConnection();
+
+/* READ JSON BODY */
 $data = json_decode(file_get_contents("php://input"), true);
+$id = $data['id'] ?? null;
 
-try {
-    if (!isset($data['id'])) {
-        throw new Exception("Menu item ID is required");
-    }
-    
-    $menu_item_id = $data['id'];
-    
-    // Check if user owns this menu item
-    $checkStmt = $pdo->prepare("SELECT id FROM menu_items WHERE id = ? AND user_id = ?");
-    $checkStmt->execute([$menu_item_id, $user_id]);
-    
-    if (!$checkStmt->fetch()) {
-        throw new Exception("Menu item not found or access denied");
-    }
-    
-    // Start transaction
-    $pdo->beginTransaction();
-    
-    // Delete variations first (foreign key constraint)
-    $deleteVariations = $pdo->prepare("DELETE FROM menu_item_variations WHERE menu_item_id = ?");
-    $deleteVariations->execute([$menu_item_id]);
-    
-    // Delete menu item
-    $deleteItem = $pdo->prepare("DELETE FROM menu_items WHERE id = ?");
-    $deleteItem->execute([$menu_item_id]);
-    
-    $pdo->commit();
-    
-    echo json_encode([
-        "success" => true,
-        "message" => "Menu item deleted successfully"
-    ]);
-    
-} catch (Exception $e) {
-    $pdo->rollBack();
-    http_response_code(400);
+if (!$id) {
     echo json_encode([
         "success" => false,
-        "message" => $e->getMessage()
+        "message" => "Menu item ID missing"
     ]);
+    exit;
 }
+
+/* DELETE MENU ITEM (✅ CORRECT TABLE) */
+$stmt = $pdo->prepare("DELETE FROM menu_items WHERE id = ?");
+$stmt->execute([$id]);
+
+if ($stmt->rowCount() === 0) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Menu item not found"
+    ]);
+    exit;
+}
+
+echo json_encode([
+    "success" => true,
+    "message" => "Menu item deleted successfully"
+]);

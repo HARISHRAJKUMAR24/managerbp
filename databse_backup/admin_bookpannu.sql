@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 30, 2025 at 01:57 PM
+-- Generation Time: Dec 31, 2025 at 08:54 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -533,11 +533,18 @@ CREATE TABLE `item_categories` (
 --
 
 INSERT INTO `item_categories` (`id`, `user_id`, `name`, `created_at`) VALUES
-(2, 27395, 'Deepak', '2025-12-30 06:01:29'),
-(7, 27395, 'Arun', '2025-12-30 06:48:25'),
-(9, 27395, 'sdf', '2025-12-30 09:24:27'),
-(10, 27395, 'sdfdf', '2025-12-30 12:35:13'),
-(12, 27395, 'www', '2025-12-30 12:56:03');
+(13, 27395, 'Chicken', '2025-12-31 05:46:02'),
+(14, 27395, 'Mutton', '2025-12-31 05:46:07'),
+(15, 27395, 'Fish', '2025-12-31 05:46:11'),
+(16, 27395, 'Pizza', '2025-12-31 05:46:16'),
+(17, 27395, 'Burger', '2025-12-31 05:46:21'),
+(18, 27395, 'Brotta', '2025-12-31 05:46:32'),
+(19, 27395, 'Samza', '2025-12-31 05:46:37'),
+(20, 27395, 'Samosa', '2025-12-31 05:46:43'),
+(21, 27395, 'Vada', '2025-12-31 05:46:48'),
+(22, 27395, 'Idli', '2025-12-31 05:46:54'),
+(23, 27395, 'Sambar', '2025-12-31 05:47:01'),
+(24, 27395, 'Pongal', '2025-12-31 05:47:07');
 
 -- --------------------------------------------------------
 
@@ -599,11 +606,10 @@ CREATE TABLE `menus` (
 --
 
 INSERT INTO `menus` (`id`, `user_id`, `name`, `active`, `created_at`) VALUES
-(5, 27395, 'dddd', 1, '2025-12-29 12:39:50'),
-(6, 27395, 'sdf', 1, '2025-12-29 12:40:07'),
-(21, 27395, 'dfffdff', 1, '2025-12-30 08:31:55'),
-(22, 27395, 'sdfsdf', 1, '2025-12-30 08:32:07'),
-(23, 27395, 'wer', 1, '2025-12-30 12:56:13');
+(21, 27395, 'South Indian Style', 1, '2025-12-30 08:31:55'),
+(22, 27395, 'Korean Style', 1, '2025-12-30 08:32:07'),
+(23, 27395, 'Chinese style', 1, '2025-12-30 12:56:13'),
+(24, 27395, 'North Indian Style', 1, '2025-12-31 06:03:05');
 
 -- --------------------------------------------------------
 
@@ -633,6 +639,21 @@ CREATE TABLE `menu_items` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `menu_items`
+--
+
+INSERT INTO `menu_items` (`id`, `user_id`, `menu_id`, `category_id`, `name`, `description`, `price`, `type`, `active`, `created_at`, `food_type`, `halal`, `stock_type`, `stock_qty`, `stock_unit`, `customer_limit`, `customer_limit_period`, `image`, `updated_at`) VALUES
+(3, 1, 23, 7, 'sdf', 'sdf', 33.00, 'veg', 1, '2025-12-31 05:44:28', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2025-12-31 05:44:28'),
+(4, 1, 22, 24, 'sdf', 'sf', 22.00, 'veg', 1, '2025-12-31 05:52:14', '', 1, 'unlimited', NULL, NULL, 44, 'per_order', '', '2025-12-31 05:52:14'),
+(5, 1, 23, 13, 'sdf', 'sdf', 22.00, 'veg', 1, '2025-12-31 05:53:31', '', 1, 'limited', 111, 'g', 333, 'per_order', '', '2025-12-31 05:53:31'),
+(7, 1, 24, 16, 'Chicken Tandoori', 'sdfsdfsdf', 333.00, 'veg', 1, '2025-12-31 07:08:58', '', 0, '', NULL, NULL, 77, 'per_day', '', '2025-12-31 07:08:58'),
+(8, 1, 24, NULL, 'sd', 'sdf', 22.00, 'veg', 1, '2025-12-31 07:21:10', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2025-12-31 07:21:10'),
+(9, 1, 23, 13, 'dsf', 'sdf', 0.00, 'veg', 1, '2025-12-31 07:21:29', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2025-12-31 07:21:29'),
+(10, 1, 23, 14, 'sdf', 'sdf', 22.00, 'veg', 1, '2025-12-31 07:32:36', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2025-12-31 07:32:36'),
+(11, 1, 23, 13, 'sdf', 'sdf', 22.00, 'veg', 1, '2025-12-31 07:36:31', 'veg', 0, 'unlimited', NULL, NULL, 33, 'per_order', '', '2025-12-31 07:36:31'),
+(12, 1, 24, 14, 'ddd', 'ddd', 33.00, 'veg', 1, '2025-12-31 07:51:02', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2025-12-31 07:51:02');
+
 -- --------------------------------------------------------
 
 --
@@ -652,6 +673,22 @@ CREATE TABLE `menu_item_variations` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `menu_item_variations`
+--
+
+INSERT INTO `menu_item_variations` (`id`, `item_id`, `name`, `mrp_price`, `selling_price`, `discount_percent`, `dine_in_price`, `takeaway_price`, `delivery_price`, `is_active`, `created_at`) VALUES
+(1, 3, 'Small', 323.00, 33.00, 90, NULL, NULL, NULL, 1, '2025-12-31 05:44:28'),
+(2, 4, 'Small', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2025-12-31 05:52:14'),
+(3, 5, 'Small', 333.00, 22.00, 93, NULL, NULL, NULL, 1, '2025-12-31 05:53:31'),
+(4, 5, 'Variation 2', 333.00, 222.00, 33, NULL, 333.00, 444.00, 1, '2025-12-31 05:53:31'),
+(6, 7, 'Small', 222.00, 333.00, -50, NULL, NULL, NULL, 1, '2025-12-31 07:08:58'),
+(7, 8, 'Small', 22.00, 22.00, 0, NULL, NULL, NULL, 1, '2025-12-31 07:21:10'),
+(8, 9, 'Small', 0.00, 0.00, 0, NULL, NULL, NULL, 1, '2025-12-31 07:21:29'),
+(9, 10, 'Small', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2025-12-31 07:32:36'),
+(10, 11, 'Small', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2025-12-31 07:36:31'),
+(11, 12, 'Small', 33.00, 33.00, 0, NULL, NULL, NULL, 1, '2025-12-31 07:51:02');
 
 -- --------------------------------------------------------
 
@@ -925,7 +962,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
-(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '840ef59e9b39f2a1c96ef9c1a25b5cba62063eb7b2494db1ec1d2008d820f93c'),
+(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, 'faacc12a4daced26191750f35ed973dac3af4f7a41e872642cb7c8f146c91340'),
 (20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, 'ed80cb719ff6cffdf88fd4cf9565d48a22f00e8f239974a054cf5c03e9463ffa'),
 (21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '9617cca3beb3d3014c03c0d57e8a2fb4ee33152c798c02bb7c72e4532db76ad8');
 
@@ -1372,7 +1409,7 @@ ALTER TABLE `hotel_settings`
 -- AUTO_INCREMENT for table `item_categories`
 --
 ALTER TABLE `item_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `managers`
@@ -1390,19 +1427,19 @@ ALTER TABLE `manual_payment_methods`
 -- AUTO_INCREMENT for table `menus`
 --
 ALTER TABLE `menus`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `menu_items`
 --
 ALTER TABLE `menu_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `menu_item_variations`
 --
 ALTER TABLE `menu_item_variations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `plugins`

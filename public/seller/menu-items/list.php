@@ -1,39 +1,53 @@
 <?php
-require "../../config/db.php";
-require "../../config/auth.php";
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
 
-header('Content-Type: application/json');
+require_once "../../../config/config.php";
+require_once "../../../src/database.php";
 
-try {
-    $stmt = $pdo->prepare("
-        SELECT 
-            mi.*,
-            c.name as category_name,
-            m.name as menu_name,
-            COUNT(DISTINCT oi.id) as order_count,
-            AVG(r.rating) as avg_rating,
-            CASE 
-                WHEN mi.stock_type = 'unlimited' THEN 'Unlimited Stock'
-                WHEN mi.stock_type = 'limited' AND mi.stock_qty > 0 THEN CONCAT(mi.stock_qty, ' ', mi.stock_unit, ' left')
-                ELSE 'Out of Stock'
-            END as stock_display,
-            DATE_FORMAT(mi.updated_at, '%d %b, %H:%i') as last_updated
-        FROM menu_items mi
-        LEFT JOIN categories c ON mi.category_id = c.id AND c.user_id = ?
-        LEFT JOIN menus m ON mi.menu_id = m.id AND m.user_id = ?
-        LEFT JOIN order_items oi ON mi.id = oi.menu_item_id
-        LEFT JOIN reviews r ON mi.id = r.menu_item_id
-        WHERE mi.user_id = ?
-        GROUP BY mi.id
-        ORDER BY mi.created_at DESC
-    ");
-    
-    $stmt->execute([$user_id, $user_id, $user_id]);
-    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    echo json_encode($items);
-    
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+$pdo = getDbConnection();
+
+$sql = "
+SELECT
+  mi.id,
+  mi.name,
+  mi.description,
+  mi.menu_id,
+  mi.category_id,
+  mi.food_type,
+  mi.image,
+  mi.stock_type,
+  mi.stock_qty,
+  mi.stock_unit,
+  mi.halal,
+  mi.created_at AS last_updated,
+
+  -- pricing
+  mi.price AS price,
+  mi.price AS original_price,
+
+  -- UI defaults
+  0 AS order_count,
+  0 AS rating,
+  'Medium' AS spice_level,
+  mi.customer_limit,
+
+  -- visibility
+  mi.active AS is_available,
+  mi.active AS show_on_site
+
+FROM menu_items mi
+ORDER BY mi.created_at DESC
+";
+
+$stmt = $pdo->query($sql);
+$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+/* Ensure frontend never crashes */
+foreach ($items as &$item) {
+  $item['tags'] = [];
+  $item['is_best_seller'] = false;
 }
+
+echo json_encode($items);

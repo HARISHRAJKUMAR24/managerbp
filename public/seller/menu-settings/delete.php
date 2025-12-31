@@ -2,7 +2,7 @@
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -15,8 +15,9 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-/* ✅ READ ID FROM QUERY STRING */
-$id = $_GET['id'] ?? null;
+/* ✅ READ JSON BODY */
+$data = json_decode(file_get_contents("php://input"), true);
+$id = $data['id'] ?? null;
 
 if (!$id) {
     echo json_encode([
