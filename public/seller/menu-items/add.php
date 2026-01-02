@@ -1,13 +1,13 @@
 <?php
 
 /* ===============================
-   CORS
+   HEADERS / CORS
 ================================ */
+header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Content-Type: application/json");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -33,17 +33,39 @@ $pdo = getDbConnection();
 /* ===============================
    READ INPUT
 ================================ */
-$raw = file_get_contents("php://input");
-$input = json_decode($raw, true);
+$raw   = file_get_contents("php://input");
+$input = json_decode($raw, true) ?? [];
 
 /* ===============================
-   DEBUG (TEMP)
+   AUTH: TOKEN → USER
 ================================ */
-file_put_contents(
-    __DIR__ . "/debug.log",
-    date("Y-m-d H:i:s") . " | RAW=" . $raw . PHP_EOL,
-    FILE_APPEND
+$token =
+    ($input["token"] ?? null)
+    ?: ($_COOKIE["token"] ?? "");
+
+if (!$token) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Unauthorized: Missing token"
+    ]);
+    exit;
+}
+
+$stmt = $pdo->prepare(
+    "SELECT user_id FROM users WHERE api_token = ? LIMIT 1"
 );
+$stmt->execute([$token]);
+$user = $stmt->fetch(PDO::FETCH_OBJ);
+
+if (!$user) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid token"
+    ]);
+    exit;
+}
+
+$user_id = (int)$user->user_id;
 
 /* ===============================
    VALIDATION
@@ -71,11 +93,10 @@ if (!is_array($input["variations"]) || count($input["variations"]) === 0) {
 /* ===============================
    SAFE VALUES
 ================================ */
-$userId = 1; // TODO: from session
-$halal  = !empty($input["halal"]) ? 1 : 0;
-
-$stockQty  = $input["stock_qty"] ?? null;
-$stockUnit = $input["stock_unit"] ?? null;
+$halal      = !empty($input["halal"]) ? 1 : 0;
+$stockQty   = $input["stock_qty"] ?? null;
+$stockUnit  = $input["stock_unit"] ?? null;
+$categoryId = $input["category_id"] ?? null;
 
 /* ===============================
    TRANSACTION
@@ -84,7 +105,9 @@ $pdo->beginTransaction();
 
 try {
 
-    /* INSERT MENU ITEM */
+    /* ===============================
+       INSERT MENU ITEM
+    ================================ */
     $stmt = $pdo->prepare("
         INSERT INTO menu_items (
             user_id,
@@ -100,6 +123,7 @@ try {
             customer_limit,
             customer_limit_period,
             image,
+            active,
             created_at
         ) VALUES (
             :user_id,
@@ -115,31 +139,35 @@ try {
             :customer_limit,
             :customer_limit_period,
             :image,
+            1,
             NOW()
         )
     ");
 
     $stmt->execute([
-        ":user_id" => $userId,
-        ":menu_id" => (int)$input["menu_id"],
-        ":category_id" => $input["category_id"] ?? null,
-        ":name" => trim($input["name"]),
-        ":description" => $input["description"] ?? "",
-        ":food_type" => $input["food_type"],
-        ":halal" => $halal,
-        ":stock_type" => $input["stock_type"],
-        ":stock_qty" => $stockQty,
-        ":stock_unit" => $stockUnit,
-        ":customer_limit" => $input["customer_limit"] ?? null,
+        ":user_id"               => $user_id,
+        ":menu_id"               => (int)$input["menu_id"],
+        ":category_id"           => $categoryId,
+        ":name"                  => trim($input["name"]),
+        ":description"           => $input["description"] ?? "",
+        ":food_type"             => $input["food_type"],
+        ":halal"                 => $halal,
+        ":stock_type"            => $input["stock_type"],
+        ":stock_qty"             => $stockQty,
+        ":stock_unit"            => $stockUnit,
+        ":customer_limit"        => $input["customer_limit"] ?? null,
         ":customer_limit_period" => $input["customer_limit_period"] ?? null,
-        ":image" => $input["image"] ?? null,
+        ":image"                 => $input["image"] ?? null,
     ]);
 
     $itemId = $pdo->lastInsertId();
 
-    /* INSERT VARIATIONS */
+    /* ===============================
+       INSERT VARIATIONS (🔥 FIXED)
+    ================================ */
     $varStmt = $pdo->prepare("
         INSERT INTO menu_item_variations (
+            user_id,
             item_id,
             name,
             mrp_price,
@@ -150,6 +178,7 @@ try {
             delivery_price,
             is_active
         ) VALUES (
+            :user_id,
             :item_id,
             :name,
             :mrp_price,
@@ -164,26 +193,42 @@ try {
 
     $minSelling = PHP_FLOAT_MAX;
 
-    foreach ($input["variations"] as $v) {
+foreach ($input["variations"] as $v) {
 
-        $mrp = (float)$v["mrp_price"];
-        $selling = (float)$v["selling_price"];
+    $mrp     = isset($v["mrp_price"]) ? (float)$v["mrp_price"] : 0;
+    $selling = isset($v["selling_price"]) ? (float)$v["selling_price"] : 0;
 
-        $varStmt->execute([
-            ":item_id" => $itemId,
-            ":name" => $v["name"],
-            ":mrp_price" => $mrp,
-            ":selling_price" => $selling,
-            ":discount_percent" => $v["discount_percent"] ?? 0,
-            ":dine_in_price" => $v["dine_in_price"] ?? null,
-            ":takeaway_price" => $v["takeaway_price"] ?? null,
-            ":delivery_price" => $v["delivery_price"] ?? null,
-        ]);
+    $dineIn    = ($v["dine_in_price"] !== "" && $v["dine_in_price"] !== null)
+        ? (float)$v["dine_in_price"]
+        : null;
 
-        $minSelling = min($minSelling, $selling);
-    }
+    $takeaway = ($v["takeaway_price"] !== "" && $v["takeaway_price"] !== null)
+        ? (float)$v["takeaway_price"]
+        : null;
 
-    /* UPDATE BASE PRICE */
+    $delivery = ($v["delivery_price"] !== "" && $v["delivery_price"] !== null)
+        ? (float)$v["delivery_price"]
+        : null;
+
+    $varStmt->execute([
+        ":user_id"          => $user_id,
+        ":item_id"          => $itemId,
+        ":name"             => trim($v["name"]),
+        ":mrp_price"        => $mrp,
+        ":selling_price"    => $selling,
+        ":discount_percent" => (float)($v["discount_percent"] ?? 0),
+        ":dine_in_price"    => $dineIn,
+        ":takeaway_price"   => $takeaway,
+        ":delivery_price"   => $delivery,
+    ]);
+
+    $minSelling = min($minSelling, $selling);
+}
+
+
+    /* ===============================
+       UPDATE BASE PRICE
+    ================================ */
     $pdo->prepare("
         UPDATE menu_items
         SET price = ?
@@ -195,7 +240,7 @@ try {
     echo json_encode([
         "success" => true,
         "message" => "Menu item created successfully",
-        "id" => $itemId
+        "id"      => $itemId
     ]);
 
 } catch (Exception $e) {
