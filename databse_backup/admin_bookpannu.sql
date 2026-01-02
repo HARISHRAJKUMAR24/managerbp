@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 31, 2025 at 08:54 AM
+-- Generation Time: Jan 02, 2026 at 01:51 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -449,6 +449,13 @@ CREATE TABLE `employees` (
   `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `employees`
+--
+
+INSERT INTO `employees` (`id`, `employee_id`, `user_id`, `name`, `position`, `email`, `phone`, `address`, `joining_date`, `image`, `created_at`) VALUES
+(11, '1affbae8-55e1-40b6-aba1-b404a5ecb4b6', 27395, 'Deepak', 'Developer', 'deepakchitravel@gmail.com', '+919345604653', '1/60 Middle street ,Cholapandi', '2026-01-02', '/uploads/sellers/27395/employees/2026/01/02/emp_69574f7710837.png', '2026-01-02 10:24:16.049');
+
 -- --------------------------------------------------------
 
 --
@@ -644,15 +651,7 @@ CREATE TABLE `menu_items` (
 --
 
 INSERT INTO `menu_items` (`id`, `user_id`, `menu_id`, `category_id`, `name`, `description`, `price`, `type`, `active`, `created_at`, `food_type`, `halal`, `stock_type`, `stock_qty`, `stock_unit`, `customer_limit`, `customer_limit_period`, `image`, `updated_at`) VALUES
-(3, 1, 23, 7, 'sdf', 'sdf', 33.00, 'veg', 1, '2025-12-31 05:44:28', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2025-12-31 05:44:28'),
-(4, 1, 22, 24, 'sdf', 'sf', 22.00, 'veg', 1, '2025-12-31 05:52:14', '', 1, 'unlimited', NULL, NULL, 44, 'per_order', '', '2025-12-31 05:52:14'),
-(5, 1, 23, 13, 'sdf', 'sdf', 22.00, 'veg', 1, '2025-12-31 05:53:31', '', 1, 'limited', 111, 'g', 333, 'per_order', '', '2025-12-31 05:53:31'),
-(7, 1, 24, 16, 'Chicken Tandoori', 'sdfsdfsdf', 333.00, 'veg', 1, '2025-12-31 07:08:58', '', 0, '', NULL, NULL, 77, 'per_day', '', '2025-12-31 07:08:58'),
-(8, 1, 24, NULL, 'sd', 'sdf', 22.00, 'veg', 1, '2025-12-31 07:21:10', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2025-12-31 07:21:10'),
-(9, 1, 23, 13, 'dsf', 'sdf', 0.00, 'veg', 1, '2025-12-31 07:21:29', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2025-12-31 07:21:29'),
-(10, 1, 23, 14, 'sdf', 'sdf', 22.00, 'veg', 1, '2025-12-31 07:32:36', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2025-12-31 07:32:36'),
-(11, 1, 23, 13, 'sdf', 'sdf', 22.00, 'veg', 1, '2025-12-31 07:36:31', 'veg', 0, 'unlimited', NULL, NULL, 33, 'per_order', '', '2025-12-31 07:36:31'),
-(12, 1, 24, 14, 'ddd', 'ddd', 33.00, 'veg', 1, '2025-12-31 07:51:02', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2025-12-31 07:51:02');
+(30, 27395, 24, 13, 'Chicken', 'Taste is best.', 22.00, 'veg', 1, '2026-01-02 10:52:39', 'nonveg', 1, 'unlimited', NULL, NULL, 33, 'per_order', '/uploads/sellers/27395/menu-settings/2026/01/02/iphone_1767351159.png', '2026-01-02 12:36:12');
 
 -- --------------------------------------------------------
 
@@ -663,6 +662,7 @@ INSERT INTO `menu_items` (`id`, `user_id`, `menu_id`, `category_id`, `name`, `de
 CREATE TABLE `menu_item_variations` (
   `id` int(11) NOT NULL,
   `item_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `mrp_price` decimal(10,2) NOT NULL,
   `selling_price` decimal(10,2) NOT NULL,
@@ -678,17 +678,9 @@ CREATE TABLE `menu_item_variations` (
 -- Dumping data for table `menu_item_variations`
 --
 
-INSERT INTO `menu_item_variations` (`id`, `item_id`, `name`, `mrp_price`, `selling_price`, `discount_percent`, `dine_in_price`, `takeaway_price`, `delivery_price`, `is_active`, `created_at`) VALUES
-(1, 3, 'Small', 323.00, 33.00, 90, NULL, NULL, NULL, 1, '2025-12-31 05:44:28'),
-(2, 4, 'Small', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2025-12-31 05:52:14'),
-(3, 5, 'Small', 333.00, 22.00, 93, NULL, NULL, NULL, 1, '2025-12-31 05:53:31'),
-(4, 5, 'Variation 2', 333.00, 222.00, 33, NULL, 333.00, 444.00, 1, '2025-12-31 05:53:31'),
-(6, 7, 'Small', 222.00, 333.00, -50, NULL, NULL, NULL, 1, '2025-12-31 07:08:58'),
-(7, 8, 'Small', 22.00, 22.00, 0, NULL, NULL, NULL, 1, '2025-12-31 07:21:10'),
-(8, 9, 'Small', 0.00, 0.00, 0, NULL, NULL, NULL, 1, '2025-12-31 07:21:29'),
-(9, 10, 'Small', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2025-12-31 07:32:36'),
-(10, 11, 'Small', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2025-12-31 07:36:31'),
-(11, 12, 'Small', 33.00, 33.00, 0, NULL, NULL, NULL, 1, '2025-12-31 07:51:02');
+INSERT INTO `menu_item_variations` (`id`, `item_id`, `user_id`, `name`, `mrp_price`, `selling_price`, `discount_percent`, `dine_in_price`, `takeaway_price`, `delivery_price`, `is_active`, `created_at`) VALUES
+(56, 30, 27395, 'Small', 55.00, 44.00, 20, 55.00, 33.00, 44.00, 1, '2026-01-02 12:36:07'),
+(57, 30, 27395, 'Medium', 332.00, 22.00, 93, 321.00, 22.00, 33.00, 1, '2026-01-02 12:36:07');
 
 -- --------------------------------------------------------
 
@@ -962,8 +954,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
-(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, 'faacc12a4daced26191750f35ed973dac3af4f7a41e872642cb7c8f146c91340'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, 'ed80cb719ff6cffdf88fd4cf9565d48a22f00e8f239974a054cf5c03e9463ffa'),
+(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, '125e5f7bbf2da8efba222ab06e99fad3a6e70d0015b5cd1106445d0168866bbb'),
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', NULL, 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, '05b7ceff5560de8e0f994207d5d504f374ad26d90588762a6fa6f1a56f5826bc'),
 (21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, NULL, 0, NULL, '9617cca3beb3d3014c03c0d57e8a2fb4ee33152c798c02bb7c72e4532db76ad8');
 
 -- --------------------------------------------------------
@@ -1214,7 +1206,8 @@ ALTER TABLE `menu_items`
 --
 ALTER TABLE `menu_item_variations`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `item_id` (`item_id`);
+  ADD KEY `item_id` (`item_id`),
+  ADD KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `plugins`
@@ -1385,7 +1378,7 @@ ALTER TABLE `doctor_schedule`
 -- AUTO_INCREMENT for table `employees`
 --
 ALTER TABLE `employees`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `events`
@@ -1427,19 +1420,19 @@ ALTER TABLE `manual_payment_methods`
 -- AUTO_INCREMENT for table `menus`
 --
 ALTER TABLE `menus`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `menu_items`
 --
 ALTER TABLE `menu_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `menu_item_variations`
 --
 ALTER TABLE `menu_item_variations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `plugins`
