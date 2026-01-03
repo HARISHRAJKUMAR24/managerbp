@@ -39,22 +39,59 @@ if (!$user) {
     exit;
 }
 
-$user_id = $user->user_id;
+$user_id = (int)$user->user_id;
 
 /* ----------------------------------------------------
-   3️⃣ FETCH ITEM CATEGORIES (NO ITEM COUNT YET)
+   3️⃣ OPTIONAL MENU FILTER
 ---------------------------------------------------- */
-$stmt = $pdo->prepare("
-    SELECT 
-        id,
-        name,
-        0 AS items
-    FROM item_categories
-    WHERE user_id = ?
-    ORDER BY id DESC
-");
+$menu_id = isset($_GET['menu_id']) && is_numeric($_GET['menu_id'])
+    ? (int)$_GET['menu_id']
+    : null;
 
-$stmt->execute([$user_id]);
+/* ----------------------------------------------------
+   4️⃣ FETCH CATEGORIES WITH ITEM COUNT ✅
+---------------------------------------------------- */
+if ($menu_id) {
+    // Categories for a specific menu
+    $sql = "
+        SELECT 
+            c.id,
+            c.name,
+            COUNT(mi.id) AS items
+        FROM item_categories c
+        LEFT JOIN menu_items mi 
+            ON mi.category_id = c.id
+            AND mi.menu_id = ?
+        WHERE c.user_id = ?
+        GROUP BY c.id, c.name
+        ORDER BY c.id DESC
+    ";
 
-echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$menu_id, $user_id]);
+} else {
+    // All categories
+    $sql = "
+        SELECT 
+            c.id,
+            c.name,
+            COUNT(mi.id) AS items
+        FROM item_categories c
+        LEFT JOIN menu_items mi 
+            ON mi.category_id = c.id
+        WHERE c.user_id = ?
+        GROUP BY c.id, c.name
+        ORDER BY c.id DESC
+    ";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$user_id]);
+}
+
+/* ----------------------------------------------------
+   5️⃣ RETURN RESPONSE
+---------------------------------------------------- */
+$categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+echo json_encode($categories);
 exit;
