@@ -1,7 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: POST, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
 
@@ -15,22 +15,55 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-$category_id = $_GET['category_id'] ?? '';
-$user_id     = $_GET['user_id'] ?? '';
+/* -----------------------------------------
+   READ JSON BODY
+----------------------------------------- */
+$rawInput = file_get_contents("php://input");
+$data = json_decode($rawInput, true);
 
-// ⭐ ADD THIS LOG
-error_log("DELETE REQUESTED category_id: " . $category_id);
+/* -----------------------------------------
+   GET PARAMS (JSON > GET fallback)
+----------------------------------------- */
+$category_id = $data['category_id'] ?? $_GET['category_id'] ?? null;
+$user_id     = $data['user_id'] ?? $_GET['user_id'] ?? null;
 
+/* -----------------------------------------
+   VALIDATION
+----------------------------------------- */
 if (!$category_id) {
-    echo json_encode(["success" => false, "message" => "Category ID missing"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Category ID missing"
+    ]);
     exit();
 }
 
-$sql = "DELETE FROM categories WHERE category_id = :cid";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([':cid' => $category_id]);
+/* -----------------------------------------
+   DELETE (SECURE)
+----------------------------------------- */
+$sql = "DELETE FROM categories 
+        WHERE category_id = :category_id 
+        AND user_id = :user_id";
 
-echo json_encode([
-    "success" => $stmt->rowCount() > 0,
-    "message" => $stmt->rowCount() > 0 ? "Category deleted" : "Category not found"
+$stmt = $pdo->prepare($sql);
+$stmt->execute([
+    ':category_id' => $category_id,
+    ':user_id'     => $user_id,
 ]);
+
+if ($stmt->rowCount() === 0) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Category not found or already deleted"
+    ]);
+    exit();
+}
+
+/* -----------------------------------------
+   SUCCESS
+----------------------------------------- */
+echo json_encode([
+    "success" => true,
+    "message" => "Category deleted successfully"
+]);
+exit();

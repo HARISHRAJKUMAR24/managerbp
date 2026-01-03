@@ -1,10 +1,8 @@
 <?php
-// ------------------------
-// CORS FIX (REQUIRED)
-// ------------------------
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -17,70 +15,55 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-// Read JSON body for POST requests
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $raw = file_get_contents("php://input");
-    $input = json_decode($raw, true);
-    $userId = $input["user_id"] ?? null;
-} else {
-    $userId = $_GET["user_id"] ?? null;
-}
+/* =====================
+   AUTH VIA COOKIE TOKEN
+===================== */
+$token = $_COOKIE['token'] ?? null;
 
-// Validation
-if (empty($userId)) {
-    echo json_encode([
-        "success" => false,
-        "message" => "user_id required"
-    ]);
+if (!$token) {
+    echo json_encode(["success" => false, "message" => "Unauthorized"]);
     exit;
 }
 
-try {
-    // Fetch doctor schedules
-    $sql = "SELECT 
-        ds.*,
-        c.doctor_name,
-        c.specialization,
-        c.qualification,
-        c.experience,
-        c.doctor_image,
-        c.doctor_fee
-    FROM doctor_schedule ds
-    LEFT JOIN categories c ON ds.category_id = c.id
-    WHERE ds.user_id = :user_id
-    ORDER BY ds.created_at DESC";
+$stmt = $pdo->prepare("SELECT user_id FROM users WHERE api_token = ? LIMIT 1");
+$stmt->execute([$token]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([":user_id" => $userId]);
-    $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Decode JSON fields
-    foreach ($schedules as &$schedule) {
-        if (!empty($schedule['weekly_schedule'])) {
-            $schedule['weekly_schedule'] = json_decode($schedule['weekly_schedule'], true);
-        } else {
-            $schedule['weekly_schedule'] = [];
-        }
-
-        if (!empty($schedule['additional_images'])) {
-            $schedule['additional_images'] = json_decode($schedule['additional_images'], true);
-        } else {
-            $schedule['additional_images'] = [];
-        }
-    }
-
-    echo json_encode([
-        "success" => true,
-        "message" => "Doctor schedules fetched successfully",
-        "data" => $schedules,
-        "count" => count($schedules)
-    ]);
-
-} catch (Exception $e) {
-    echo json_encode([
-        "success" => false,
-        "message" => $e->getMessage(),
-        "error_details" => $e->getTraceAsString()
-    ]);
+if (!$user) {
+    echo json_encode(["success" => false, "message" => "Invalid token"]);
+    exit;
 }
-?>
+
+$userId = (int)$user['user_id'];
+
+/* =====================
+   FETCH DOCTOR SCHEDULES
+===================== */
+$sql = "
+SELECT
+    id AS serviceId,
+    id AS id,
+    user_id AS userId,
+    name,
+    slug,
+    amount,
+    doctor_image AS image,
+    specialization,
+    qualification,
+    created_at AS createdAt
+FROM doctor_schedule
+WHERE user_id = ?
+ORDER BY created_at DESC
+";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$userId]);
+
+$records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+echo json_encode([
+    "success" => true,
+    "records" => $records,
+    "totalRecords" => count($records),
+    "totalPages" => 1
+]);
