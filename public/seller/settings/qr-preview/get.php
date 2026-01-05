@@ -78,7 +78,6 @@ try {
         'success' => true,
         'data' => $formattedData
     ]);
-
 } catch (PDOException $e) {
     error_log("Database error in get.php: " . $e->getMessage());
     echo json_encode([
