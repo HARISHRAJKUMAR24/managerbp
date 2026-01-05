@@ -31,15 +31,15 @@ $password = '';      // Change if different
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
+
     $sql = "SELECT gst_number, gst_type, tax_percent, country, state 
             FROM site_settings 
             WHERE user_id = ?";
-    
+
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$user_id]);
     $settings = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$settings) {
         $settings = [
             'gst_number' => '',
@@ -50,18 +50,17 @@ try {
         ];
     } else {
         // Convert null values to empty strings
-        foreach ($settings as $key => $value) {
-            if ($value === null) {
-                $settings[$key] = '';
+        if ($settings) {
+            if ($settings['tax_percent'] !== null) {
+                $settings['tax_percent'] = (float) $settings['tax_percent'];
             }
         }
     }
-    
+
     echo json_encode([
         'success' => true,
         'data' => $settings
     ]);
-    
 } catch (PDOException $e) {
     error_log("Database error: " . $e->getMessage());
     echo json_encode([
