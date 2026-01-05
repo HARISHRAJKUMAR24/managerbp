@@ -11,6 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
+// Include your config file
+require_once "../../../../config/config.php";
+require_once "../../../../src/database.php";
+
 // Get user ID from query parameters
 $user_id = $_GET['user_id'] ?? null;
 
@@ -22,15 +26,9 @@ if (!$user_id) {
     exit();
 }
 
-// Database connection
-$host = 'localhost';
-$dbname = 'admin_bookpannu';
-$username = 'root';  // Change if different
-$password = '';      // Change if different
-
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Use your existing database connection function
+    $pdo = getDbConnection();
 
     $sql = "SELECT gst_number, gst_type, tax_percent, country, state 
             FROM site_settings 
@@ -44,15 +42,18 @@ try {
         $settings = [
             'gst_number' => '',
             'gst_type' => '',
-            'tax_percent' => '',
+            'tax_percent' => null,
             'country' => '',
             'state' => ''
         ];
     } else {
-        // Convert null values to empty strings
-        if ($settings) {
-            if ($settings['tax_percent'] !== null) {
-                $settings['tax_percent'] = (float) $settings['tax_percent'];
+        // Ensure proper types
+        $settings['tax_percent'] = $settings['tax_percent'] !== null ? (float) $settings['tax_percent'] : null;
+        
+        // Convert other null values to empty strings
+        foreach ($settings as $key => $value) {
+            if ($value === null && $key !== 'tax_percent') {
+                $settings[$key] = '';
             }
         }
     }
@@ -62,7 +63,7 @@ try {
         'data' => $settings
     ]);
 } catch (PDOException $e) {
-    error_log("Database error: " . $e->getMessage());
+    error_log("Database error in tax get.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
         'message' => 'Database error occurred'

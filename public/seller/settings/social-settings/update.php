@@ -11,26 +11,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
+// Include your config file
 require_once "../../../../config/config.php";
 require_once "../../../../src/database.php";
 
-
-// Get JSON input
-$input = file_get_contents("php://input");
+// Get the raw POST data
+$input = file_get_contents('php://input');
 $data = json_decode($input, true);
 
-// Get user ID
-$user_id = $data['user_id'] ?? null;
-
-if (!$user_id) {
+// Validate required data
+if (!isset($data['user_id'])) {
     echo json_encode([
-        "success" => false,
-        "message" => "User ID required"
+        'success' => false,
+        'message' => 'User ID is required'
     ]);
     exit();
 }
 
-// Prepare data with sanitization
+$user_id = $data['user_id'];
+
+// Extract and sanitize data
 $facebook = isset($data['facebook']) ? trim($data['facebook']) : null;
 $twitter = isset($data['twitter']) ? trim($data['twitter']) : null;
 $instagram = isset($data['instagram']) ? trim($data['instagram']) : null;
@@ -38,7 +38,7 @@ $linkedin = isset($data['linkedin']) ? trim($data['linkedin']) : null;
 $youtube = isset($data['youtube']) ? trim($data['youtube']) : null;
 $pinterest = isset($data['pinterest']) ? trim($data['pinterest']) : null;
 
-// Add https:// prefix if missing but URL exists
+// Function to format URLs (add https:// if missing)
 function formatUrl($url)
 {
     if ($url === null || trim($url) === '') {
@@ -46,8 +46,13 @@ function formatUrl($url)
     }
 
     $url = trim($url);
+    
+    if (empty($url)) {
+        return null;
+    }
 
-    if (!empty($url) && !preg_match("~^(?:f|ht)tps?://~i", $url)) {
+    // If it doesn't start with http:// or https://, add https://
+    if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
         return "https://" . $url;
     }
 
@@ -62,59 +67,70 @@ $linkedin = formatUrl($linkedin);
 $youtube = formatUrl($youtube);
 $pinterest = formatUrl($pinterest);
 
-// Check if settings already exist for user
-$checkSql = "SELECT COUNT(*) FROM site_settings WHERE user_id = :user_id";
-$checkStmt = $pdo->prepare($checkSql);
-$checkStmt->execute([':user_id' => $user_id]);
-$exists = $checkStmt->fetchColumn() > 0;
-
 try {
+    // Use your existing database connection function
+    $pdo = getDbConnection();
+
+    // Check if record exists
+    $checkSql = "SELECT COUNT(*) FROM site_settings WHERE user_id = ?";
+    $checkStmt = $pdo->prepare($checkSql);
+    $checkStmt->execute([$user_id]);
+    $exists = $checkStmt->fetchColumn() > 0;
+
     if ($exists) {
-        // Update existing record - only social fields
-        $sql = "UPDATE site_settings 
-                SET facebook = :facebook,
-                    twitter = :twitter,
-                    instagram = :instagram,
-                    linkedin = :linkedin,
-                    youtube = :youtube,
-                    pinterest = :pinterest
-                WHERE user_id = :user_id";
+        // Update existing record
+        $sql = "UPDATE site_settings SET 
+                facebook = ?, 
+                twitter = ?,
+                instagram = ?,
+                linkedin = ?,
+                youtube = ?,
+                pinterest = ?
+                WHERE user_id = ?";
+
+        $stmt = $pdo->prepare($sql);
+        $result = $stmt->execute([
+            $facebook,
+            $twitter,
+            $instagram,
+            $linkedin,
+            $youtube,
+            $pinterest,
+            $user_id
+        ]);
     } else {
-        // SIMPLIFIED INSERT: Only specify the columns we're providing
-        // Other columns will use their DEFAULT values or NULL
+        // Insert new record
         $sql = "INSERT INTO site_settings 
-                (user_id, facebook, twitter, instagram, linkedin, youtube, pinterest) 
-                VALUES (:user_id, :facebook, :twitter, :instagram, :linkedin, :youtube, :pinterest)";
+                (user_id, facebook, twitter, instagram, linkedin, youtube, pinterest, currency) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'INR')";
+
+        $stmt = $pdo->prepare($sql);
+        $result = $stmt->execute([
+            $user_id,
+            $facebook,
+            $twitter,
+            $instagram,
+            $linkedin,
+            $youtube,
+            $pinterest
+        ]);
     }
-
-    $stmt = $pdo->prepare($sql);
-
-    // Execute with parameters (same parameters for both INSERT and UPDATE)
-    $result = $stmt->execute([
-        ':user_id' => $user_id,
-        ':facebook' => $facebook,
-        ':twitter' => $twitter,
-        ':instagram' => $instagram,
-        ':linkedin' => $linkedin,
-        ':youtube' => $youtube,
-        ':pinterest' => $pinterest
-    ]);
 
     if ($result) {
         echo json_encode([
-            "success" => true,
-            "message" => "Social settings updated successfully"
+            'success' => true,
+            'message' => 'Social settings saved successfully'
         ]);
     } else {
         echo json_encode([
-            "success" => false,
-            "message" => "Failed to update social settings"
+            'success' => false,
+            'message' => 'Failed to save social settings'
         ]);
     }
 } catch (PDOException $e) {
     error_log("Database error in update.php: " . $e->getMessage());
     echo json_encode([
-        "success" => false,
-        "message" => "Database error occurred: " . $e->getMessage()
+        'success' => false,
+        'message' => 'Database error: ' . $e->getMessage()
     ]);
 }

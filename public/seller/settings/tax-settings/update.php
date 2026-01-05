@@ -11,12 +11,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
+// Include your config file
+require_once "../../../../config/config.php";
+require_once "../../../../src/database.php";
+
 // Get the raw POST data
 $input = file_get_contents('php://input');
 $data = json_decode($input, true);
-
-// Debug: Check what we received
-error_log("Received data: " . print_r($data, true));
 
 // Validate required data
 if (!isset($data['user_id'])) {
@@ -50,16 +51,17 @@ if ($isClearAction) {
     // GST ON → validate & save
     $gst_number  = trim($data['gstNumber'] ?? '');
     $gst_type    = trim($data['gstType'] ?? '');
-    $tax_percent = $data['taxPercent'] ?? null;
+    $tax_percent = isset($data['taxPercent']) && $data['taxPercent'] !== '' ? $data['taxPercent'] : null;
     $country     = trim($data['country'] ?? '');
     $state       = trim($data['state'] ?? '');
 
-    if ($gst_number === '') {
+    // Validate required fields
+    if (empty($gst_number)) {
         echo json_encode(['success' => false, 'message' => 'GST Number is required']);
         exit();
     }
 
-    if ($gst_type === '') {
+    if (empty($gst_type)) {
         echo json_encode(['success' => false, 'message' => 'GST Type is required']);
         exit();
     }
@@ -72,35 +74,9 @@ if ($isClearAction) {
     $tax_percent = (float) $tax_percent;
 }
 
-
-if (!$isClearAction) {
-    // Validate required fields for save
-    if (empty($gst_number)) {
-        echo json_encode(['success' => false, 'message' => 'GST Number is required']);
-        exit();
-    }
-    if (empty($gst_type)) {
-        echo json_encode(['success' => false, 'message' => 'GST Type is required']);
-        exit();
-    }
-    if ($tax_percent === null || $tax_percent === '') {
-        echo json_encode(['success' => false, 'message' => 'Tax Percentage is required']);
-        exit();
-    }
-
-    // Convert tax percent to float
-    $tax_percent = floatval($tax_percent);
-}
-
-// Database connection
-$host = 'localhost';
-$dbname = 'admin_bookpannu';
-$username = 'root';  // Change if different
-$password = '';      // Change if different
-
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Use your existing database connection function
+    $pdo = getDbConnection();
 
     // Check if record exists
     $checkSql = "SELECT COUNT(*) FROM site_settings WHERE user_id = ?";
@@ -156,7 +132,7 @@ try {
         ]);
     }
 } catch (PDOException $e) {
-    error_log("Database error: " . $e->getMessage());
+    error_log("Database error in tax update.php: " . $e->getMessage());
 
     // Check for duplicate GST number
     if (strpos($e->getMessage(), 'Duplicate entry') !== false) {

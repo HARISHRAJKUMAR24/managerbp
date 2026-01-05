@@ -11,33 +11,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
+// Include your config file
 require_once "../../../../config/config.php";
 require_once "../../../../src/database.php";
-
 
 // Get user ID from query parameters
 $user_id = $_GET['user_id'] ?? null;
 
 if (!$user_id) {
     echo json_encode([
-        "success" => false,
-        "message" => "User ID required"
+        'success' => false,
+        'message' => 'User ID is required'
     ]);
     exit();
 }
 
 try {
-    // CORRECTED QUERY: Changed table name from 'users_settings' to 'site_settings'
+    // Use your existing database connection function
+    $pdo = getDbConnection();
+
     $sql = "SELECT facebook, twitter, instagram, linkedin, youtube, pinterest 
             FROM site_settings 
-            WHERE user_id = :user_id";
+            WHERE user_id = ?";
 
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':user_id' => $user_id]);
+    $stmt->execute([$user_id]);
     $settings = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // If no settings exist, return default empty values
     if (!$settings) {
+        // Don't auto-create record here, just return empty values
+        // Let update.php handle record creation when user saves
         $settings = [
             'facebook' => '',
             'twitter' => '',
@@ -47,7 +50,7 @@ try {
             'pinterest' => ''
         ];
     } else {
-        // Convert NULL values to empty strings for React
+        // Convert null values to empty strings
         foreach ($settings as $key => $value) {
             if ($value === null) {
                 $settings[$key] = '';
@@ -55,12 +58,10 @@ try {
         }
     }
 
-    // Return success with data
     echo json_encode([
         'success' => true,
         'data' => $settings
     ]);
-
 } catch (PDOException $e) {
     error_log("Database error in get.php: " . $e->getMessage());
     echo json_encode([
