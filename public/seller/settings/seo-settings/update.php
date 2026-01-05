@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
 
 require_once "../../../../config/config.php";
 require_once "../../../../src/database.php";
-require_once "../../../../src/auth.php"; // ✅ USE THIS
+require_once "../../../../src/auth.php";
 
 $pdo = getDbConnection();
 
@@ -20,66 +20,82 @@ $pdo = getDbConnection();
 
 $user = getAuthenticatedUser($pdo);
 
-// VERY IMPORTANT: use public user_id, not internal id
+// IMPORTANT: use public user_id
 $user_id = $user['user_id'] ?? null;
 
 if (!$user_id) {
     echo json_encode([
         "success" => false,
-        "message" => "User ID not found"
+        "message" => "Unauthorized"
     ]);
     exit;
 }
 
 /* ================= INPUT ================= */
 
-$data = json_decode(file_get_contents("php://input"), true);
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true);
 
-$meta_title = $data["meta_title"] ?? null;
-$meta_description = $data["meta_description"] ?? null;
-$sharing_image_preview = $data["sharing_image_preview"] ?? null;
+if (!$data) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid JSON input"
+    ]);
+    exit;
+}
 
-/* ================= UPSERT SEO SETTINGS ================= */
+$meta_title             = $data["meta_title"] ?? "";
+$meta_description       = $data["meta_description"] ?? "";
+$sharing_image_preview  = $data["sharing_image_preview"] ?? null;
+
+/* ================= UPSERT ================= */
 
 try {
-    // Check if row exists
-    $checkStmt = $pdo->prepare(
-        "SELECT id FROM site_settings WHERE user_id = :uid"
+    // Check if settings row already exists
+    $check = $pdo->prepare(
+        "SELECT id FROM site_settings WHERE user_id = ? LIMIT 1"
     );
-    $checkStmt->execute([":uid" => $user_id]);
-    $exists = $checkStmt->fetch(PDO::FETCH_ASSOC);
+    $check->execute([$user_id]);
+    $exists = $check->fetch(PDO::FETCH_ASSOC);
 
     if ($exists) {
         // UPDATE
-        $sql = "UPDATE site_settings SET
-                    meta_title = :mt,
-                    meta_description = :md,
-                    sharing_image_preview = :sip
-                WHERE user_id = :uid";
+        $stmt = $pdo->prepare("
+            UPDATE site_settings SET
+                meta_title = ?,
+                meta_description = ?,
+                sharing_image_preview = ?
+            WHERE user_id = ?
+        ");
+        $stmt->execute([
+            $meta_title,
+            $meta_description,
+            $sharing_image_preview,
+            $user_id
+        ]);
     } else {
         // INSERT
-        $sql = "INSERT INTO site_settings
+        $stmt = $pdo->prepare("
+            INSERT INTO site_settings
                 (user_id, meta_title, meta_description, sharing_image_preview)
-                VALUES
-                (:uid, :mt, :md, :sip)";
+            VALUES (?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $user_id,
+            $meta_title,
+            $meta_description,
+            $sharing_image_preview
+        ]);
     }
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([
-        ":uid" => $user_id,
-        ":mt"  => $meta_title,
-        ":md"  => $meta_description,
-        ":sip" => $sharing_image_preview,
-    ]);
 
     echo json_encode([
         "success" => true,
         "message" => "SEO settings updated successfully"
     ]);
-
-} catch (Exception $e) {
+} catch (Throwable $e) {
     echo json_encode([
         "success" => false,
-        "message" => $e->getMessage()
+        "message" => "Database error",
+        "error" => $e->getMessage()
     ]);
 }

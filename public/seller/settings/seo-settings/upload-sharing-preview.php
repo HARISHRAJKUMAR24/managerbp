@@ -7,7 +7,7 @@ header("Content-Type: application/json");
 
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
     http_response_code(200);
-    exit();
+    exit;
 }
 
 require_once "../../../../config/config.php";
@@ -17,20 +17,18 @@ require_once "../../../../src/auth.php";
 $pdo = getDbConnection();
 
 /* ================= AUTH ================= */
-
 $user = getAuthenticatedUser($pdo);
 $user_id = $user['user_id'] ?? null;
 
 if (!$user_id) {
     echo json_encode([
         "success" => false,
-        "message" => "User not authenticated"
+        "message" => "Unauthorized"
     ]);
     exit;
 }
 
 /* ================= FILE CHECK ================= */
-
 if (!isset($_FILES["file"])) {
     echo json_encode([
         "success" => false,
@@ -39,19 +37,28 @@ if (!isset($_FILES["file"])) {
     exit;
 }
 
-/* ================= PATH ================= */
+/* ================= DATE STRUCTURE ================= */
+$year  = date("Y");
+$month = date("m");
+$day   = date("d");
 
-$relativePath = "sellers/{$user_id}/site-settings/seo/";
-$uploadDir = "../../../../uploads/" . $relativePath;
+/* ================= PATHS ================= */
+
+/* DB VALUE */
+$relativePath =
+    "sellers/{$user_id}/seo-settings/preview-image/{$year}/{$month}/{$day}/";
+
+/* FILESYSTEM PATH (🔥 PUBLIC UPLOADS ONLY 🔥) */
+$uploadDir =
+    __DIR__ . "/../../../../public/uploads/" . $relativePath;
 
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0777, true);
 }
 
 /* ================= UPLOAD ================= */
-
 $file = $_FILES["file"];
-$ext = pathinfo($file["name"], PATHINFO_EXTENSION);
+$ext = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
 $filename = uniqid("seo_") . "." . $ext;
 
 if (!move_uploaded_file($file["tmp_name"], $uploadDir . $filename)) {
@@ -63,7 +70,6 @@ if (!move_uploaded_file($file["tmp_name"], $uploadDir . $filename)) {
 }
 
 /* ================= RESPONSE ================= */
-
 echo json_encode([
     "success" => true,
     "filename" => $relativePath . $filename
