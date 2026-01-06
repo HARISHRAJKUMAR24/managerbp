@@ -36,7 +36,7 @@ if (!$user_id) {
 }
 
 try {
-    // Get user details and site settings
+    // Get user details and site settings - FIXED COLUMN NAMES
     $sql = "
         SELECT 
             u.name,
@@ -46,8 +46,8 @@ try {
             s.email,
             s.address
         FROM users u
-        LEFT JOIN site_settings s ON u.id = s.user_id
-        WHERE u.id = :user_id
+        LEFT JOIN site_settings s ON u.user_id = s.user_id
+        WHERE u.user_id = :user_id
     ";
 
     $stmt = $pdo->prepare($sql);
@@ -55,7 +55,6 @@ try {
     $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$data) {
-        // If no user found
         echo json_encode([
             "success" => false,
             "message" => "User not found"
@@ -78,6 +77,7 @@ try {
         'success' => true,
         'data' => $formattedData
     ]);
+
 } catch (PDOException $e) {
     error_log("Database error in get.php: " . $e->getMessage());
     echo json_encode([
