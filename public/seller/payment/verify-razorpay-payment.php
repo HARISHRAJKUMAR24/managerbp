@@ -80,10 +80,27 @@ if ($generated_signature !== $signature) {
 
 // Payment verified successfully
 try {
+    // Start transaction
+    $pdo->beginTransaction();
+
     // Get invoice number
     $stmt = $pdo->query("SELECT MAX(invoice_number) AS last_invoice FROM subscription_histories");
     $last = $stmt->fetch(PDO::FETCH_ASSOC);
     $invoice_number = ($last['last_invoice'] ?? 0) + 1;
+
+    // Get plan duration from subscription_plans table
+    $plan_id = $plan_data["plan_id"] ?? null;
+    $duration_days = 0;
+
+    if ($plan_id) {
+        $stmt = $pdo->prepare("SELECT duration FROM subscription_plans WHERE id = ?");
+        $stmt->execute([$plan_id]);
+        $plan = $stmt->fetch(PDO::FETCH_ASSOC);
+        $duration_days = $plan['duration'] ?? 0;
+    }
+
+    // Calculate expiration date
+    $expires_on = date('Y-m-d H:i:s', strtotime("+$duration_days days"));
 
     // Insert subscription record
     $insertSql = "INSERT INTO subscription_histories (
@@ -102,8 +119,8 @@ try {
 
     $insertData = [
         ":invoice_number" => $invoice_number,
-        ":plan_id" => $plan_data["plan_id"] ?? null,
-        ":user_id" => $logged_in_user_id,   // <---- ALWAYS CORRECT NOW
+        ":plan_id" => $plan_id,
+        ":user_id" => $logged_in_user_id,
         ":payment_method" => "razorpay",
         ":payment_id" => $payment_id,
         ":currency" => $plan_data["currency"] ?? $currency,
@@ -126,8 +143,23 @@ try {
     ];
 
     error_log("Inserting subscription: " . json_encode($insertData));
-
     $insert->execute($insertData);
+
+    // Update users table with plan_id and expiration date
+    $updateUserSql = "UPDATE users SET plan_id = :plan_id, expires_on = :expires_on WHERE user_id = :user_id";
+    $updateUser = $pdo->prepare($updateUserSql);
+    $updateUser->execute([
+        ':plan_id' => $plan_id,
+        ':expires_on' => $expires_on,
+        ':user_id' => $logged_in_user_id
+    ]);
+
+    $rowsAffected = $updateUser->rowCount();
+    error_log("Updated users table. Rows affected: " . $rowsAffected);
+    error_log("Set expires_on to: " . $expires_on . " for user_id: " . $logged_in_user_id);
+
+    // Commit transaction
+    $pdo->commit();
 
     echo json_encode([
         "success" => true,
@@ -135,14 +167,16 @@ try {
         "invoice_number" => $invoice_number,
         "payment_id" => $payment_id,
         "user_id" => $logged_in_user_id,
+        "expires_on" => $expires_on,
+        "plan_id" => $plan_id,
         "redirect_url" => "/payment-success?invoice={$invoice_number}"
     ]);
-
 } catch (Exception $e) {
+    // Rollback transaction on error
+    $pdo->rollBack();
     error_log("❌ Payment Insert Error: " . $e->getMessage());
     echo json_encode([
         "success" => false,
         "message" => "Database error: " . $e->getMessage()
     ]);
 }
-?>

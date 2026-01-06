@@ -2544,176 +2544,27 @@ require __DIR__ . "/includes/header.php";
     </style>
 
     <!-- Top Offer Bar -->
-    <!-- <div
+    <div
         class="w-full bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 py-2 px-4 fixed top-0 z-[60] shadow-md">
-        <div class="max-w-7xl mx-auto"> -->
-    <!-- Offer Content - Stacked on mobile, inline on desktop -->
-    <!-- <div
-                class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-white text-xs sm:text-sm text-center"> -->
-    <!-- Limited Time Badge -->
-    <!-- <div
+        <div class="max-w-7xl mx-auto">
+            <!-- Offer Content - Stacked on mobile, inline on desktop -->
+            <div
+                class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-white text-xs sm:text-sm text-center">
+                <!-- Limited Time Badge -->
+                <div
                     class="bg-white/20 rounded-full px-2 py-0.5 flex items-center gap-1 flex-shrink-0 backdrop-blur-sm">
                     <span class="font-bold">🔥</span>
                     <span class="font-semibold">LIMITED TIME</span>
-                </div> -->
+                </div>
 
-    <!-- Offer Text -->
-    <!-- <span class="font-medium">
+                <!-- Offer Text -->
+                <span class="font-medium">
                     Launch your store in 2 minutes & get <span class="font-bold">50% OFF!</span>
                 </span>
             </div>
         </div>
-    </div> -->
-
-    <!-- Christmas Offer Bar -->
-    <div class="w-full bg-gradient-to-r from-red-500 via-green-500 to-amber-400 py-2 px-4 fixed top-0 z-[60] shadow-md overflow-hidden">
-        <!-- Snowfall Animation -->
-        <div class="absolute inset-0 pointer-events-none">
-            <div class="snowflake">❄</div>
-            <div class="snowflake">❄</div>
-            <div class="snowflake">❄</div>
-            <div class="snowflake">❄</div>
-            <div class="snowflake">❄</div>
-            <div class="snowflake">❄</div>
-            <div class="snowflake">❄</div>
-            <div class="snowflake">❄</div>
-            <div class="snowflake">❄</div>
-            <div class="snowflake">❄</div>
-        </div>
-
-        <!-- Glowing Border Effect -->
-        <div class="absolute inset-0 border-2 border-white/30 rounded-lg shadow-[0_0_15px_rgba(255,255,255,0.5)] animate-pulse"></div>
-
-        <div class="max-w-7xl mx-auto relative z-10">
-            <!-- Offer Content - Stacked on mobile, inline on desktop -->
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-white text-xs sm:text-sm text-center">
-                <!-- Christmas Badge -->
-                <div class="bg-white/20 rounded-full px-2 py-0.5 flex items-center gap-1 flex-shrink-0 backdrop-blur-sm border border-white/40 shadow-lg">
-                    <span class="font-bold">🎄🎅</span>
-                    <span class="font-semibold">CHRISTMAS SPECIAL</span>
-                    <span class="font-bold">🤶☃️</span>
-                </div>
-
-                <!-- Offer Text with Glow -->
-                <span class="font-medium relative">
-                    <span class="drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">Merry Christmas! Get </span>
-                    <span class="font-bold text-white">60% OFF</span>
-
-                </span>
-
-
-            </div>
-        </div>
     </div>
 
-    <style>
-        /* Snowfall Animation */
-        .snowflake {
-            position: absolute;
-            color: white;
-            font-size: 0.8rem;
-            opacity: 0.8;
-            animation: fall linear infinite;
-        }
-
-        .snowflake:nth-child(1) {
-            left: 10%;
-            animation-delay: 0s;
-            animation-duration: 8s;
-        }
-
-        .snowflake:nth-child(2) {
-            left: 20%;
-            animation-delay: 1s;
-            animation-duration: 10s;
-        }
-
-        .snowflake:nth-child(3) {
-            left: 30%;
-            animation-delay: 2s;
-            animation-duration: 7s;
-        }
-
-        .snowflake:nth-child(4) {
-            left: 40%;
-            animation-delay: 3s;
-            animation-duration: 9s;
-        }
-
-        .snowflake:nth-child(5) {
-            left: 50%;
-            animation-delay: 4s;
-            animation-duration: 6s;
-        }
-
-        .snowflake:nth-child(6) {
-            left: 60%;
-            animation-delay: 5s;
-            animation-duration: 8s;
-        }
-
-        .snowflake:nth-child(7) {
-            left: 70%;
-            animation-delay: 6s;
-            animation-duration: 10s;
-        }
-
-        .snowflake:nth-child(8) {
-            left: 80%;
-            animation-delay: 7s;
-            animation-duration: 7s;
-        }
-
-        .snowflake:nth-child(9) {
-            left: 90%;
-            animation-delay: 8s;
-            animation-duration: 9s;
-        }
-
-        .snowflake:nth-child(10) {
-            left: 95%;
-            animation-delay: 9s;
-            animation-duration: 6s;
-        }
-
-        @keyframes fall {
-            0% {
-                transform: translateY(-20px) rotate(0deg);
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 1;
-            }
-
-            90% {
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(40px) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        /* Subtle glow animation for the entire bar */
-        @keyframes glow {
-
-            0%,
-            100% {
-                box-shadow: 0 0 20px rgba(255, 50, 50, 0.3);
-            }
-
-            50% {
-                box-shadow: 0 0 30px rgba(50, 255, 50, 0.4);
-            }
-        }
-
-        /* Apply glow to the main container */
-        .bg-gradient-to-r {
-            animation: glow 3s ease-in-out infinite;
-        }
-    </style>
 
     <!-- Header Navigation -->
     <header
