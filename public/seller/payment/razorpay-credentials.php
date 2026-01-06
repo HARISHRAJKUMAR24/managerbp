@@ -18,13 +18,13 @@ $settings = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$settings) {
     // Return default test credentials
     echo json_encode([
-        "razorpay_key_id" => "rzp_test_RGZZjGF5vUiIUz",
+        "razorpay_key_id" => "",
         "razorpay_key_secret" => ""
     ]);
     exit;
 }
 
 echo json_encode([
-    "razorpay_key_id" => $settings['razorpay_key_id'] ?? "rzp_test_RGZZjGF5vUiIUz",
+    "razorpay_key_id" => $settings['razorpay_key_id'] ?? "",
     "razorpay_key_secret" => $settings['razorpay_key_secret'] ?? ""
 ]);
