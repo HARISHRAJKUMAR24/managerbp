@@ -1,117 +1,124 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
-/* ===============================
-   CORS (MATCHES YOUR PROJECT)
-================================ */
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
     http_response_code(200);
-    exit;
+    exit();
 }
 
-/* ===============================
-   LOAD PROJECT CONFIG (IMPORTANT)
-================================ */
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
 
-/* ===============================
-   DB CONNECTION (PDO)
-================================ */
-try {
-    $pdo = getDbConnection();
-} catch (Exception $e) {
+$pdo = getDbConnection();
+
+/* =====================================================
+   1️⃣ READ TOKEN (JSON BODY OR COOKIE)
+===================================================== */
+$raw  = file_get_contents("php://input");
+$data = json_decode($raw, true) ?? [];
+
+$token =
+    ($data["token"] ?? null)
+    ?: ($_COOKIE["token"] ?? null);
+
+if (!$token) {
     echo json_encode([
         "success" => false,
-        "message" => "Database connection failed",
-        "error" => $e->getMessage()
+        "message" => "Unauthorized: Missing token"
     ]);
     exit;
 }
 
-/* ===============================
-   READ RAW JSON
-================================ */
-$raw = file_get_contents("php://input");
+/* =====================================================
+   2️⃣ FETCH USER USING TOKEN
+===================================================== */
+$stmt = $pdo->prepare("
+    SELECT user_id 
+    FROM users 
+    WHERE api_token = ? 
+    LIMIT 1
+");
+$stmt->execute([$token]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$raw || trim($raw) === "") {
+if (!$user) {
     echo json_encode([
         "success" => false,
-        "message" => "Empty request body"
+        "message" => "Invalid token"
     ]);
     exit;
 }
 
-$data = json_decode($raw, true);
+$user_id = (int) $user["user_id"]; // ✅ 27395
 
-if (json_last_error() !== JSON_ERROR_NONE) {
-    echo json_encode([
-        "success" => false,
-        "message" => "Invalid JSON"
-    ]);
-    exit;
-}
-
-/* ===============================
-   EXTRACT DATA
-================================ */
-$timing = $data["timing"] ?? null;
+/* =====================================================
+   3️⃣ VALIDATE PAYLOAD
+===================================================== */
+$timing        = $data["timing"] ?? null;
 $operatingDays = $data["operatingDays"] ?? [];
-$tables = $data["tables"] ?? [];
+$tables        = $data["tables"] ?? [];
 $breakSchedule = $data["breakSchedule"] ?? null;
 
-if (!$timing) {
+if (!$timing || empty($tables)) {
     echo json_encode([
         "success" => false,
-        "message" => "Timing data missing"
+        "message" => "Invalid payload"
     ]);
     exit;
 }
 
-/* ===============================
-   INSERT RESTAURANT SETTINGS
-================================ */
-try {
-    $pdo->beginTransaction();
+/* =====================================================
+   4️⃣ TRANSACTION
+===================================================== */
+$pdo->beginTransaction();
 
+try {
+
+    /* UPSERT restaurant_settings */
     $stmt = $pdo->prepare("
         INSERT INTO restaurant_settings
-        (start_time, start_meridiem, end_time, end_meridiem, break_start, break_end, operating_days)
-        VALUES (:start_time, :start_meridiem, :end_time, :end_meridiem, :break_start, :break_end, :operating_days)
+        (user_id, start_time, start_meridiem, end_time, end_meridiem, break_start, break_end, operating_days)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            start_time = VALUES(start_time),
+            start_meridiem = VALUES(start_meridiem),
+            end_time = VALUES(end_time),
+            end_meridiem = VALUES(end_meridiem),
+            break_start = VALUES(break_start),
+            break_end = VALUES(break_end),
+            operating_days = VALUES(operating_days)
     ");
 
     $stmt->execute([
-        ":start_time"      => $timing["startTime"],
-        ":start_meridiem"  => $timing["startMeridiem"],
-        ":end_time"        => $timing["endTime"],
-        ":end_meridiem"    => $timing["endMeridiem"],
-        ":break_start"     => $breakSchedule["breakStart"] ?? null,
-        ":break_end"       => $breakSchedule["breakEnd"] ?? null,
-        ":operating_days"  => json_encode($operatingDays),
+        $user_id,
+        $timing["startTime"],
+        $timing["startMeridiem"],
+        $timing["endTime"],
+        $timing["endMeridiem"],
+        $breakSchedule["breakStart"] ?? null,
+        $breakSchedule["breakEnd"] ?? null,
+        json_encode($operatingDays)
     ]);
 
-    $settingsId = $pdo->lastInsertId();
+    /* REPLACE restaurant_tables */
+    $pdo->prepare("
+        DELETE FROM restaurant_tables WHERE user_id = ?
+    ")->execute([$user_id]);
 
-    /* ===============================
-       INSERT TABLES
-    ================================ */
-    $tableStmt = $pdo->prepare("
-        INSERT INTO tables (table_number, seats, settings_id)
-        VALUES (:table_number, :seats, :settings_id)
+    $insert = $pdo->prepare("
+        INSERT INTO restaurant_tables (user_id, table_number, seats)
+        VALUES (?, ?, ?)
     ");
 
-    foreach ($tables as $table) {
-        $tableStmt->execute([
-            ":table_number" => $table["tableNumber"],
-            ":seats"        => (int)$table["seats"],
-            ":settings_id"  => $settingsId
+    foreach ($tables as $t) {
+        $insert->execute([
+            $user_id,
+            $t["tableNumber"],
+            (int) $t["seats"]
         ]);
     }
 
@@ -119,18 +126,14 @@ try {
 
     echo json_encode([
         "success" => true,
-        "message" => "Settings saved successfully",
-        "settings_id" => $settingsId
+        "message" => "Table settings saved successfully"
     ]);
-    exit;
 
 } catch (Exception $e) {
     $pdo->rollBack();
-
     echo json_encode([
         "success" => false,
-        "message" => "Failed to save settings",
+        "message" => "Save failed",
         "error" => $e->getMessage()
     ]);
-    exit;
 }
