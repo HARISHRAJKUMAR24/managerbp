@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 06, 2026 at 01:50 PM
+-- Generation Time: Jan 07, 2026 at 01:48 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -227,8 +227,9 @@ CREATE TABLE `dashboard_messages` (
 --
 
 INSERT INTO `dashboard_messages` (`id`, `title`, `description`, `expiry_type`, `expiry_value`, `expiry_date`, `seller_type`, `just_created_seller`, `created_at`, `updated_at`) VALUES
-(79, 'Date 1-12-2025 Time Now 3:59 pm', 'Date 1-12-2025 Time Now 3:59 pm', 'weeks', 1, '2026-01-13 06:25:20', '[\"1\",\"8\",\"5\"]', 0, '2025-12-01 10:29:01', '2026-01-06 06:25:20'),
-(86, 'wer', 'wer', 'days', 3, '2026-01-09 06:24:22', NULL, 0, '2026-01-06 05:20:17', '2026-01-06 06:24:22');
+(88, 'test', 'test_1', 'days', 1, '2026-01-08 11:57:09', NULL, 0, '2026-01-07 09:28:00', '2026-01-07 11:57:09'),
+(90, '3w', 'sdf', 'hours', 1, '2026-01-07 12:58:20', NULL, 0, '2026-01-07 11:58:20', '2026-01-07 11:58:20'),
+(91, 'sdf', 'sdf', 'days', 1, '2026-01-08 11:58:27', NULL, 0, '2026-01-07 11:58:27', '2026-01-07 11:58:27');
 
 -- --------------------------------------------------------
 
@@ -634,9 +635,8 @@ CREATE TABLE `menu_items` (
 --
 
 INSERT INTO `menu_items` (`id`, `user_id`, `menu_id`, `category_id`, `name`, `description`, `price`, `type`, `active`, `created_at`, `food_type`, `halal`, `stock_type`, `stock_qty`, `stock_unit`, `customer_limit`, `customer_limit_period`, `image`, `updated_at`) VALUES
-(30, 27395, 24, 13, 'Chicken', 'Taste is best.', 22.00, 'veg', 1, '2026-01-02 10:52:39', 'nonveg', 1, 'unlimited', NULL, NULL, 33, 'per_order', '/uploads/sellers/27395/menu-settings/2026/01/02/iphone_1767351159.png', '2026-01-06 06:49:12'),
-(31, 27395, 24, 13, 'sd', 'sd', 22.00, 'veg', 1, '2026-01-03 04:39:56', 'veg', 1, 'limited', 33, 'pcs', NULL, NULL, '/uploads/sellers/27395/menu-settings/2026/01/03/mouse_1767415195.webp', '2026-01-06 08:19:35'),
-(32, 27395, 24, 23, 'xdv', 'sdf', 22.00, 'veg', 1, '2026-01-06 08:19:50', '', 1, 'unlimited', NULL, NULL, NULL, NULL, '', '2026-01-06 08:19:50');
+(30, 27395, 24, 13, 'Chicken', 'Taste is best.', 22.00, 'veg', 0, '2026-01-02 10:52:39', 'nonveg', 1, 'unlimited', NULL, NULL, 33, 'per_order', '/uploads/sellers/27395/menu-settings/2026/01/02/iphone_1767351159.png', '2026-01-07 11:03:20'),
+(31, 27395, 24, 13, 'sd', 'sd', 22.00, 'veg', 0, '2026-01-03 04:39:56', 'veg', 1, 'limited', 33, 'pcs', NULL, NULL, '/uploads/sellers/27395/menu-settings/2026/01/03/mouse_1767415195.webp', '2026-01-07 11:03:19');
 
 -- --------------------------------------------------------
 
@@ -666,8 +666,7 @@ CREATE TABLE `menu_item_variations` (
 INSERT INTO `menu_item_variations` (`id`, `item_id`, `user_id`, `name`, `mrp_price`, `selling_price`, `discount_percent`, `dine_in_price`, `takeaway_price`, `delivery_price`, `is_active`, `created_at`) VALUES
 (56, 30, 27395, 'Small', 55.00, 44.00, 20, 55.00, 33.00, 44.00, 1, '2026-01-02 12:36:07'),
 (57, 30, 27395, 'Medium', 332.00, 22.00, 93, 321.00, 22.00, 33.00, 1, '2026-01-02 12:36:07'),
-(59, 31, 27395, 'sdf', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2026-01-03 04:46:14'),
-(60, 32, 27395, 'sdf', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2026-01-06 08:19:50');
+(59, 31, 27395, 'sdf', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2026-01-03 04:46:14');
 
 -- --------------------------------------------------------
 
@@ -810,7 +809,7 @@ CREATE TABLE `settings` (
 --
 
 INSERT INTO `settings` (`id`, `app_name`, `currency`, `gst_tax_type`, `gst_number`, `gst_percentage`, `favicon`, `address`, `logo`, `disclaimer`, `timezone`, `razorpay_key_id`, `razorpay_key_secret`, `phonepe_key_merchant_id`, `phonepe_key_index`, `phonepe_key`, `payu_merchant_key`, `payu_salt`, `payu_client_id`, `payu_client_secret`) VALUES
-(1, 'Book Pannu', 'USD', 'exclusive', '33AACCZ2135N1Z8', 18, 'settings/6933b7691e08d.png', 'simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry', 'settings/6933b7691cc4a.png', 'simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it. ', 'America/New_York', 'rzp_test_RGZZjGF5vUiIUz', 'V8ToWLDw00mE6BtGNWoCxgwR', '', '', '', 'gtKFFx', '4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW', '39e62683c5fc5436e3aeb84dcf487f63513ef38c1c71df51c8db35d8b131656d', '1cb5eef2cd8c7b79af76d4971bbb777d80da93f14089b3f7a8e071ab1fe912e5');
+(1, 'Book Pannu', 'INR', 'exclusive', '33AACCZ2135N1Z8', 18, 'settings/6933b7691e08d.png', 'simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry', 'settings/6933b7691cc4a.png', 'simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it. ', 'Asia/Kolkata', 'rzp_test_RGZZjGF5vUiIUz', 'V8ToWLDw00mE6BtGNWoCxgwR', '', '', '', 'gtKFFx', '4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW', '39e62683c5fc5436e3aeb84dcf487f63513ef38c1c71df51c8db35d8b131656d', '1cb5eef2cd8c7b79af76d4971bbb777d80da93f14089b3f7a8e071ab1fe912e5');
 
 -- --------------------------------------------------------
 
@@ -919,7 +918,12 @@ CREATE TABLE `subscription_histories` (
 --
 
 INSERT INTO `subscription_histories` (`id`, `invoice_number`, `plan_id`, `user_id`, `payment_method`, `payment_id`, `currency`, `amount`, `gst_amount`, `gst_type`, `gst_number`, `gst_percentage`, `discount`, `name`, `email`, `phone`, `address_1`, `address_2`, `state`, `city`, `pin_code`, `country`, `created_at`, `currency_symbol`) VALUES
-(43, 1, 5, 32128, 'razorpay', 'pay_S0aReDx6lnyazS', 'INR', 1999, 305, 'exclusive', '', 18, 0, 'Harish', 'harish@gmail.com', '8015021359', 'Manojipatti', 'church', 'Tamil Nadu', 'Thanjavur', '613004', 'IN', '2026-01-06 17:36:26.000', '₹');
+(97, 1, 1, 32128, 'payu', '7a5e158b8e7accfbe398', 'INR', 1, 0, NULL, NULL, 0, 0, 'Harish', 'harish@gmail.com', '8015021359', 'Manojipatti', '', 'Tamil Nadu', 'Thanjavur', '613004', 'India', '2026-01-07 14:40:22.000', '₹'),
+(98, 2, 1, 32128, 'payu', '98e57dff07b8a7f060d2', 'INR', 1, 0, NULL, NULL, 0, 0, 'Harish', 'harish@gmail.com', '8015021359', 'Manojipatti', '', 'Tamil Nadu', 'Thanjavur', '613004', 'India', '2026-01-07 14:41:35.000', '₹'),
+(99, 3, 4, 32128, 'payu', 'edcc7d707815ac05700c', 'INR', 199, 0, NULL, NULL, 0, 0, 'Harish', 'harish@gmail.com', '8015021359', 'Manojipatti', '', 'Tamil Nadu', 'Thanjavur', '613004', 'India', '2026-01-07 14:43:41.000', '₹'),
+(100, 4, 4, 32128, 'payu', '4aa10775f3c8304033a8', 'INR', 199, 0, NULL, NULL, 0, 0, 'Harish', 'harish@gmail.com', '8015021359', 'Manojipatti', '', 'Tamil Nadu', 'Thanjavur', '613004', 'India', '2026-01-07 14:46:54.000', '₹'),
+(101, 5, 1, 32128, 'payu', 'e305439ba7c5ec1acd2e', 'INR', 1, 0, NULL, NULL, 0, 0, 'Harish', 'harish@gmail.com', '8015021359', 'Manojipatti', '', 'Tamil Nadu', 'Thanjavur', '613004', 'India', '2026-01-07 14:48:37.000', '₹'),
+(102, 6, 1, 27395, 'payu', '3011b21ce850bbe854a4', 'INR', 1, 0, NULL, NULL, 0, 0, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', 'Gopalasamudram', '', 'Tamil Nadu', 'Tiruvarur', '614001', 'India', '2026-01-07 18:14:17.000', '₹');
 
 -- --------------------------------------------------------
 
@@ -936,12 +940,12 @@ CREATE TABLE `subscription_plans` (
   `description` text DEFAULT NULL,
   `feature_lists` longtext NOT NULL,
   `appointments_limit` varchar(191) NOT NULL,
-  `events_limit` varchar(191) NOT NULL DEFAULT 'unlimited',
   `customers_limit` varchar(191) NOT NULL,
-  `categories_limit` varchar(191) NOT NULL,
   `services_limit` varchar(191) NOT NULL,
+  `menu_limit` varchar(191) NOT NULL DEFAULT 'unlimited',
   `coupons_limit` varchar(191) NOT NULL,
   `manual_payment_methods_limit` varchar(191) NOT NULL,
+  `free_credits` varchar(191) NOT NULL DEFAULT 'unlimited',
   `razorpay` tinyint(1) NOT NULL,
   `phonepe` tinyint(1) NOT NULL,
   `payu` tinyint(1) NOT NULL,
@@ -956,11 +960,11 @@ CREATE TABLE `subscription_plans` (
 -- Dumping data for table `subscription_plans`
 --
 
-INSERT INTO `subscription_plans` (`id`, `name`, `amount`, `previous_amount`, `duration`, `description`, `feature_lists`, `appointments_limit`, `events_limit`, `customers_limit`, `categories_limit`, `services_limit`, `coupons_limit`, `manual_payment_methods_limit`, `razorpay`, `phonepe`, `payu`, `created_at`, `plan_id`, `is_disabled`, `is_trial`, `gst_type`) VALUES
+INSERT INTO `subscription_plans` (`id`, `name`, `amount`, `previous_amount`, `duration`, `description`, `feature_lists`, `appointments_limit`, `customers_limit`, `services_limit`, `menu_limit`, `coupons_limit`, `manual_payment_methods_limit`, `free_credits`, `razorpay`, `phonepe`, `payu`, `created_at`, `plan_id`, `is_disabled`, `is_trial`, `gst_type`) VALUES
 (1, 'Free Trial', 1, 0, 30, 'Start your dream online store for free for 3 days +GST\r\n\r\n', 'Appointments Limit - 2.,\r\nCustomers Limit - 2.,\r\nCategories Limit - 2.,\r\nServices Limit - 2.,\r\nCoupons Limit - 2.,\r\nManual Pay - 2.', '2', '2', '2', '2', '2', '2', '2', 1, 0, 1, '2024-11-14 06:55:02.000', '65b9324d-7a3d-42f1-b4a9-50be0a4a2021', 1, 1, 'exclusive'),
-(4, 'Welcome', 169, 597, 180, 'Start your dream online store for Just ₹199/2 month with GST.\r\n', 'Appointments Limit - 6.,\r\nCustomers Limit - 6.,\r\nCategories Limit -6.,\r\nServices Limit - 6.,\r\nCoupons Limit - 6.,\r\nManual Pay - 6.', '6', '6', '6', '6', '6', '6', '6', 1, 0, 0, '2024-11-16 08:10:42.670', '91272600-4e06-6e9b-d015-f7ed634828c2', 1, 0, 'exclusive'),
-(5, 'Intermediate', 1694, 3999, 365, 'Normal Plan 499/3months', 'Appointments Limit - 10.,\r\nCustomers Limit - 10.,\r\nCategories Limit - 10.,\r\nServices Limit - 10.,\r\nCoupons Limit - 10.,\r\nManual Pay - 10.', '10', '10', '10', '10', '10', '10', '10', 1, 0, 0, '2024-11-17 14:00:20.721', 'f8b5fc4c-8325-5380-8e99-3ac8f709c7a1', 1, 0, 'exclusive'),
-(8, 'Professional', 2542, 4999, 365, 'mass da mama', 'Appointments Limit - unlimited.,\r\nCustomers Limit - unlimited.,\r\nCategories Limit - unlimited.,\r\nServices Limit - unlimited.,\r\nCoupons Limit - unlimited.,\r\nManual Pay - unlimited.', 'unlimited', 'unlimited', 'unlimited', 'unlimited', 'unlimited', '5', 'unlimited', 1, 0, 0, '2025-12-03 11:38:37.639', 'b187cf4c-158c-11e0-15cc-b58e78e900d0', 1, 0, 'exclusive');
+(4, 'Welcome', 169, 597, 180, 'Start your dream online store for Just ₹199/2 month with GST.\r\n', 'Appointments Limit - 6.,\r\nCustomers Limit - 6.,\r\nCategories Limit -6.,\r\nServices Limit - 6.,\r\nCoupons Limit - 6.,\r\nManual Pay - 6.', '6', '6', '6', 'unlimited', '6', '6', '6', 1, 0, 1, '2024-11-16 08:10:42.670', '91272600-4e06-6e9b-d015-f7ed634828c2', 1, 0, 'exclusive'),
+(5, 'Intermediate', 1694, 3999, 365, 'Normal Plan 499/3months', 'Appointments Limit - 10.,\r\nCustomers Limit - 10.,\r\nCategories Limit - 10.,\r\nServices Limit - 10.,\r\nCoupons Limit - 10.,\r\nManual Pay - 10.', '10', '10', '10', 'unlimited', '10', '10', '10', 1, 0, 1, '2024-11-17 14:00:20.721', 'f8b5fc4c-8325-5380-8e99-3ac8f709c7a1', 1, 0, 'exclusive'),
+(8, 'Professional', 2542, 4999, 365, 'mass da mama', 'Appointments Limit - unlimited.,\r\nCustomers Limit - unlimited.,\r\nCategories Limit - unlimited.,\r\nServices Limit - unlimited.,\r\nCoupons Limit - unlimited.,\r\nManual Pay - unlimited.', 'unlimited', 'unlimited', 'unlimited', 'unlimited', '5', 'unlimited', 'unlimited', 1, 0, 1, '2025-12-03 11:38:37.639', 'b187cf4c-158c-11e0-15cc-b58e78e900d0', 1, 0, 'exclusive');
 
 -- --------------------------------------------------------
 
@@ -1006,8 +1010,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
-(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, NULL, 0, NULL, 'b7f44d79343e5faa14e334f4901206cddcdd5d6c923a118e9386344b1fe9c4a3'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, NULL, 0, NULL, 'da88d1aa322a7d254c18229f15da6198afa6a9d6f73c97ce7f9efd7e08def2d7'),
+(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, '2026-02-06 13:44:17.000', 0, 1, '7e82319ddc4a392a7c28b2a8c36f237a9e26ffc101b1712ba736e79e02670819'),
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2026-02-06 10:18:37.000', 0, 1, 'e5faa628bb194e55b7f612b96c75f2bfa2ed12663076822d2f17e1cc8b19ca10'),
 (21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, 'bcf299234450ff2bd788840008d7b2564d4006c6d935e1fd45e7b5f81b86db6a');
 
 -- --------------------------------------------------------
@@ -1415,7 +1419,7 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT for table `dashboard_messages`
 --
 ALTER TABLE `dashboard_messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
 
 --
 -- AUTO_INCREMENT for table `departments`
@@ -1475,7 +1479,7 @@ ALTER TABLE `hotel_settings`
 -- AUTO_INCREMENT for table `item_categories`
 --
 ALTER TABLE `item_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `managers`
@@ -1505,7 +1509,7 @@ ALTER TABLE `menu_items`
 -- AUTO_INCREMENT for table `menu_item_variations`
 --
 ALTER TABLE `menu_item_variations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `plugins`
@@ -1553,7 +1557,7 @@ ALTER TABLE `site_settings`
 -- AUTO_INCREMENT for table `subscription_histories`
 --
 ALTER TABLE `subscription_histories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=103;
 
 --
 -- AUTO_INCREMENT for table `subscription_plans`
