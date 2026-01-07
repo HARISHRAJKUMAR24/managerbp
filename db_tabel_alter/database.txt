@@ -256,3 +256,28 @@ ADD COLUMN `doctor_image` VARCHAR(255) DEFAULT NULL;
 
 -- Make amount field accept decimal values (optional)
 ALTER TABLE `doctor_schedule` MODIFY COLUMN `amount` DECIMAL(10,2) DEFAULT 0.00;
+
+
+
+
+7/1/2026 
+This is for change the subscrption plan tabel 
+
+-- Rename events_limit to free_credits
+ALTER TABLE subscription_plans CHANGE events_limit free_credits VARCHAR(191) NOT NULL DEFAULT 'unlimited';
+
+-- Remove categories_limit column
+ALTER TABLE subscription_plans DROP COLUMN categories_limit;
+
+-- Reorder columns to match your desired order
+ALTER TABLE subscription_plans 
+MODIFY COLUMN appointments_limit varchar(191) NOT NULL AFTER feature_lists,
+MODIFY COLUMN customers_limit varchar(191) NOT NULL AFTER appointments_limit,
+MODIFY COLUMN services_limit varchar(191) NOT NULL AFTER customers_limit,
+MODIFY COLUMN coupons_limit varchar(191) NOT NULL AFTER services_limit,
+MODIFY COLUMN manual_payment_methods_limit varchar(191) NOT NULL AFTER coupons_limit,
+MODIFY COLUMN free_credits varchar(191) NOT NULL DEFAULT 'unlimited' AFTER manual_payment_methods_limit;
+
+ALTER TABLE subscription_plans 
+ADD COLUMN menu_limit VARCHAR(191) NOT NULL DEFAULT 'unlimited' 
+AFTER services_limit;

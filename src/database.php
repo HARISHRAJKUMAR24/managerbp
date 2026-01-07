@@ -208,21 +208,34 @@ function fetchPlan($plan_id)
 
     return $stmt->fetchObject();
 }
-
-function addPlan($name, $amount, $previous_amount, $duration, $description, $feature_lists, 
-                 $appointments_limit, $events_limit, $customers_limit, $categories_limit, 
-                 $services_limit, $coupons_limit, $manual_payment_methods_limit, 
-                 $razorpay, $phonepe, $payu, $gst_type)
-{
+function addPlan(
+    $name,
+    $amount,
+    $previous_amount,
+    $duration,
+    $description,
+    $feature_lists,
+    $appointments_limit,
+    $customers_limit,
+    $services_limit,
+    $menu_limit, // ✅ ADDED: Menu Limit parameter
+    $coupons_limit,
+    $manual_payment_methods_limit,
+    $free_credits,
+    $razorpay,
+    $phonepe,
+    $payu,
+    $gst_type
+) {
     $pdo = getDbConnection();
     $stmt = $pdo->prepare("INSERT INTO subscription_plans
     (plan_id, name, amount, previous_amount, duration, description, feature_lists, 
-     appointments_limit, events_limit, customers_limit, categories_limit, services_limit, 
-     coupons_limit, manual_payment_methods_limit, razorpay, phonepe, payu, gst_type)
+     appointments_limit, customers_limit, services_limit, menu_limit, 
+     coupons_limit, manual_payment_methods_limit, free_credits, razorpay, phonepe, payu, gst_type)
     VALUES
     (:plan_id, :name, :amount, :previous_amount, :duration, :description, :feature_lists, 
-     :appointments_limit, :events_limit, :customers_limit, :categories_limit, :services_limit, 
-     :coupons_limit, :manual_payment_methods_limit, :razorpay, :phonepe, :payu, :gst_type)");
+     :appointments_limit, :customers_limit, :services_limit, :menu_limit, 
+     :coupons_limit, :manual_payment_methods_limit, :free_credits, :razorpay, :phonepe, :payu, :gst_type)");
 
     $stmt->execute([
         'plan_id' => uuid(),
@@ -233,12 +246,12 @@ function addPlan($name, $amount, $previous_amount, $duration, $description, $fea
         'description' => $description,
         'feature_lists' => $feature_lists,
         'appointments_limit' => $appointments_limit,
-        'events_limit' => $events_limit,
         'customers_limit' => $customers_limit,
-        'categories_limit' => $categories_limit,
         'services_limit' => $services_limit,
+        'menu_limit' => $menu_limit, // ✅ ADDED: Menu Limit
         'coupons_limit' => $coupons_limit,
         'manual_payment_methods_limit' => $manual_payment_methods_limit,
+        'free_credits' => $free_credits,
         'razorpay' => $razorpay,
         'phonepe' => $phonepe,
         'payu' => $payu,
@@ -246,11 +259,26 @@ function addPlan($name, $amount, $previous_amount, $duration, $description, $fea
     ]);
 }
 
-function updatePlan($plan_id, $name, $amount, $previous_amount, $duration, $description, $feature_lists, 
-                    $appointments_limit, $events_limit, $customers_limit, $categories_limit, 
-                    $services_limit, $coupons_limit, $manual_payment_methods_limit, 
-                    $razorpay, $phonepe, $payu, $gst_type)
-{
+function updatePlan(
+    $plan_id,
+    $name,
+    $amount,
+    $previous_amount,
+    $duration,
+    $description,
+    $feature_lists,
+    $appointments_limit,
+    $customers_limit,
+    $services_limit,
+    $menu_limit,
+    $coupons_limit,
+    $manual_payment_methods_limit,
+    $free_credits,
+    $razorpay,
+    $phonepe,
+    $payu,
+    $gst_type
+) {
     $pdo = getDbConnection();
     $stmt = $pdo->prepare("UPDATE subscription_plans SET 
         name = :name,
@@ -260,12 +288,12 @@ function updatePlan($plan_id, $name, $amount, $previous_amount, $duration, $desc
         description = :description,
         feature_lists = :feature_lists,
         appointments_limit = :appointments_limit,
-        events_limit = :events_limit,
         customers_limit = :customers_limit,
-        categories_limit = :categories_limit,
         services_limit = :services_limit,
+        menu_limit = :menu_limit,
         coupons_limit = :coupons_limit,
         manual_payment_methods_limit = :manual_payment_methods_limit,
+        free_credits = :free_credits,
         razorpay = :razorpay,
         phonepe = :phonepe,
         payu = :payu,
@@ -281,18 +309,19 @@ function updatePlan($plan_id, $name, $amount, $previous_amount, $duration, $desc
         'description' => $description,
         'feature_lists' => $feature_lists,
         'appointments_limit' => $appointments_limit,
-        'events_limit' => $events_limit,
         'customers_limit' => $customers_limit,
-        'categories_limit' => $categories_limit,
         'services_limit' => $services_limit,
+        'menu_limit' => $menu_limit,
         'coupons_limit' => $coupons_limit,
         'manual_payment_methods_limit' => $manual_payment_methods_limit,
+        'free_credits' => $free_credits,
         'razorpay' => $razorpay,
         'phonepe' => $phonepe,
         'payu' => $payu,
         'gst_type' => $gst_type
     ]);
 }
+
 // Add these functions to your existing database functions file
 
 function fetchSubscriptionHistories($limit, $offset, $searchValue = '', $conditions = [])

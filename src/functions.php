@@ -19,8 +19,6 @@ function redirect($url)
     echo '<script>window.location.href="' . $url . '"</script>';
 }
 
-// Add these functions to function.php
-
 /**
  * Get duration value from total days
  */
@@ -85,6 +83,7 @@ function getCurrencySymbol($currency)
         return $currency;
     }
 }
+
 function uuid()
 {
     return sprintf(
@@ -96,6 +95,7 @@ function uuid()
         bin2hex(random_bytes(6))
     );
 }
+
 function uploadImage($file, $folder = 'uploads')
 {
     // Get the absolute path to uploads folder
@@ -130,7 +130,6 @@ function uploadImage($file, $folder = 'uploads')
     return ['success' => false, 'error' => 'Upload failed'];
 }
 
-
 // get data from database
 function getData($column, $table, $condition = "")
 {
@@ -157,6 +156,7 @@ function getData($column, $table, $condition = "")
         return null;
     }
 }
+
 // Get timezone from settings
 function getAppTimezone()
 {
@@ -282,4 +282,272 @@ function isNewlyCreatedSeller($sellerCreatedAt, $messageCreatedAt)
     }
 }
 
+/**
+ * Get user's plan limit for a specific resource
+ */
+function getUserPlanLimit($user_id, $resource_type)
+{
+    $pdo = getDbConnection();
 
+    // Map resource types to column names
+    $column_map = [
+        'appointments' => 'appointments_limit',
+        'customers' => 'customers_limit',
+        'services' => 'services_limit',
+        'coupons' => 'coupons_limit',
+        'manual_payment_methods' => 'manual_payment_methods_limit',
+        'menu_items' => 'menu_items_limit',  // ✅ NEW: Separate menu items limit
+        'free_credits' => 'free_credits'
+    ];
+
+    if (!isset($column_map[$resource_type])) {
+        return [
+            'can_add' => false,
+            'message' => 'Invalid resource type',
+            'current' => 0,
+            'limit' => 0,
+            'remaining' => 0
+        ];
+    }
+
+    $column = $column_map[$resource_type];
+
+    // Get user's current plan
+    $stmt = $pdo->prepare("
+        SELECT u.plan_id, sp.$column as limit_value
+        FROM users u 
+        LEFT JOIN subscription_plans sp ON u.plan_id = sp.id 
+        WHERE u.user_id = ?
+    ");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // ✅ KEY CHANGE: Allow 1 resource for users without a plan
+    if (!$user || $user['plan_id'] === null) {
+        $limit = 1; // Allow only 1 resource for users without plan
+
+        // Get current count for this resource
+        if ($resource_type === 'services') {
+            // Count only departments + categories for services limit
+            $stmt = $pdo->prepare("
+                SELECT 
+                    (SELECT COUNT(*) FROM departments WHERE user_id = ?) +
+                    (SELECT COUNT(*) FROM categories WHERE user_id = ?) as total_count
+            ");
+            $stmt->execute([$user_id, $user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $current_count = $result['total_count'] ?? 0;
+
+            if ($current_count >= $limit) {
+                return [
+                    'can_add' => false,
+                    'message' => "You can only create 1 service (department/category) without a plan. Please subscribe to a plan to add more.",
+                    'current' => $current_count,
+                    'limit' => $limit,
+                    'remaining' => 0
+                ];
+            }
+
+            return [
+                'can_add' => true,
+                'message' => "You can create 1 service (department/category) without a plan. Subscribe to add more.",
+                'current' => $current_count,
+                'limit' => $limit,
+                'remaining' => $limit - $current_count
+            ];
+        } elseif ($resource_type === 'menu_items') {
+            // Count menu items for menu limit
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM menu_items WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $current_count = $result['count'] ?? 0;
+
+            if ($current_count >= $limit) {
+                return [
+                    'can_add' => false,
+                    'message' => "You can only create 1 menu item without a plan. Please subscribe to a plan to add more.",
+                    'current' => $current_count,
+                    'limit' => $limit,
+                    'remaining' => 0
+                ];
+            }
+
+            return [
+                'can_add' => true,
+                'message' => "You can create 1 menu item without a plan. Subscribe to add more.",
+                'current' => $current_count,
+                'limit' => $limit,
+                'remaining' => $limit - $current_count
+            ];
+        } else {
+            // Normal counting for other resources
+            $table_map = [
+                'appointments' => 'appointments',
+                'customers' => 'customers',
+                'coupons' => 'coupons',
+                'manual_payment_methods' => 'manual_payment_methods'
+            ];
+
+            $current_count = 0;
+            if (isset($table_map[$resource_type])) {
+                $table = $table_map[$resource_type];
+                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE user_id = ?");
+                $stmt->execute([$user_id]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $current_count = $result['count'];
+            }
+
+            if ($current_count >= $limit) {
+                return [
+                    'can_add' => false,
+                    'message' => "You can only create 1 {$resource_type} without a plan. Please subscribe to a plan to add more.",
+                    'current' => $current_count,
+                    'limit' => $limit,
+                    'remaining' => 0
+                ];
+            }
+
+            return [
+                'can_add' => true,
+                'message' => "You can create 1 {$resource_type} without a plan. Subscribe to add more.",
+                'current' => $current_count,
+                'limit' => $limit,
+                'remaining' => $limit - $current_count
+            ];
+        }
+    }
+
+    $limit_value = $user['limit_value'];
+
+    // Check if unlimited
+    if ($limit_value === 'unlimited') {
+        return [
+            'can_add' => true,
+            'message' => 'Unlimited usage',
+            'current' => 0,
+            'limit' => 'unlimited',
+            'remaining' => 'unlimited'
+        ];
+    }
+
+    $limit = (int)$limit_value;
+
+    // Get current count for this resource
+    $current_count = 0;
+
+    if ($resource_type === 'services') {
+        // ✅ SERVICES: Count only departments + categories
+        $stmt = $pdo->prepare("
+            SELECT 
+                (SELECT COUNT(*) FROM departments WHERE user_id = ?) as dept_count,
+                (SELECT COUNT(*) FROM categories WHERE user_id = ?) as cat_count
+        ");
+        $stmt->execute([$user_id, $user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $current_count = ($result['dept_count'] ?? 0) + ($result['cat_count'] ?? 0);
+    } elseif ($resource_type === 'menu_items') {
+        // ✅ MENU ITEMS: Count menu_items only
+        $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM menu_items WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $current_count = $result['count'] ?? 0;
+    } else {
+        // Normal counting for other resources
+        $table_map = [
+            'appointments' => 'appointments',
+            'customers' => 'customers',
+            'coupons' => 'coupons',
+            'manual_payment_methods' => 'manual_payment_methods'
+        ];
+
+        if (isset($table_map[$resource_type])) {
+            $table = $table_map[$resource_type];
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $current_count = $result['count'];
+        }
+    }
+
+    // For free_credits, handle differently (not a count but a value)
+    if ($resource_type === 'free_credits') {
+        return [
+            'can_add' => true,
+            'message' => "Your plan includes {$limit_value} free credits",
+            'current' => 0,
+            'limit' => $limit_value,
+            'remaining' => $limit_value
+        ];
+    }
+
+    if ($current_count >= $limit) {
+        return [
+            'can_add' => false,
+            'message' => "You have reached your {$resource_type} limit ({$limit}). Please upgrade your plan to add more.",
+            'current' => $current_count,
+            'limit' => $limit,
+            'remaining' => 0
+        ];
+    }
+
+    return [
+        'can_add' => true,
+        'message' => "You can add " . ($limit - $current_count) . " more {$resource_type}",
+        'current' => $current_count,
+        'limit' => $limit,
+        'remaining' => $limit - $current_count
+    ];
+}
+
+/**
+ * Check if user can add a specific resource
+ */
+function canUserAddResource($user_id, $resource_type)
+{
+    $result = getUserPlanLimit($user_id, $resource_type);
+    return $result['can_add'];
+}
+
+/**
+ * Get user's resource usage summary
+ */
+function getUserResourceUsage($user_id, $resource_type = null)
+{
+    if ($resource_type) {
+        // Get specific resource usage
+        return getUserPlanLimit($user_id, $resource_type);
+    } else {
+        // Get all resource usage (now includes menu_items)
+        $resources = ['appointments', 'customers', 'services', 'coupons', 'manual_payment_methods', 'menu_items'];
+        $usage = [];
+
+        foreach ($resources as $resource) {
+            $usage[$resource] = getUserPlanLimit($user_id, $resource);
+        }
+
+        return $usage;
+    }
+}
+
+/**
+ * Validate resource limit before adding (use in your API files)
+ */
+function validateResourceLimit($user_id, $resource_type)
+{
+    $result = getUserPlanLimit($user_id, $resource_type);
+
+    if (!$result['can_add']) {
+        http_response_code(403); // Forbidden
+        echo json_encode([
+            'success' => false,
+            'message' => $result['message'],
+            'current' => $result['current'],
+            'limit' => $result['limit'],
+            'remaining' => $result['remaining']
+        ]);
+        exit();
+    }
+
+    return $result;
+}

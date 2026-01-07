@@ -112,52 +112,46 @@ $settings = fetchSettings();
                     <textarea name="description" class="form-control form-control-solid" placeholder="Start your dream online store for only 199 for 1 year"></textarea>
                 </div>
 
+                <!-- Remove Categories Limit and change Events Limit to Free Credits -->
                 <div class="col-sm-6 mb-5">
                     <label class="required form-label">Appointments Limit</label>
                     <input type="text" name="appointments_limit" class="form-control form-control-solid" />
-
-                    <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
-                </div>
-
-                <div class="col-sm-6 mb-5">
-                    <label class="required form-label">Events Limit</label>
-                    <input type="text" name="events_limit" class="form-control form-control-solid" />
-
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 
                 <div class="col-sm-6 mb-5">
                     <label class="required form-label">Customers Limit</label>
                     <input type="text" name="customers_limit" class="form-control form-control-solid" />
-
-                    <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
-                </div>
-
-                <div class="col-sm-6 mb-5">
-                    <label class="required form-label">Categories Limit</label>
-                    <input type="text" name="categories_limit" class="form-control form-control-solid" />
-
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 
                 <div class="col-sm-6 mb-5">
                     <label class="required form-label">Services Limit</label>
                     <input type="text" name="services_limit" class="form-control form-control-solid" />
+                    <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
+                </div>
 
+                <div class="col-sm-6 mb-5">
+                    <label class="required form-label">Menu Limit</label>
+                    <input type="text" name="menu_limit" class="form-control form-control-solid" />
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 
                 <div class="col-sm-6 mb-5">
                     <label class="required form-label">Coupons Limit</label>
                     <input type="text" name="coupons_limit" class="form-control form-control-solid" />
-
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 
                 <div class="col-sm-6 mb-5">
                     <label class="required form-label">Manual Payment Methods Limit</label>
                     <input type="text" name="manual_payment_methods_limit" class="form-control form-control-solid" />
+                    <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
+                </div>
 
+                <div class="col-sm-6 mb-5">
+                    <label class="required form-label">Free Credits</label>
+                    <input type="text" name="free_credits" class="form-control form-control-solid" />
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 

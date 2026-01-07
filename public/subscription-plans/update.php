@@ -123,49 +123,42 @@ $plan = fetchPlan($_GET['id']);
                 <div class="col-sm-6 mb-5">
                     <label class="required form-label">Appointments Limit</label>
                     <input type="text" name="appointments_limit" class="form-control form-control-solid" value="<?= $plan->appointments_limit ?>" />
-
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 
-                <div class="col-sm-6 mb-5">
-                    <label class="required form-label">Events Limit</label>
-                    <input type="text" name="events_limit" class="form-control form-control-solid" value="<?= $plan->events_limit ?>" />
-
-                    <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
-                </div>
-                
                 <div class="col-sm-6 mb-5">
                     <label class="required form-label">Customers Limit</label>
                     <input type="text" name="customers_limit" class="form-control form-control-solid" value="<?= $plan->customers_limit ?>" />
-
-                    <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
-                </div>
-
-                <div class="col-sm-6 mb-5">
-                    <label class="required form-label">Categories Limit</label>
-                    <input type="text" name="categories_limit" class="form-control form-control-solid" value="<?= $plan->categories_limit ?>" />
-
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 
                 <div class="col-sm-6 mb-5">
                     <label class="required form-label">Services Limit</label>
                     <input type="text" name="services_limit" class="form-control form-control-solid" value="<?= $plan->services_limit ?>" />
+                    <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
+                </div>
 
+                <div class="col-sm-6 mb-5">
+                    <label class="required form-label">Menu Limit</label>
+                    <input type="text" name="menu_limit" class="form-control form-control-solid" value="<?= $plan->menu_limit ?>" />
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 
                 <div class="col-sm-6 mb-5">
                     <label class="required form-label">Coupons Limit</label>
                     <input type="text" name="coupons_limit" class="form-control form-control-solid" value="<?= $plan->coupons_limit ?>" />
-
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 
                 <div class="col-sm-6 mb-5">
                     <label class="required form-label">Manual Payment Methods Limit</label>
                     <input type="text" name="manual_payment_methods_limit" class="form-control form-control-solid" value="<?= $plan->manual_payment_methods_limit ?>" />
+                    <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
+                </div>
 
+                <div class="col-sm-6 mb-5">
+                    <label class="required form-label">Free Credits</label>
+                    <input type="text" name="free_credits" class="form-control form-control-solid" value="<?= $plan->free_credits ?>" />
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
                 </div>
 

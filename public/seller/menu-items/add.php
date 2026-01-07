@@ -16,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([
-        "success" => false,
-        "message" => "Invalid request method"
+        "type" => "error",
+        "msg" => "Invalid request method"
     ]);
     exit;
 }
@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 ================================ */
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
+require_once "../../../src/functions.php"; // ✅ ADDED
 
 $pdo = getDbConnection();
 
@@ -45,8 +46,8 @@ $token =
 
 if (!$token) {
     echo json_encode([
-        "success" => false,
-        "message" => "Unauthorized: Missing token"
+        "type" => "error",
+        "msg" => "Unauthorized: Missing token"
     ]);
     exit;
 }
@@ -59,13 +60,24 @@ $user = $stmt->fetch(PDO::FETCH_OBJ);
 
 if (!$user) {
     echo json_encode([
-        "success" => false,
-        "message" => "Invalid token"
+        "type" => "error",
+        "msg" => "Invalid token"
     ]);
     exit;
 }
 
 $user_id = (int)$user->user_id;
+
+// ✅ ADDED: Check menu limit with proper format
+$limitResult = getUserPlanLimit($user_id, 'menu');
+
+if (!$limitResult['can_add']) {
+    echo json_encode([
+        "type" => "error", 
+        "msg" => $limitResult['message'] // Uses your toast format
+    ]);
+    exit;
+}
 
 /* ===============================
    VALIDATION
@@ -75,8 +87,8 @@ $required = ["menu_id", "name", "food_type", "stock_type", "variations"];
 foreach ($required as $field) {
     if (empty($input[$field])) {
         echo json_encode([
-            "success" => false,
-            "message" => "$field is required"
+            "type" => "error",
+            "msg" => "$field is required"
         ]);
         exit;
     }
@@ -84,8 +96,8 @@ foreach ($required as $field) {
 
 if (!is_array($input["variations"]) || count($input["variations"]) === 0) {
     echo json_encode([
-        "success" => false,
-        "message" => "At least one variation is required"
+        "type" => "error",
+        "msg" => "At least one variation is required"
     ]);
     exit;
 }
@@ -163,7 +175,7 @@ try {
     $itemId = $pdo->lastInsertId();
 
     /* ===============================
-       INSERT VARIATIONS (🔥 FIXED)
+       INSERT VARIATIONS
     ================================ */
     $varStmt = $pdo->prepare("
         INSERT INTO menu_item_variations (
@@ -193,38 +205,37 @@ try {
 
     $minSelling = PHP_FLOAT_MAX;
 
-foreach ($input["variations"] as $v) {
+    foreach ($input["variations"] as $v) {
 
-    $mrp     = isset($v["mrp_price"]) ? (float)$v["mrp_price"] : 0;
-    $selling = isset($v["selling_price"]) ? (float)$v["selling_price"] : 0;
+        $mrp     = isset($v["mrp_price"]) ? (float)$v["mrp_price"] : 0;
+        $selling = isset($v["selling_price"]) ? (float)$v["selling_price"] : 0;
 
-    $dineIn    = ($v["dine_in_price"] !== "" && $v["dine_in_price"] !== null)
-        ? (float)$v["dine_in_price"]
-        : null;
+        $dineIn    = ($v["dine_in_price"] !== "" && $v["dine_in_price"] !== null)
+            ? (float)$v["dine_in_price"]
+            : null;
 
-    $takeaway = ($v["takeaway_price"] !== "" && $v["takeaway_price"] !== null)
-        ? (float)$v["takeaway_price"]
-        : null;
+        $takeaway = ($v["takeaway_price"] !== "" && $v["takeaway_price"] !== null)
+            ? (float)$v["takeaway_price"]
+            : null;
 
-    $delivery = ($v["delivery_price"] !== "" && $v["delivery_price"] !== null)
-        ? (float)$v["delivery_price"]
-        : null;
+        $delivery = ($v["delivery_price"] !== "" && $v["delivery_price"] !== null)
+            ? (float)$v["delivery_price"]
+            : null;
 
-    $varStmt->execute([
-        ":user_id"          => $user_id,
-        ":item_id"          => $itemId,
-        ":name"             => trim($v["name"]),
-        ":mrp_price"        => $mrp,
-        ":selling_price"    => $selling,
-        ":discount_percent" => (float)($v["discount_percent"] ?? 0),
-        ":dine_in_price"    => $dineIn,
-        ":takeaway_price"   => $takeaway,
-        ":delivery_price"   => $delivery,
-    ]);
+        $varStmt->execute([
+            ":user_id"          => $user_id,
+            ":item_id"          => $itemId,
+            ":name"             => trim($v["name"]),
+            ":mrp_price"        => $mrp,
+            ":selling_price"    => $selling,
+            ":discount_percent" => (float)($v["discount_percent"] ?? 0),
+            ":dine_in_price"    => $dineIn,
+            ":takeaway_price"   => $takeaway,
+            ":delivery_price"   => $delivery,
+        ]);
 
-    $minSelling = min($minSelling, $selling);
-}
-
+        $minSelling = min($minSelling, $selling);
+    }
 
     /* ===============================
        UPDATE BASE PRICE
@@ -238,16 +249,16 @@ foreach ($input["variations"] as $v) {
     $pdo->commit();
 
     echo json_encode([
-        "success" => true,
-        "message" => "Menu item created successfully",
-        "id"      => $itemId
+        "type" => "success", // ✅ Uses "type" not "success"
+        "msg" => "Menu item created successfully",
+        "id" => $itemId
     ]);
 
 } catch (Exception $e) {
     $pdo->rollBack();
 
     echo json_encode([
-        "success" => false,
-        "message" => $e->getMessage()
+        "type" => "error",
+        "msg" => $e->getMessage()
     ]);
 }

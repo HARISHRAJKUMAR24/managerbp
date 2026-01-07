@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
+require_once "../../../src/functions.php"; // ✅ ADDED
 
 $pdo = getDbConnection();
 
@@ -43,6 +44,11 @@ if (!$user) {
 }
 
 $user_id = $user->user_id;
+
+/* --------------------------------------
+   ✅ CHECK SERVICES LIMIT (departments + categories + menu_items)
+---------------------------------------*/
+validateResourceLimit($user_id, 'services');
 
 /* --------------------------------------
    CATEGORY FIELDS
@@ -116,7 +122,7 @@ $ok = $stmt->execute([
     ":uid"   => $user_id,
     ":name"  => $name,
     ":slug"  => $slug,
-    ":mtitle"=> $meta_title,
+    ":mtitle" => $meta_title,
     ":mdesc" => $meta_desc,
     ":dname" => $doctor_name,
     ":spec"  => $specialization,

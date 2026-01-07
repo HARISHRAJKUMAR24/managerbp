@@ -1,22 +1,5 @@
 <?php
-ob_start();
-
-ini_set("display_errors", 1);
-ini_set("display_startup_errors", 1);
-error_reporting(E_ALL);
-
-// catch fatal errors and output as JSON
-register_shutdown_function(function () {
-    $error = error_get_last();
-    if ($error) {
-        echo json_encode([
-            "success" => false,
-            "message" => "PHP Fatal Error",
-            "error" => $error
-        ]);
-    }
-});
-
+// seller/coupons/create.php
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
@@ -30,20 +13,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
+require_once "../../../src/functions.php"; // Make sure functions.php is included
 
 $pdo = getDbConnection();
 
 $raw = file_get_contents("php://input");
-error_log("RAW INPUT ==> " . $raw);
-
 $data = json_decode($raw, true);
 
 if (!is_array($data)) {
     echo json_encode(["success" => false, "message" => "Invalid JSON"]);
     exit();
 }
-
-error_log("DECODED JSON ==> " . print_r($data, true));
 
 $required = ['name', 'code', 'discount_type', 'discount', 'start_date', 'end_date'];
 
@@ -55,6 +35,9 @@ foreach ($required as $f) {
 }
 
 $user_id = $_GET['user_id'] ?? 1;
+
+// ✅ KEY CHANGE 1: Check coupon limit before creating
+validateResourceLimit($user_id, 'coupons');
 
 $coupon_id = "CPN_" . uniqid() . "_" . rand(1000, 9999);
 
@@ -116,12 +99,8 @@ if ($result) {
     ]);
 } else {
     $error = $stmt->errorInfo();
-    error_log("INSERT ERROR ==> " . print_r($error, true));
-
     echo json_encode([
         "success" => false,
         "message" => "Database error: " . $error[2]
     ]);
 }
-
-ob_end_flush();
