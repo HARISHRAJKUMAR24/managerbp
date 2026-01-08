@@ -294,16 +294,22 @@ function getUserPlanLimit($user_id, $resource_type)
         'appointments' => 'appointments_limit',
         'customers' => 'customers_limit',
         'services' => 'services_limit',
+        'menu' => 'menu_limit', // ✅ Support both 'menu'
+        'menu_items' => 'menu_limit', // ✅ and 'menu_items'
         'coupons' => 'coupons_limit',
         'manual_payment_methods' => 'manual_payment_methods_limit',
-        'menu_items' => 'menu_items_limit',  // ✅ NEW: Separate menu items limit
         'free_credits' => 'free_credits'
     ];
+
+    // Alias mapping for backward compatibility
+    if ($resource_type === 'menu') {
+        $resource_type = 'menu_items'; // Treat 'menu' as 'menu_items'
+    }
 
     if (!isset($column_map[$resource_type])) {
         return [
             'can_add' => false,
-            'message' => 'Invalid resource type',
+            'message' => 'Invalid resource type: ' . $resource_type,
             'current' => 0,
             'limit' => 0,
             'remaining' => 0
@@ -341,7 +347,7 @@ function getUserPlanLimit($user_id, $resource_type)
             if ($current_count >= $limit) {
                 return [
                     'can_add' => false,
-                    'message' => "You can only create 1 service (department/category) without a plan. Please subscribe to a plan to add more.",
+                    'message' => "You can only create 1 without a plan.<br>Please subscribe to a plan to add more.",
                     'current' => $current_count,
                     'limit' => $limit,
                     'remaining' => 0
@@ -350,7 +356,7 @@ function getUserPlanLimit($user_id, $resource_type)
 
             return [
                 'can_add' => true,
-                'message' => "You can create 1 service (department/category) without a plan. Subscribe to add more.",
+                'message' => "You can only create 1 without a plan.<br>Please subscribe to a plan to add more.",
                 'current' => $current_count,
                 'limit' => $limit,
                 'remaining' => $limit - $current_count
@@ -365,7 +371,7 @@ function getUserPlanLimit($user_id, $resource_type)
             if ($current_count >= $limit) {
                 return [
                     'can_add' => false,
-                    'message' => "You can only create 1 menu item without a plan. Please subscribe to a plan to add more.",
+                    'message' => "You can only create 1 menu item without a plan.<br>Please subscribe to a plan to add more.",
                     'current' => $current_count,
                     'limit' => $limit,
                     'remaining' => 0
@@ -400,7 +406,7 @@ function getUserPlanLimit($user_id, $resource_type)
             if ($current_count >= $limit) {
                 return [
                     'can_add' => false,
-                    'message' => "You can only create 1 {$resource_type} without a plan. Please subscribe to a plan to add more.",
+                    'message' => "You can only create 1 {$resource_type} without a plan.<br>Please subscribe to a plan to add more.",
                     'current' => $current_count,
                     'limit' => $limit,
                     'remaining' => 0
@@ -484,7 +490,7 @@ function getUserPlanLimit($user_id, $resource_type)
     if ($current_count >= $limit) {
         return [
             'can_add' => false,
-            'message' => "You have reached your {$resource_type} limit ({$limit}). Please upgrade your plan to add more.",
+            'message' => "You have reached your limit ({$limit}).<br>Please upgrade your plan to add more.",
             'current' => $current_count,
             'limit' => $limit,
             'remaining' => 0
@@ -493,7 +499,7 @@ function getUserPlanLimit($user_id, $resource_type)
 
     return [
         'can_add' => true,
-        'message' => "You can add " . ($limit - $current_count) . " more {$resource_type}",
+        'message' => "You can add " . ($limit - $current_count) . " more.",
         'current' => $current_count,
         'limit' => $limit,
         'remaining' => $limit - $current_count

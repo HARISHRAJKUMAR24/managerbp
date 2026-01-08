@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 ================================ */
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
+require_once "../../../src/functions.php"; // ✅ ADDED for limit checking
 
 $pdo = getDbConnection();
 
@@ -66,6 +67,18 @@ if (!$user) {
 }
 
 $user_id = (int)$user->user_id;
+
+// ✅ ADDED: Check menu limit before creating
+$limitResult = getUserPlanLimit($user_id, 'menu');
+
+if (!$limitResult['can_add']) {
+    // Convert to toast format
+    echo json_encode([
+        "success" => false,
+        "message" => $limitResult['message'] // This will show as toast
+    ]);
+    exit;
+}
 
 /* ===============================
    VALIDATION
