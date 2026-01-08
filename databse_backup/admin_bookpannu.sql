@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 07, 2026 at 01:48 PM
+-- Generation Time: Jan 08, 2026 at 01:35 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -201,7 +201,10 @@ CREATE TABLE `customers` (
 --
 
 INSERT INTO `customers` (`id`, `customer_id`, `user_id`, `name`, `email`, `phone`, `password`, `photo`, `created_at`) VALUES
-(16, 879456, 27395, 'Deepak C', NULL, '+919345604653', '$2y$10$QPL9d82JH/LNZHoQtKV9.eHxV51h8gC9IGTVP4dgbUmKPv7Rb3Nwi', NULL, '2025-12-27 06:10:11.098');
+(16, 879456, 27395, 'Deepak C', NULL, '+919345604653', '$2y$10$QPL9d82JH/LNZHoQtKV9.eHxV51h8gC9IGTVP4dgbUmKPv7Rb3Nwi', NULL, '2025-12-27 06:10:11.098'),
+(17, 902977, 85960, 'Deepak', 'deepakchitravel@gmail.com', '+919999999999', '$2y$10$6OIlWZCT0QX81qlXrkpGW.M17scGPqEGLxsErNQrjuP3JQA1Zxrme', NULL, '2026-01-08 10:02:05.397'),
+(18, 256423, 85960, 'Arun', 'arun@gmail.com', '+918888888888', '$2y$10$1gggU70XYk17tTbE8t5/ze4wv4WALVC.HBoem3n3y2BPF61l7jVvK', NULL, '2026-01-08 10:40:39.829'),
+(19, 151380, 85960, 'Harish', 'harish@gmail.com', '+917777777777', '$2y$10$TYtf0qfhBo.E9Lhh8x7I8OGWMNxoEBjC2lizW0BfHgVJ.Vx6SRwcW', NULL, '2026-01-08 11:52:28.741');
 
 -- --------------------------------------------------------
 
@@ -403,15 +406,17 @@ CREATE TABLE `doctor_schedule` (
   `address` text DEFAULT NULL,
   `map_link` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `leave_dates` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`leave_dates`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `doctor_schedule`
 --
 
-INSERT INTO `doctor_schedule` (`id`, `user_id`, `category_id`, `name`, `slug`, `amount`, `description`, `specialization`, `qualification`, `experience`, `doctor_image`, `weekly_schedule`, `meta_title`, `meta_description`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `created_at`, `updated_at`) VALUES
-(22, 85960, 49, 'vf', 'vf-fd', 12.00, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '[]', '', '', '', '', '', '', '', '', '2026-01-05 15:09:04', '2026-01-05 15:09:04');
+INSERT INTO `doctor_schedule` (`id`, `user_id`, `category_id`, `name`, `slug`, `amount`, `description`, `specialization`, `qualification`, `experience`, `doctor_image`, `weekly_schedule`, `meta_title`, `meta_description`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `created_at`, `updated_at`, `leave_dates`) VALUES
+(22, 85960, 49, 'vf', 'vf-fd', 12.00, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"02:02\",\"to\":\"06:06\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"66\"}]},\"Mon\":{\"enabled\":true,\"slots\":[{\"from\":\"03:32\",\"to\":\"07:07\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"33\"}]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-05 15:09:04', '2026-01-08 15:41:40', NULL),
+(24, 85960, 49, 'vf', 'vf-fd', 33.00, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '[]', '', '', '', '', '', '', '', '', '2026-01-08 17:23:15', '2026-01-08 17:38:36', '[\"2026-01-08\",\"2026-01-10\",\"2026-01-23\"]');
 
 -- --------------------------------------------------------
 
@@ -636,7 +641,8 @@ CREATE TABLE `menu_items` (
 
 INSERT INTO `menu_items` (`id`, `user_id`, `menu_id`, `category_id`, `name`, `description`, `price`, `type`, `active`, `created_at`, `food_type`, `halal`, `stock_type`, `stock_qty`, `stock_unit`, `customer_limit`, `customer_limit_period`, `image`, `updated_at`) VALUES
 (30, 27395, 24, 13, 'Chicken', 'Taste is best.', 22.00, 'veg', 0, '2026-01-02 10:52:39', 'nonveg', 1, 'unlimited', NULL, NULL, 33, 'per_order', '/uploads/sellers/27395/menu-settings/2026/01/02/iphone_1767351159.png', '2026-01-07 11:03:20'),
-(31, 27395, 24, 13, 'sd', 'sd', 22.00, 'veg', 0, '2026-01-03 04:39:56', 'veg', 1, 'limited', 33, 'pcs', NULL, NULL, '/uploads/sellers/27395/menu-settings/2026/01/03/mouse_1767415195.webp', '2026-01-07 11:03:19');
+(31, 27395, 24, 13, 'sd', 'sd', 22.00, 'veg', 0, '2026-01-03 04:39:56', 'veg', 1, 'limited', 33, 'pcs', NULL, NULL, '/uploads/sellers/27395/menu-settings/2026/01/03/mouse_1767415195.webp', '2026-01-07 11:03:19'),
+(33, 27395, 23, 15, 'sdf', 'sdf', 33.00, 'veg', 1, '2026-01-07 12:50:43', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2026-01-07 12:50:43');
 
 -- --------------------------------------------------------
 
@@ -666,7 +672,8 @@ CREATE TABLE `menu_item_variations` (
 INSERT INTO `menu_item_variations` (`id`, `item_id`, `user_id`, `name`, `mrp_price`, `selling_price`, `discount_percent`, `dine_in_price`, `takeaway_price`, `delivery_price`, `is_active`, `created_at`) VALUES
 (56, 30, 27395, 'Small', 55.00, 44.00, 20, 55.00, 33.00, 44.00, 1, '2026-01-02 12:36:07'),
 (57, 30, 27395, 'Medium', 332.00, 22.00, 93, 321.00, 22.00, 33.00, 1, '2026-01-02 12:36:07'),
-(59, 31, 27395, 'sdf', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2026-01-03 04:46:14');
+(59, 31, 27395, 'sdf', 33.00, 22.00, 33, NULL, NULL, NULL, 1, '2026-01-03 04:46:14'),
+(63, 33, 27395, 'sdf', 33.00, 33.00, 0, NULL, NULL, NULL, 1, '2026-01-07 12:50:43');
 
 -- --------------------------------------------------------
 
@@ -1011,8 +1018,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, '2026-02-06 13:44:17.000', 0, 1, '7e82319ddc4a392a7c28b2a8c36f237a9e26ffc101b1712ba736e79e02670819'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2026-02-06 10:18:37.000', 0, 1, 'e5faa628bb194e55b7f612b96c75f2bfa2ed12663076822d2f17e1cc8b19ca10'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, 'bcf299234450ff2bd788840008d7b2564d4006c6d935e1fd45e7b5f81b86db6a');
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2026-02-06 10:18:37.000', 0, 1, '7222a736f02aba0cdb7389c5fb74de3d25e9baf542041c85919ddfc4064b5283'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, 'bd07b614f2798c489c4102a838076a602f26ea3f6cb130923695a5584b22f5a8');
 
 -- --------------------------------------------------------
 
@@ -1413,7 +1420,7 @@ ALTER TABLE `coupons`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `dashboard_messages`
@@ -1449,7 +1456,7 @@ ALTER TABLE `doctors`
 -- AUTO_INCREMENT for table `doctor_schedule`
 --
 ALTER TABLE `doctor_schedule`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `employees`
@@ -1503,13 +1510,13 @@ ALTER TABLE `menus`
 -- AUTO_INCREMENT for table `menu_items`
 --
 ALTER TABLE `menu_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `menu_item_variations`
 --
 ALTER TABLE `menu_item_variations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT for table `plugins`
