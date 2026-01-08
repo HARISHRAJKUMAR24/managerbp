@@ -10,162 +10,148 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-// Get raw input
+/* =========================
+   OPTIONS PREFLIGHT
+========================= */
+if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+    http_response_code(200);
+    exit;
+}
+
+/* =========================
+   READ INPUT
+========================= */
 $rawInput = file_get_contents("php://input");
 error_log("=== UPDATE.PHP DEBUG ===");
 error_log("Raw input: " . $rawInput);
 
 $input = json_decode($rawInput, true);
 
-if (!$input) {
-    error_log("No input or invalid JSON");
-    echo json_encode(["success" => false, "message" => "No data received or invalid JSON"]);
+if (!$input || !isset($input["id"])) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid input or ID missing"
+    ]);
     exit;
 }
 
-if (!isset($input["id"])) {
-    error_log("No ID in input");
-    echo json_encode(["success" => false, "message" => "ID required"]);
-    exit;
-}
+$id = (int)$input["id"];
 
-error_log("Input received: " . json_encode($input));
+/* =========================
+   NORMALIZE INPUT
+========================= */
+$category_id = isset($input["categoryId"]) && $input["categoryId"] !== ""
+    ? (int)$input["categoryId"]
+    : null;
 
-try {
-    // Extract data EXACTLY as get.php sends it
-    $id = $input["id"] ?? null;
-    $category_id = isset($input["categoryId"]) && $input["categoryId"] !== "" ? intval($input["categoryId"]) : null;
-    $name = $input["name"] ?? ($input["doctor_name"] ?? '');
-    $slug = $input["slug"] ?? '';
-    
-    // Amount handling
-    $amount = 0;
-    if (isset($input["amount"])) {
-        if (is_numeric($input["amount"])) {
-            $amount = floatval($input["amount"]);
-        } elseif (is_string($input["amount"])) {
-            $amount = floatval($input["amount"]);
-        }
-    }
-    
-    $description = $input["description"] ?? '';
-    $specialization = $input["specialization"] ?? '';
-    $qualification = $input["qualification"] ?? '';
-    
-    // Experience handling
-    $experience = 0;
-    if (isset($input["experience"])) {
-        if (is_numeric($input["experience"])) {
-            $experience = intval($input["experience"]);
-        } elseif (is_string($input["experience"])) {
-            $experience = intval($input["experience"]);
-        }
-    }
-    
-    $doctor_image = $input["doctorImage"] ?? ($input["doctor_image"] ?? '');
-    $meta_title = $input["metaTitle"] ?? '';
-    $meta_description = $input["metaDescription"] ?? '';
-    
-    // Location handling - EXACTLY as get.php structure
-    $doctorLocation = $input["doctorLocation"] ?? [];
-    $country = $doctorLocation["country"] ?? '';
-    $state = $doctorLocation["state"] ?? '';
-    $city = $doctorLocation["city"] ?? '';
-    $pincode = $doctorLocation["pincode"] ?? '';
-    $address = $doctorLocation["address"] ?? '';
-    $map_link = $doctorLocation["mapLink"] ?? '';
-    
-    // Weekly schedule - EXACTLY as get.php structure
-    $weekly_schedule = isset($input["weeklySchedule"]) ? json_encode($input["weeklySchedule"]) : json_encode([]);
-    
-    error_log("Parsed data:");
-    error_log("ID: $id");
-    error_log("Category ID: " . ($category_id ?? 'NULL'));
-    error_log("Name: $name");
-    error_log("Amount: $amount");
-    error_log("Weekly Schedule: $weekly_schedule");
-    
-    // Prepare SQL - UPDATE ONLY fields that exist in your table
-    $sql = "UPDATE doctor_schedule SET
-        category_id = :category_id,
-        name = :name,
-        slug = :slug,
-        amount = :amount,
-        description = :description,
-        specialization = :specialization,
-        qualification = :qualification,
-        experience = :experience,
-        doctor_image = :doctor_image,
-        meta_title = :meta_title,
-        meta_description = :meta_description,
-        country = :country,
-        state = :state,
-        city = :city,
-        pincode = :pincode,
-        address = :address,
-        map_link = :map_link,
-        weekly_schedule = :weekly_schedule,
-        updated_at = NOW()
-        WHERE id = :id";
+$name = $input["name"] ?? ($input["doctor_name"] ?? "");
+$slug = $input["slug"] ?? "";
 
-    $stmt = $pdo->prepare($sql);
+$amount = isset($input["amount"]) && is_numeric($input["amount"])
+    ? (float)$input["amount"]
+    : 0;
 
-    $params = [
-        ":id" => $id,
-        ":category_id" => $category_id,
-        ":name" => $name,
-        ":slug" => $slug,
-        ":amount" => $amount,
-        ":description" => $description,
-        ":specialization" => $specialization,
-        ":qualification" => $qualification,
-        ":experience" => $experience,
-        ":doctor_image" => $doctor_image,
-        ":meta_title" => $meta_title,
-        ":meta_description" => $meta_description,
-        ":country" => $country,
-        ":state" => $state,
-        ":city" => $city,
-        ":pincode" => $pincode,
-        ":address" => $address,
-        ":map_link" => $map_link,
-        ":weekly_schedule" => $weekly_schedule,
-    ];
+$description = $input["description"] ?? "";
+$specialization = $input["specialization"] ?? "";
+$qualification = $input["qualification"] ?? "";
 
-    error_log("Executing with params: " . json_encode($params));
-    
-    $result = $stmt->execute($params);
-    $affectedRows = $stmt->rowCount();
+$experience = isset($input["experience"]) && is_numeric($input["experience"])
+    ? (int)$input["experience"]
+    : 0;
 
-    error_log("Update result: " . ($result ? "SUCCESS" : "FAILED"));
-    error_log("Affected rows: $affectedRows");
+$doctor_image = $input["doctorImage"] ?? ($input["doctor_image"] ?? "");
 
-    if ($affectedRows > 0) {
-        echo json_encode([
-            "success" => true, 
-            "message" => "Doctor schedule updated successfully",
-            "updated_id" => $id
-        ]);
-    } else {
-        echo json_encode([
-            "success" => true, 
-            "message" => "No changes detected or record not found",
-            "warning" => true
-        ]);
-    }
-    
-} catch (PDOException $e) {
-    error_log("UPDATE.PHP PDO ERROR: " . $e->getMessage());
-    error_log("SQL Error Code: " . $e->getCode());
-    echo json_encode([
-        "success" => false,
-        "message" => "Database error: " . $e->getMessage(),
-        "error_code" => $e->getCode()
-    ]);
-} catch (Exception $e) {
-    error_log("UPDATE.PHP ERROR: " . $e->getMessage());
-    echo json_encode([
-        "success" => false,
-        "message" => "Update failed: " . $e->getMessage()
-    ]);
-}
+$meta_title = $input["metaTitle"] ?? "";
+$meta_description = $input["metaDescription"] ?? "";
+
+/* =========================
+   LOCATION
+========================= */
+$loc = $input["doctorLocation"] ?? [];
+
+$country  = $loc["country"] ?? "";
+$state    = $loc["state"] ?? "";
+$city     = $loc["city"] ?? "";
+$pincode  = $loc["pincode"] ?? "";
+$address  = $loc["address"] ?? "";
+$map_link = $loc["mapLink"] ?? "";
+
+/* =========================
+   SCHEDULES
+========================= */
+$weekly_schedule = json_encode(
+    $input["weeklySchedule"] ?? [],
+    JSON_UNESCAPED_UNICODE
+);
+
+$leave_dates = json_encode(
+    $input["leaveDates"] ?? [],
+    JSON_UNESCAPED_UNICODE
+);
+
+error_log("Weekly schedule: " . $weekly_schedule);
+error_log("Leave dates: " . $leave_dates);
+
+/* =========================
+   UPDATE QUERY
+========================= */
+$sql = "
+UPDATE doctor_schedule SET
+    category_id     = :category_id,
+    name            = :name,
+    slug            = :slug,
+    amount          = :amount,
+    description     = :description,
+    specialization  = :specialization,
+    qualification   = :qualification,
+    experience      = :experience,
+    doctor_image    = :doctor_image,
+    meta_title      = :meta_title,
+    meta_description= :meta_description,
+    country         = :country,
+    state           = :state,
+    city            = :city,
+    pincode         = :pincode,
+    address         = :address,
+    map_link        = :map_link,
+    weekly_schedule = :weekly_schedule,
+    leave_dates     = :leave_dates,
+    updated_at      = NOW()
+WHERE id = :id
+";
+
+$stmt = $pdo->prepare($sql);
+
+$params = [
+    ":id" => $id,
+    ":category_id" => $category_id,
+    ":name" => $name,
+    ":slug" => $slug,
+    ":amount" => $amount,
+    ":description" => $description,
+    ":specialization" => $specialization,
+    ":qualification" => $qualification,
+    ":experience" => $experience,
+    ":doctor_image" => $doctor_image,
+    ":meta_title" => $meta_title,
+    ":meta_description" => $meta_description,
+    ":country" => $country,
+    ":state" => $state,
+    ":city" => $city,
+    ":pincode" => $pincode,
+    ":address" => $address,
+    ":map_link" => $map_link,
+    ":weekly_schedule" => $weekly_schedule,
+    ":leave_dates" => $leave_dates
+];
+
+$stmt->execute($params);
+
+/* =========================
+   RESPONSE
+========================= */
+echo json_encode([
+    "success" => true,
+    "message" => "Doctor schedule updated successfully",
+    "updated_id" => $id
+]);

@@ -30,6 +30,7 @@ try {
             experience,
             doctor_image,
             weekly_schedule,
+            leave_dates,
             meta_title,
             meta_description,
             country,
@@ -53,37 +54,56 @@ try {
         exit;
     }
 
-    // CRITICAL: Convert category_id to string
-    $data['category_id'] = isset($data['category_id']) ? strval($data['category_id']) : "";
+    /* =========================
+       NORMALIZE FIELDS
+    ========================= */
 
-    // Decode JSON
+    // category_id must be string for frontend select
+    $categoryId = isset($data['category_id'])
+        ? strval($data['category_id'])
+        : "";
+
+    // Decode weekly schedule
     $weeklySchedule = [];
     if (!empty($data['weekly_schedule'])) {
-        $decoded = json_decode($data['weekly_schedule'], true);
-        $weeklySchedule = $decoded ?: [];
+        $weeklySchedule = json_decode($data['weekly_schedule'], true) ?: [];
     }
 
-    // Build response
-    $response = [
+    // ✅ Decode leave dates
+    $leaveDates = [];
+    if (!empty($data['leave_dates'])) {
+        $leaveDates = json_decode($data['leave_dates'], true) ?: [];
+    }
+
+    /* =========================
+       RESPONSE
+    ========================= */
+    echo json_encode([
         "success" => true,
         "data" => [
             "id" => $data['id'],
             "serviceId" => $data['id'],
             "userId" => $data['user_id'],
-            "categoryId" => $data['category_id'], // This is the CRITICAL field
+            "categoryId" => $categoryId,
+
             "name" => $data['name'] ?? '',
             "doctor_name" => $data['name'] ?? '',
             "slug" => $data['slug'] ?? '',
-            "amount" => $data['amount'] ? strval($data['amount']) : "0",
+            "amount" => $data['amount'] !== null ? strval($data['amount']) : "0",
             "description" => $data['description'] ?? '',
             "specialization" => $data['specialization'] ?? '',
             "qualification" => $data['qualification'] ?? '',
-            "experience" => $data['experience'] ? strval($data['experience']) : "0",
+            "experience" => $data['experience'] !== null ? strval($data['experience']) : "0",
+
             "doctorImage" => $data['doctor_image'] ?? '',
             "doctor_image" => $data['doctor_image'] ?? '',
+
             "weeklySchedule" => $weeklySchedule,
+            "leaveDates" => $leaveDates, // ✅ IMPORTANT
+
             "metaTitle" => $data['meta_title'] ?? '',
             "metaDescription" => $data['meta_description'] ?? '',
+
             "doctorLocation" => [
                 "country" => $data['country'] ?? "",
                 "state" => $data['state'] ?? "",
@@ -92,14 +112,16 @@ try {
                 "address" => $data['address'] ?? "",
                 "mapLink" => $data['map_link'] ?? ""
             ],
+
             "createdAt" => $data['created_at'],
             "updatedAt" => $data['updated_at']
         ]
-    ];
+    ]);
 
-    echo json_encode($response);
-    
 } catch (Exception $e) {
     error_log("GET.PHP ERROR: " . $e->getMessage());
-    echo json_encode(["success" => false, "message" => "Error: " . $e->getMessage()]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Error fetching doctor schedule"
+    ]);
 }
