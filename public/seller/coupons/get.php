@@ -11,7 +11,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
-// ✅ CORRECT PATH: Go up 3 levels from seller/coupons/
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
 

@@ -29,6 +29,12 @@ $pdo = getDbConnection();
 ================================ */
 $raw = file_get_contents("php://input");
 $input = json_decode($raw, true);
+$leaveDates = $input["leaveDates"] ?? [];
+
+
+if (!is_array($leaveDates)) {
+    $leaveDates = [];
+}
 
 /* ===============================
    DEBUG (KEEP TEMPORARILY)
@@ -129,6 +135,7 @@ $sql = "INSERT INTO doctor_schedule (
     address,
     map_link,
     weekly_schedule,
+    leave_dates,
     created_at
 ) VALUES (
     :user_id,
@@ -150,8 +157,10 @@ $sql = "INSERT INTO doctor_schedule (
     :address,
     :map_link,
     :weekly_schedule,
+    :leave_dates,
     NOW()
 )";
+
 
 $stmt = $pdo->prepare($sql);
 
@@ -174,7 +183,9 @@ $stmt->execute([
     ":pincode" => $loc["pincode"] ?? "",
     ":address" => $loc["address"] ?? "",
     ":map_link" => $loc["mapLink"] ?? "",
-    ":weekly_schedule" => json_encode($input["weeklySchedule"] ?? [])
+    ":weekly_schedule" => json_encode($input["weeklySchedule"] ?? []),
+    ":leave_dates"     => json_encode($leaveDates),
+
 ]);
 
 echo json_encode([
