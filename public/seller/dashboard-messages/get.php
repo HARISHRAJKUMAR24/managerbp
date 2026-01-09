@@ -88,7 +88,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute(['current_utc_time' => $current_utc_time]);
 $all_messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$message_for_user = null;
+$messages_for_user = []; // Changed to array to store ALL matching messages
 
 foreach ($all_messages as $msg) {
     $seller_type_json = $msg['seller_type'];
@@ -126,7 +126,7 @@ foreach ($all_messages as $msg) {
         // Show to ALL sellers (old and new)
         $new_seller_match = true;
     } else if ($just_created_seller === 1) {
-        // CRITICAL LOGIC: Show only if user was created AFTER message
+        // Show only if user was created AFTER message
         // Compare timestamps: user_created_at > message_created_at
         $user_timestamp = strtotime($user_created_at);
         $message_timestamp = strtotime($message_created_at);
@@ -138,10 +138,10 @@ foreach ($all_messages as $msg) {
         // If user was created BEFORE or AT same time as message → Don't show
     }
     
-    // STEP 3: If both conditions match, use this message
+    // STEP 3: If both conditions match, ADD this message to array (NO BREAK!)
     if ($seller_type_match && $new_seller_match) {
-        $message_for_user = $msg;
-        break; // Take the first matching message
+        $messages_for_user[] = $msg; // Add to array instead of single variable
+        // REMOVED: break; // This was preventing multiple messages
     }
 }
 
@@ -200,13 +200,13 @@ if (isset($_GET['debug'])) {
             "user_created_timestamp" => strtotime($user_created_at),
             "current_utc_time" => $current_utc_time,
             "total_active_messages" => count($all_messages),
+            "matching_messages_count" => count($messages_for_user),
             "messages" => $debug_messages,
-            "selected_message" => $message_for_user ? [
-                'id' => $message_for_user['id'],
-                'title' => $message_for_user['title']
-            ] : null
+            "selected_messages" => $messages_for_user ? array_map(function($msg) {
+                return ['id' => $msg['id'], 'title' => $msg['title']];
+            }, $messages_for_user) : []
         ],
-        "data" => $message_for_user
+        "data" => $messages_for_user
     ]);
     exit();
 }
@@ -218,6 +218,6 @@ if (isset($_GET['debug'])) {
 */
 echo json_encode([
     "success" => true,
-    "data" => $message_for_user
+    "data" => $messages_for_user // Now returns array of all matching messages
 ]);
 exit();
