@@ -282,6 +282,7 @@ function isNewlyCreatedSeller($sellerCreatedAt, $messageCreatedAt)
     }
 }
 
+
 /**
  * Get user's plan limit for a specific resource
  */

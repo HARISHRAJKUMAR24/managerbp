@@ -281,3 +281,25 @@ MODIFY COLUMN free_credits varchar(191) NOT NULL DEFAULT 'unlimited' AFTER manua
 ALTER TABLE subscription_plans 
 ADD COLUMN menu_limit VARCHAR(191) NOT NULL DEFAULT 'unlimited' 
 AFTER services_limit;
+
+
+9/1/2026 
+in users tabel paste the query 
+`is_suspended` tinyint(1) NOT NULL DEFAULT 0
+
+
+
+-- Drop existing table if it exists
+DROP TABLE IF EXISTS `suspend_users`;
+
+-- Create new table with correct foreign key reference
+CREATE TABLE `suspend_users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `reason` text DEFAULT NULL,
+  `action_type` enum('suspend','unsuspend') NOT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  PRIMARY KEY (`id`),
+  KEY `fk_suspend_users_user` (`user_id`),
+  CONSTRAINT `fk_suspend_users_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

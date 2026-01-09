@@ -61,7 +61,7 @@ renderTemplate('header');
                                 <span class="path1"></span>
                                 <span class="path2"></span>
                             </i>
-                            <input type="text" class="form-control form-control-solid w-350px ps-13" placeholder="Search invoice, payment ID, customer, plan..." id="searchFilter" />
+                            <input type="text" class="form-control form-control-solid w-350px ps-13" placeholder="Search payment ID, customer, plan..." id="searchFilter" />
                         </div>
                         <!--end::Search Box-->
                     </div>
@@ -189,8 +189,8 @@ renderTemplate('header');
                                     </div>
                                 </th>
                                 <th class="min-w-125px">Invoice No</th>
-                                <th class="min-w-150px">Plan Name</th>
                                 <th class="min-w-200px">Customer Details</th>
+                                <th class="min-w-150px">Plan Name</th>
                                 <th class="min-w-125px">Amount</th>
                                 <th class="min-w-125px">Payment Method</th>
                                 <th class="min-w-150px">Payment ID</th>
