@@ -89,6 +89,19 @@ $token = base64_encode(json_encode([
     "iat"         => time()
 ]));
 
+
+setcookie(
+    "token",
+    $token,
+    [
+        "expires"  => time() + (60 * 60 * 24 * 7), // 7 days
+        "path"     => "/",
+        "httponly" => true,   // 🔒 secure
+        "samesite" => "Lax"   // ✅ WORKS on HTTP
+        // DO NOT set "secure" on localhost HTTP
+    ]
+);
+
 /* ===============================
    SUCCESS
 ================================ */

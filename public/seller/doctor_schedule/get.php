@@ -11,11 +11,17 @@ $pdo = getDbConnection();
 $id = $_GET['id'] ?? null;
 
 if (!$id) {
-    echo json_encode(["success" => false, "message" => "ID required"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "ID required"
+    ]);
     exit;
 }
 
 try {
+    /* =========================
+       FETCH DOCTOR SCHEDULE
+    ========================= */
     $stmt = $pdo->prepare("
         SELECT 
             id,
@@ -24,6 +30,7 @@ try {
             name,
             slug,
             amount,
+            token_limit,          -- ✅ IMPORTANT
             description,
             specialization,
             qualification,
@@ -50,33 +57,26 @@ try {
     $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$data) {
-        echo json_encode(["success" => false, "message" => "Not found"]);
+        echo json_encode([
+            "success" => false,
+            "message" => "Not found"
+        ]);
         exit;
     }
 
     /* =========================
-       NORMALIZE FIELDS
+       SAFE JSON DECODE
     ========================= */
+    $weeklySchedule = !empty($data['weekly_schedule'])
+        ? json_decode($data['weekly_schedule'], true)
+        : [];
 
-    // category_id must be string for frontend select
-    $categoryId = isset($data['category_id'])
-        ? strval($data['category_id'])
-        : "";
-
-    // Decode weekly schedule
-    $weeklySchedule = [];
-    if (!empty($data['weekly_schedule'])) {
-        $weeklySchedule = json_decode($data['weekly_schedule'], true) ?: [];
-    }
-
-    // ✅ Decode leave dates
-    $leaveDates = [];
-    if (!empty($data['leave_dates'])) {
-        $leaveDates = json_decode($data['leave_dates'], true) ?: [];
-    }
+    $leaveDates = !empty($data['leave_dates'])
+        ? json_decode($data['leave_dates'], true)
+        : [];
 
     /* =========================
-       RESPONSE
+       NORMALIZED RESPONSE
     ========================= */
     echo json_encode([
         "success" => true,
@@ -84,25 +84,29 @@ try {
             "id" => $data['id'],
             "serviceId" => $data['id'],
             "userId" => $data['user_id'],
-            "categoryId" => $categoryId,
+            "categoryId" => (string)($data['category_id'] ?? ""),
 
-            "name" => $data['name'] ?? '',
-            "doctor_name" => $data['name'] ?? '',
-            "slug" => $data['slug'] ?? '',
-            "amount" => $data['amount'] !== null ? strval($data['amount']) : "0",
-            "description" => $data['description'] ?? '',
-            "specialization" => $data['specialization'] ?? '',
-            "qualification" => $data['qualification'] ?? '',
-            "experience" => $data['experience'] !== null ? strval($data['experience']) : "0",
+            "name" => $data['name'] ?? "",
+            "doctor_name" => $data['name'] ?? "",
+            "slug" => $data['slug'] ?? "",
+            "amount" => $data['amount'] !== null ? (string)$data['amount'] : "0",
 
-            "doctorImage" => $data['doctor_image'] ?? '',
-            "doctor_image" => $data['doctor_image'] ?? '',
+            // ✅🔥 THIS IS THE FIX
+            "token_limit" => (string)($data['token_limit'] ?? "0"),
+
+            "description" => $data['description'] ?? "",
+            "specialization" => $data['specialization'] ?? "",
+            "qualification" => $data['qualification'] ?? "",
+            "experience" => $data['experience'] !== null ? (string)$data['experience'] : "0",
+
+            "doctorImage" => $data['doctor_image'] ?? "",
+            "doctor_image" => $data['doctor_image'] ?? "",
 
             "weeklySchedule" => $weeklySchedule,
-            "leaveDates" => $leaveDates, // ✅ IMPORTANT
+            "leaveDates" => $leaveDates,
 
-            "metaTitle" => $data['meta_title'] ?? '',
-            "metaDescription" => $data['meta_description'] ?? '',
+            "metaTitle" => $data['meta_title'] ?? "",
+            "metaDescription" => $data['meta_description'] ?? "",
 
             "doctorLocation" => [
                 "country" => $data['country'] ?? "",

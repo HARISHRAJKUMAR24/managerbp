@@ -22,12 +22,9 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
    READ INPUT
 ========================= */
 $rawInput = file_get_contents("php://input");
-error_log("=== UPDATE.PHP DEBUG ===");
-error_log("Raw input: " . $rawInput);
-
 $input = json_decode($rawInput, true);
 
-if (!$input || !isset($input["id"])) {
+if (!$input || empty($input["id"])) {
     echo json_encode([
         "success" => false,
         "message" => "Invalid input or ID missing"
@@ -51,6 +48,25 @@ $amount = isset($input["amount"]) && is_numeric($input["amount"])
     ? (float)$input["amount"]
     : 0;
 
+/* =========================
+   TOKEN LIMIT (✅ FIX)
+========================= */
+$tokenRaw = $input["tokenLimit"] ?? null;
+
+if ($tokenRaw === "" || $tokenRaw === null) {
+    $token_limit = 0; // unlimited
+} else {
+    $token_limit = (int)$tokenRaw;
+}
+
+if ($token_limit < 0) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid token limit"
+    ]);
+    exit;
+}
+
 $description = $input["description"] ?? "";
 $specialization = $input["specialization"] ?? "";
 $qualification = $input["qualification"] ?? "";
@@ -60,7 +76,6 @@ $experience = isset($input["experience"]) && is_numeric($input["experience"])
     : 0;
 
 $doctor_image = $input["doctorImage"] ?? ($input["doctor_image"] ?? "");
-
 $meta_title = $input["metaTitle"] ?? "";
 $meta_description = $input["metaDescription"] ?? "";
 
@@ -89,45 +104,44 @@ $leave_dates = json_encode(
     JSON_UNESCAPED_UNICODE
 );
 
-error_log("Weekly schedule: " . $weekly_schedule);
-error_log("Leave dates: " . $leave_dates);
-
 /* =========================
-   UPDATE QUERY
+   UPDATE QUERY (✅ FIX)
 ========================= */
 $sql = "
 UPDATE doctor_schedule SET
-    category_id     = :category_id,
-    name            = :name,
-    slug            = :slug,
-    amount          = :amount,
-    description     = :description,
-    specialization  = :specialization,
-    qualification   = :qualification,
-    experience      = :experience,
-    doctor_image    = :doctor_image,
-    meta_title      = :meta_title,
-    meta_description= :meta_description,
-    country         = :country,
-    state           = :state,
-    city            = :city,
-    pincode         = :pincode,
-    address         = :address,
-    map_link        = :map_link,
-    weekly_schedule = :weekly_schedule,
-    leave_dates     = :leave_dates,
-    updated_at      = NOW()
+    category_id      = :category_id,
+    name             = :name,
+    slug             = :slug,
+    amount           = :amount,
+    token_limit      = :token_limit,
+    description      = :description,
+    specialization   = :specialization,
+    qualification    = :qualification,
+    experience       = :experience,
+    doctor_image     = :doctor_image,
+    meta_title       = :meta_title,
+    meta_description = :meta_description,
+    country          = :country,
+    state            = :state,
+    city             = :city,
+    pincode          = :pincode,
+    address          = :address,
+    map_link         = :map_link,
+    weekly_schedule  = :weekly_schedule,
+    leave_dates      = :leave_dates,
+    updated_at       = NOW()
 WHERE id = :id
 ";
 
 $stmt = $pdo->prepare($sql);
 
-$params = [
+$stmt->execute([
     ":id" => $id,
     ":category_id" => $category_id,
     ":name" => $name,
     ":slug" => $slug,
     ":amount" => $amount,
+    ":token_limit" => $token_limit, // ✅ FIX
     ":description" => $description,
     ":specialization" => $specialization,
     ":qualification" => $qualification,
@@ -143,9 +157,7 @@ $params = [
     ":map_link" => $map_link,
     ":weekly_schedule" => $weekly_schedule,
     ":leave_dates" => $leave_dates
-];
-
-$stmt->execute($params);
+]);
 
 /* =========================
    RESPONSE
@@ -153,5 +165,6 @@ $stmt->execute($params);
 echo json_encode([
     "success" => true,
     "message" => "Doctor schedule updated successfully",
-    "updated_id" => $id
+    "updated_id" => $id,
+    "token_limit_saved" => $token_limit
 ]);

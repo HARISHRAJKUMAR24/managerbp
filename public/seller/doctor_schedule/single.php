@@ -84,6 +84,8 @@ $data = [
     "doctor_name" => $row["name"] ?? "",
     "slug" => $row["slug"] ?? "",
     "amount" => $row["amount"] !== null ? (string)$row["amount"] : "0",
+    "token_limit" => (string)($row["token_limit"] ?? "0"), // ✅ REQUIRED
+
     "description" => $row["description"] ?? "",
     "specialization" => $row["specialization"] ?? "",
     "qualification" => $row["qualification"] ?? "",

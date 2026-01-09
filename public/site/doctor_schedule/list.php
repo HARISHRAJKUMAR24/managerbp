@@ -30,6 +30,7 @@ $stmt = $pdo->prepare("
         name,
         slug,
         amount,
+        token_limit,
         doctor_image AS doctorImage,
         weekly_schedule,
         leave_dates
@@ -45,16 +46,22 @@ $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ===================== */
 foreach ($records as &$row) {
     // Weekly schedule
-    $row['weeklySchedule'] = !empty($row['weekly_schedule'])
+    $weeklySchedule = !empty($row['weekly_schedule'])
         ? json_decode($row['weekly_schedule'], true)
         : [];
-
+    $row['weeklySchedule'] = $weeklySchedule;
+    
     // Leave dates
-    $row['leaveDates'] = !empty($row['leave_dates'])
+    $leaveDates = !empty($row['leave_dates'])
         ? json_decode($row['leave_dates'], true)
         : [];
-
-    unset($row['weekly_schedule'], $row['leave_dates']);
+    $row['leaveDates'] = $leaveDates;
+    
+    // Add token_limit if exists
+    $row['tokenLimit'] = $row['token_limit'] ?? null;
+    
+    // Remove raw fields
+    unset($row['weekly_schedule'], $row['leave_dates'], $row['token_limit']);
 }
 
 echo json_encode([

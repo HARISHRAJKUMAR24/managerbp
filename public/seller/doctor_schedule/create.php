@@ -5,7 +5,6 @@ header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -29,21 +28,11 @@ $pdo = getDbConnection();
 ================================ */
 $raw = file_get_contents("php://input");
 $input = json_decode($raw, true);
+
 $leaveDates = $input["leaveDates"] ?? [];
-
-
 if (!is_array($leaveDates)) {
     $leaveDates = [];
 }
-
-/* ===============================
-   DEBUG (KEEP TEMPORARILY)
-================================ */
-file_put_contents(
-    __DIR__ . "/debug.log",
-    date("Y-m-d H:i:s") . " | RAW=" . $raw . PHP_EOL,
-    FILE_APPEND
-);
 
 /* ===============================
    BASIC VALIDATION
@@ -57,32 +46,43 @@ if (empty($input["user_id"])) {
 }
 
 /* ===============================
-   AMOUNT — BULLETPROOF FIX
+   AMOUNT VALIDATION
 ================================ */
-
-/* 1. Get raw value */
 $amountRaw = $input["amount"] ?? "";
 
-/* 2. Normalize */
 if (is_string($amountRaw)) {
     $amountRaw = trim($amountRaw);
 }
 
-/* 3. Convert empty to zero */
 if ($amountRaw === "" || $amountRaw === null) {
     $amountValue = 0;
 } else {
     $amountValue = (float)$amountRaw;
 }
 
-/* 4. Final validation */
 if (!is_numeric($amountValue) || $amountValue <= 0) {
     echo json_encode([
         "success" => false,
-        "message" => "Invalid amount",
-        "debug" => [
-            "received" => $input["amount"] ?? null
-        ]
+        "message" => "Invalid amount"
+    ]);
+    exit;
+}
+
+/* ===============================
+   TOKEN LIMIT (PER USER)
+================================ */
+$tokenRaw = $input["tokenLimit"] ?? null;
+
+if ($tokenRaw === "" || $tokenRaw === null) {
+    $tokenLimit = 0; // unlimited
+} else {
+    $tokenLimit = (int)$tokenRaw;
+}
+
+if ($tokenLimit < 0) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid token limit"
     ]);
     exit;
 }
@@ -121,6 +121,7 @@ $sql = "INSERT INTO doctor_schedule (
     name,
     slug,
     amount,
+    token_limit,
     description,
     specialization,
     qualification,
@@ -143,6 +144,7 @@ $sql = "INSERT INTO doctor_schedule (
     :name,
     :slug,
     :amount,
+    :token_limit,
     :description,
     :specialization,
     :qualification,
@@ -161,7 +163,6 @@ $sql = "INSERT INTO doctor_schedule (
     NOW()
 )";
 
-
 $stmt = $pdo->prepare($sql);
 
 $stmt->execute([
@@ -169,7 +170,8 @@ $stmt->execute([
     ":category_id" => $categoryId,
     ":name" => $doctorName,
     ":slug" => $input["slug"] ?? "",
-    ":amount" => $amountValue,   // 🔥 FLOAT — PERFECT FOR DECIMAL
+    ":amount" => $amountValue,
+    ":token_limit" => $tokenLimit,
     ":description" => $input["description"] ?? "",
     ":specialization" => $specialization,
     ":qualification" => $qualification,
@@ -184,13 +186,12 @@ $stmt->execute([
     ":address" => $loc["address"] ?? "",
     ":map_link" => $loc["mapLink"] ?? "",
     ":weekly_schedule" => json_encode($input["weeklySchedule"] ?? []),
-    ":leave_dates"     => json_encode($leaveDates),
-
+    ":leave_dates" => json_encode($leaveDates),
 ]);
 
 echo json_encode([
     "success" => true,
     "message" => "Doctor schedule created successfully",
     "id" => $pdo->lastInsertId(),
-    "amount_saved" => $amountValue
+    "token_limit_saved" => $tokenLimit
 ]);
