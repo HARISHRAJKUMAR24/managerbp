@@ -38,13 +38,19 @@ try {
         // Format amount with currency
         $amountFormatted = $row['currency_symbol'] . ' ' . number_format($row['amount'], 2);
         
-        // Customer info with name, phone, email
+        // Customer info with name, phone, email - Clickable link to user
         $customerName = $row['name'] ?? 'Unknown';
         $customerPhone = $row['phone'] ?? '';
         $customerEmail = $row['email'] ?? '';
+        $userId = $row['user_id'] ?? '';
         
-        $customerInfo = '<div class="d-flex flex-column">' .
-            '<span class="text-dark fw-bold">' . htmlspecialchars($customerName) . '</span>';
+        // Create clickable customer info
+        $customerInfo = '<div class="d-flex flex-column">';
+        if ($userId) {
+            $customerInfo .= '<a href="users/' . $userId . '" class="text-dark fw-bold text-hover-primary">' . htmlspecialchars($customerName) . '</a>';
+        } else {
+            $customerInfo .= '<span class="text-dark fw-bold">' . htmlspecialchars($customerName) . '</span>';
+        }
         
         if ($customerPhone) {
             $customerInfo .= '<span class="text-muted fs-7">' . htmlspecialchars($customerPhone) . '</span>';
@@ -55,12 +61,33 @@ try {
         
         $customerInfo .= '</div>';
         
+        // Payment method badge with different colors
+        $paymentMethodText = $row['payment_method'] ?? '';
+        $paymentMethodBadge = '';
+        
+        switch(strtolower($paymentMethodText)) {
+            case 'razorpay':
+                $paymentMethodBadge = '<span class="badge badge-light-primary fw-bold">Razorpay</span>';
+                break;
+            case 'phone pay':
+            case 'phonepay':
+                $paymentMethodBadge = '<span class="badge badge-light-info fw-bold">Phone Pay</span>';
+                break;
+            case 'payu':
+                $paymentMethodBadge = '<span class="badge badge-light-success fw-bold">PayU</span>';
+                break;
+            default:
+                $paymentMethodBadge = '<span class="badge badge-light-dark fw-bold">' . ucfirst($paymentMethodText) . '</span>';
+                break;
+        }
+        
         // Payment ID display (with tooltip)
         $paymentIdDisplay = $row['payment_id'] ?? '';
+        $paymentIdHtml = '';
         if (!empty($paymentIdDisplay)) {
             if (strlen($paymentIdDisplay) > 20) {
                 $shortPaymentId = substr($paymentIdDisplay, 0, 17) . '...';
-                $paymentIdHtml = '<span class="text-muted" title="' . htmlspecialchars($paymentIdDisplay) . '">' . htmlspecialchars($shortPaymentId) . '</span>';
+                $paymentIdHtml = '<span class="text-muted" title="' . htmlspecialchars($paymentIdDisplay) . '" data-bs-toggle="tooltip">' . htmlspecialchars($shortPaymentId) . '</span>';
             } else {
                 $paymentIdHtml = '<span class="text-muted">' . htmlspecialchars($paymentIdDisplay) . '</span>';
             }
@@ -71,10 +98,10 @@ try {
         $data[] = [
             "checkbox" => '<div class="form-check form-check-sm form-check-custom form-check-solid"><input class="form-check-input" type="checkbox" value="' . $row['id'] . '" /></div>',
             "invoice_number" => '<span class="text-dark fw-bold">#' . $row['invoice_number'] . '</span>',
-            "plan_name" => $row['plan_name'] ?? 'N/A',
             "customer_info" => $customerInfo,
+            "plan_name" => $row['plan_name'] ?? 'N/A',
             "amount" => '<span class="text-dark fw-bold">' . $amountFormatted . '</span>',
-            "payment_method" => '<span class="badge badge-light-primary fw-bold">' . ucfirst($row['payment_method']) . '</span>',
+            "payment_method" => $paymentMethodBadge,
             "payment_id" => $paymentIdHtml
         ];
     }

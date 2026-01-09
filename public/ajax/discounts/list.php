@@ -23,13 +23,13 @@ foreach ($users as $row) {
         "created_at" => $row['created_at'],
 
         'actions' => '
-        <span data-id="' . $row['id'] . '" class="deleteCode text-end d-block cursor-pointer">
-        <i class="ki-duotone ki-delete-folder fs-2x text-danger">
-<span class="path1"></span>
-<span class="path2"></span>
-<span class="path3"></span>
-</i>
-        </span>',
+<span data-id="' . $row['id'] . '" class="deleteCode cursor-pointer">
+    <i class="ki-duotone ki-delete-folder fs-2x text-danger">
+        <span class="path1"></span>
+        <span class="path2"></span>
+        <span class="path3"></span>
+    </i>
+</span>',
     ];
 }
 
