@@ -162,13 +162,9 @@ renderTemplate('header');
 
                                 <!--begin::Actions-->
                                 <div class="d-flex my-4">
-                                    <?php if ($user->is_suspended): ?>
-                                        <span class="btn btn-sm btn-danger me-2">Suspended</span>
-                                    <?php else: ?>
-                                        <span class="btn btn-sm btn-success me-2">Active</span>
-                                    <?php endif; ?>
                                     <button type="button" class="btn btn-sm btn-primary" id="loginBtn">Login</button>
                                 </div>
+                                
                                 <!--end::Actions-->
                             </div>
                             <!--end::Title-->
@@ -219,25 +215,57 @@ renderTemplate('header');
                                                 <!-- Customers Limit -->
                                                 <div class="border border-gray-300 border-dashed rounded min-w-120px py-3 px-3 me-4 mb-3 text-center flex-fill">
                                                     <div class="d-flex flex-column align-items-center">
+                                                        <?php
+                                                        $customerData = getCustomerLimitWithCount($user_id); // $user_id should be available in your context
+                                                        ?>
                                                         <div class="fs-2 fw-bold text-gray-800 mb-1">
-                                                            <?= $planData ? ($planData['customers_limit'] === 'unlimited' ? 'Unlimited' : $planData['customers_limit']) : 'N/A' ?>
+                                                            <?= $customerData['actual_count'] ?> / <?= $customerData['limit'] === 'unlimited' ? 'Unlimited' : $customerData['limit'] ?>
                                                         </div>
-                                                        <div class="fw-semibold fs-7 text-gray-600">Customers Limit</div>
+                                                        <div class="fw-semibold fs-7 text-gray-600">Customers</div>
+                                                        <?php if (!$customerData['can_add']): ?>
+                                                            <div class="fs-8 text-danger mt-1">
+                                                                Limit reached!
+                                                            </div>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- Second Row -->
                                             <div class="d-flex flex-wrap">
-                                                <!-- Services Limit -->
-                                                <div class="border border-gray-300 border-dashed rounded min-w-120px py-3 px-3 me-4 mb-3 text-center flex-fill">
-                                                    <div class="d-flex flex-column align-items-center">
-                                                        <div class="fs-2 fw-bold text-gray-800 mb-1">
-                                                            <?= $planData ? ($planData['services_limit'] === 'unlimited' ? 'Unlimited' : $planData['services_limit']) : 'N/A' ?>
+                                                <!-- Services Limit - Only show for non-HOTEL users -->
+                                                <?php
+                                                $servicesLimit = getUserPlanLimitWithActual($user_id, 'services');
+                                                $actualCounts = getUserActualResourcesCount($user_id);
+
+                                                // Only show services block if user is not HOTEL type (service_type_id = 2)
+                                                // or if they actually have services (categories or departments)
+                                                if ($servicesLimit['label'] !== 'Menu Items' || $servicesLimit['actual_count'] > 0) {
+                                                ?>
+                                                    <div class="border border-gray-300 border-dashed rounded min-w-120px py-3 px-3 me-4 mb-3 text-center flex-fill">
+                                                        <div class="d-flex flex-column align-items-center">
+                                                            <div class="fs-2 fw-bold text-gray-800 mb-1">
+                                                                <?= $servicesLimit['actual_count'] ?> / <?= $servicesLimit['limit'] === 'unlimited' ? 'Unlimited' : $servicesLimit['limit'] ?>
+                                                            </div>
+                                                            <div class="fw-semibold fs-7 text-gray-600"><?= $servicesLimit['label'] ?></div>
                                                         </div>
-                                                        <div class="fw-semibold fs-7 text-gray-600">Services Limit</div>
                                                     </div>
-                                                </div>
+                                                <?php } ?>
+
+                                                <!-- Menu Items Limit - Only show for HOTEL users OR users with menu items -->
+                                                <?php
+                                                if ($actualCounts['menu_items_count'] > 0) {
+                                                    $menuItemsLimit = getUserPlanLimitWithActual($user_id, 'menu_items');
+                                                ?>
+                                                    <div class="border border-gray-300 border-dashed rounded min-w-120px py-3 px-3 me-4 mb-3 text-center flex-fill">
+                                                        <div class="d-flex flex-column align-items-center">
+                                                            <div class="fs-2 fw-bold text-gray-800 mb-1">
+                                                                <?= $menuItemsLimit['actual_count'] ?> / <?= $menuItemsLimit['limit'] === 'unlimited' ? 'Unlimited' : $menuItemsLimit['limit'] ?>
+                                                            </div>
+                                                            <div class="fw-semibold fs-7 text-gray-600"><?= $menuItemsLimit['label'] ?></div>
+                                                        </div>
+                                                    </div>
+                                                <?php } ?>
 
                                                 <!-- Joined Date -->
                                                 <div class="border border-gray-300 border-dashed rounded min-w-120px py-3 px-3 me-4 mb-3 text-center flex-fill">

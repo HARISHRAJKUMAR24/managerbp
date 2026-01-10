@@ -558,3 +558,157 @@ function validateResourceLimit($user_id, $resource_type)
 
     return $result;
 }
+
+
+/**
+ * Get actual resource count for user based on service type
+ */
+function getUserActualResourcesCount($user_id) {
+    $pdo = getDbConnection();
+    
+    // First get user's service_type_id
+    $stmt = $pdo->prepare("SELECT service_type_id FROM users WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$user) {
+        return [
+            'services_count' => 0,
+            'services_label' => 'Services',
+            'menu_items_count' => 0,
+            'menu_items_label' => 'Menu Items'
+        ];
+    }
+    
+    $service_type_id = $user['service_type_id'];
+    $services_count = 0;
+    $menu_items_count = 0;
+    $services_label = 'Services';
+    $menu_items_label = 'Menu Items';
+    
+    // Determine what to count based on service_type_id
+    switch ($service_type_id) {
+        case 1: // HOSPITAL - count categories
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM categories WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $services_count = $result['count'] ?? 0;
+            $services_label = 'Categories';
+            break;
+            
+        case 2: // HOTEL - count menu_items
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM menu_items WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $menu_items_count = $result['count'] ?? 0;
+            $services_label = 'Menu Items';
+            break;
+            
+        case 3: // OTHER - count departments
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM departments WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $services_count = $result['count'] ?? 0;
+            $services_label = 'Services';
+            break;
+            
+        default:
+            // Count both as fallback
+            $stmt = $pdo->prepare("
+                SELECT 
+                    (SELECT COUNT(*) FROM categories WHERE user_id = ?) as cat_count,
+                    (SELECT COUNT(*) FROM departments WHERE user_id = ?) as dept_count,
+                    (SELECT COUNT(*) FROM menu_items WHERE user_id = ?) as menu_count
+            ");
+            $stmt->execute([$user_id, $user_id, $user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $services_count = ($result['cat_count'] ?? 0) + ($result['dept_count'] ?? 0);
+            $menu_items_count = $result['menu_count'] ?? 0;
+            break;
+    }
+    
+    return [
+        'services_count' => $services_count,
+        'services_label' => $services_label,
+        'menu_items_count' => $menu_items_count,
+        'menu_items_label' => $menu_items_label
+    ];
+}
+
+/**
+ * Enhanced version of getUserPlanLimit with actual counts display
+ */
+function getUserPlanLimitWithActual($user_id, $resource_type) {
+    // First get the standard plan limit
+    $planLimit = getUserPlanLimit($user_id, $resource_type);
+    
+    // Get actual resource counts based on service type
+    $actualCounts = getUserActualResourcesCount($user_id);
+    
+    // Update the response based on resource type
+    if ($resource_type === 'services') {
+        $planLimit['actual_count'] = $actualCounts['services_count'];
+        $planLimit['label'] = $actualCounts['services_label'];
+    } elseif ($resource_type === 'menu_items') {
+        $planLimit['actual_count'] = $actualCounts['menu_items_count'];
+        $planLimit['label'] = $actualCounts['menu_items_label'];
+    } else {
+        // For other resources, get actual count from database
+        $pdo = getDbConnection();
+        $table_map = [
+            'appointments' => 'appointments',
+            'customers' => 'customers',
+            'coupons' => 'coupons',
+            'manual_payment_methods' => 'manual_payment_methods'
+        ];
+        
+        if (isset($table_map[$resource_type])) {
+            $table = $table_map[$resource_type];
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $planLimit['actual_count'] = $result['count'] ?? 0;
+            $planLimit['label'] = ucfirst(str_replace('_', ' ', $resource_type));
+        }
+    }
+    
+    return $planLimit;
+}
+
+
+
+/**
+ * Get actual customer count for a specific user
+ * This counts how many customers belong to a specific user_id
+ */
+function getActualCustomerCount($user_id) {
+    $pdo = getDbConnection();
+    
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) as customer_count FROM customers WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $result['customer_count'] ?? 0;
+    } catch (Exception $e) {
+        error_log("Error getting customer count: " . $e->getMessage());
+        return 0;
+    }
+}
+
+/**
+ * Get customer limit info with actual count
+ */
+function getCustomerLimitWithCount($user_id) {
+    // Get plan limit
+    $planLimit = getUserPlanLimit($user_id, 'customers');
+    
+    // Get actual count
+    $actualCount = getActualCustomerCount($user_id);
+    
+    // Combine the data
+    $planLimit['actual_count'] = $actualCount;
+    $planLimit['label'] = 'Customers';
+    
+    return $planLimit;
+}
