@@ -22,6 +22,8 @@ RewriteRule ^staffs$ public/staffs/list.php [L]
 # Redirect /staffs/add to public/staffs/add.php
 RewriteRule ^staffs/add$ public/staffs/add.php [L]
 
+# Redirect /manual-billing to public/manual-billing/add.php
+RewriteRule ^manual-billing$ public/manual-billing/add.php [L]
 
 
 # Redirect /discounts to public/discounts/list.php

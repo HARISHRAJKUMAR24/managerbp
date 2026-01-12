@@ -2038,6 +2038,25 @@ if (!isAdmin() && (str_contains($page, 'staffs') || str_contains($page, 'setting
                                 <!--end:Menu item-->
                             <?php endif; ?>
 
+                             <?php if (isAdmin()): ?>
+                            <!--begin:Menu item-->
+                            <a href="manual-billing" class="menu-item">
+                                <!--begin:Menu link-->
+                                <span class="menu-link">
+                                    <span class="menu-icon">
+                                        <i class="ki-duotone ki-wallet fs-1">
+                                            <span class="path1"></span>
+                                            <span class="path2"></span>
+                                            
+                                        </i>
+                                    </span>
+                                    <span class="menu-title">Manual Billing</span>
+                                </span>
+                                <!--end:Menu link-->
+                            </a>
+                            <!--end:Menu item-->
+                             <?php endif; ?>
+
                             <?php if (isAdmin()): ?>
                                 <!--begin:Menu item-->
                                 <a href="dashboard-message/add" class="menu-item">
