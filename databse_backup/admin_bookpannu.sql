@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 08, 2026 at 01:35 PM
+-- Generation Time: Jan 09, 2026 at 01:47 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -230,9 +230,7 @@ CREATE TABLE `dashboard_messages` (
 --
 
 INSERT INTO `dashboard_messages` (`id`, `title`, `description`, `expiry_type`, `expiry_value`, `expiry_date`, `seller_type`, `just_created_seller`, `created_at`, `updated_at`) VALUES
-(88, 'test', 'test_1', 'days', 1, '2026-01-08 11:57:09', NULL, 0, '2026-01-07 09:28:00', '2026-01-07 11:57:09'),
-(90, '3w', 'sdf', 'hours', 1, '2026-01-07 12:58:20', NULL, 0, '2026-01-07 11:58:20', '2026-01-07 11:58:20'),
-(91, 'sdf', 'sdf', 'days', 1, '2026-01-08 11:58:27', NULL, 0, '2026-01-07 11:58:27', '2026-01-07 11:58:27');
+(92, 'new seller see this This plan is intermeite', 'yes it work visible for This plan is intermeite', 'hours', 1, '2026-01-09 07:22:41', '[\"5\"]', 1, '2026-01-09 06:20:10', '2026-01-09 06:22:41');
 
 -- --------------------------------------------------------
 
@@ -381,6 +379,57 @@ CREATE TABLE `doctors` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `doctor_appointments`
+--
+
+CREATE TABLE `doctor_appointments` (
+  `id` int(11) NOT NULL,
+  `customer_id` int(11) NOT NULL,
+  `doctor_id` int(11) NOT NULL,
+  `appointment_date` date NOT NULL,
+  `slot_from` time NOT NULL,
+  `slot_to` time NOT NULL,
+  `tokens` int(11) DEFAULT 1,
+  `notes` text DEFAULT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `status` enum('pending','confirmed','cancelled') DEFAULT 'confirmed',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `doctor_appointments`
+--
+
+INSERT INTO `doctor_appointments` (`id`, `customer_id`, `doctor_id`, `appointment_date`, `slot_from`, `slot_to`, `tokens`, `notes`, `amount`, `status`, `created_at`) VALUES
+(1, 902977, 25, '2026-01-10', '02:02:00', '05:05:00', 2, 'sd', 886.00, 'confirmed', '2026-01-09 11:09:55'),
+(2, 902977, 25, '2026-01-10', '02:02:00', '05:05:00', 2, 'sd', 886.00, 'confirmed', '2026-01-09 11:12:03');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_appointment_files`
+--
+
+CREATE TABLE `doctor_appointment_files` (
+  `id` int(11) NOT NULL,
+  `doctor_appointment_id` int(11) NOT NULL,
+  `file_name` varchar(255) DEFAULT NULL,
+  `file_path` varchar(255) DEFAULT NULL,
+  `file_type` varchar(50) DEFAULT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `doctor_appointment_files`
+--
+
+INSERT INTO `doctor_appointment_files` (`id`, `doctor_appointment_id`, `file_name`, `file_path`, `file_type`, `file_size`, `created_at`) VALUES
+(1, 2, 'Economic System.pdf', '1767957123_Economic System.pdf', 'application/pdf', 106402, '2026-01-09 11:12:03');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `doctor_schedule`
 --
 
@@ -391,6 +440,7 @@ CREATE TABLE `doctor_schedule` (
   `name` varchar(255) DEFAULT NULL,
   `slug` varchar(255) DEFAULT NULL,
   `amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `token_limit` int(11) NOT NULL DEFAULT 0,
   `description` text DEFAULT NULL,
   `specialization` varchar(255) DEFAULT NULL,
   `qualification` varchar(255) DEFAULT NULL,
@@ -414,9 +464,8 @@ CREATE TABLE `doctor_schedule` (
 -- Dumping data for table `doctor_schedule`
 --
 
-INSERT INTO `doctor_schedule` (`id`, `user_id`, `category_id`, `name`, `slug`, `amount`, `description`, `specialization`, `qualification`, `experience`, `doctor_image`, `weekly_schedule`, `meta_title`, `meta_description`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `created_at`, `updated_at`, `leave_dates`) VALUES
-(22, 85960, 49, 'vf', 'vf-fd', 12.00, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"02:02\",\"to\":\"06:06\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"66\"}]},\"Mon\":{\"enabled\":true,\"slots\":[{\"from\":\"03:32\",\"to\":\"07:07\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"33\"}]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-05 15:09:04', '2026-01-08 15:41:40', NULL),
-(24, 85960, 49, 'vf', 'vf-fd', 33.00, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '[]', '', '', '', '', '', '', '', '', '2026-01-08 17:23:15', '2026-01-08 17:38:36', '[\"2026-01-08\",\"2026-01-10\",\"2026-01-23\"]');
+INSERT INTO `doctor_schedule` (`id`, `user_id`, `category_id`, `name`, `slug`, `amount`, `token_limit`, `description`, `specialization`, `qualification`, `experience`, `doctor_image`, `weekly_schedule`, `meta_title`, `meta_description`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `created_at`, `updated_at`, `leave_dates`) VALUES
+(25, 85960, 49, 'vf', 'vf-fd', 443.00, 2, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"02:02\",\"to\":\"05:05\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"66\"}]},\"Mon\":{\"enabled\":false,\"slots\":[]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', 'sfwer', 'werwer', 'AF', 'BDS', 'Ashkāsham', '6666666', '34wqer', 'https://maps.google.com/maps?q=34wqer%20Ashk%C4%81sham%206666666&z=15&output=embed', '2026-01-09 10:37:54', '2026-01-09 13:13:21', '[\"2026-01-13\",\"2026-01-16\",\"2026-01-27\"]');
 
 -- --------------------------------------------------------
 
@@ -884,7 +933,7 @@ CREATE TABLE `site_settings` (
 
 INSERT INTO `site_settings` (`id`, `user_id`, `logo`, `favicon`, `phone`, `whatsapp`, `email`, `currency`, `country`, `state`, `address`, `meta_title`, `meta_description`, `sharing_image_preview`, `gst_number`, `gst_type`, `tax_percent`, `facebook`, `twitter`, `instagram`, `linkedin`, `youtube`, `pinterest`, `cash_in_hand`, `razorpay_key_id`, `phonepe_salt_key`, `phonepe_salt_index`, `phonepe_merchant_id`, `payu_api_key`, `payu_salt`, `sunday`, `sunday_starts`, `sunday_ends`, `monday`, `monday_starts`, `monday_ends`, `tuesday`, `tuesday_starts`, `tuesday_ends`, `wednesday`, `wednesday_starts`, `wednesday_ends`, `thursday`, `thursday_starts`, `thursday_ends`, `friday`, `friday_starts`, `friday_ends`, `saturday`, `saturday_starts`, `saturday_ends`) VALUES
 (14, 27395, 'sellers/27395/site-settings/logo/2025/12/17/logo_6942a478ae072.png', 'sellers/27395/site-settings/favicon/2025/12/17/favicon_6942a47bb6819.png', '', '', '', 'INR', '', '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL),
-(15, 85960, 'sellers/85960/site-settings/logo/2026/01/03/logo_6958cdda803ce.png', 'sellers/85960/site-settings/favicon/2026/01/03/favicon_6958cdde20219.png', '88888 88888', '88888 88888', 'deepakchitravel@gmail.com', 'GTQ', 'AS', '03', '1/60 Middle street ,Cholapandi', NULL, NULL, NULL, NULL, NULL, NULL, 'facebook', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 0, NULL, NULL),
+(15, 85960, 'sellers/85960/site-settings/logo/2026/01/03/logo_6958cdda803ce.png', 'sellers/85960/site-settings/favicon/2026/01/03/favicon_6958cdde20219.png', '88888 88888', '88888 88888', 'deepakchitravel@gmail.com', 'GTQ', 'AS', '03', '1/60 Middle street ,Cholapandi', NULL, NULL, NULL, NULL, NULL, NULL, 'facebook', NULL, NULL, NULL, NULL, NULL, 1, 'sdfwe', 'wer', 'er', 'wer', 'dfg', 'sdf', 0, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 0, NULL, NULL),
 (16, 32128, 'sellers/32128/site-settings/logo/2026/01/05/logo_695ba749bc174.jpg', 'sellers/32128/site-settings/favicon/2026/01/05/favicon_695ba6573524e.jpg', '8015021359', '8015021359', 'harish@gmail.com', 'INR', 'IN', '', '1Milestone Technology Solution Private Limited\nNO 1, SIVAN KOVIL STREET,\nNeedamangalam,\nTamil Nadu - 614404', 'fd', 'fdhdf', 'sellers/32128/seo-settings/preview-image/2026/01/05/seo_695bb08e43c0b.png', '33AACCZ2135N1Z7', 'inclusive', 5.00, 'https://wwww', NULL, 'https://4r4r', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, 0, NULL, NULL);
 
 -- --------------------------------------------------------
@@ -930,7 +979,10 @@ INSERT INTO `subscription_histories` (`id`, `invoice_number`, `plan_id`, `user_i
 (99, 3, 4, 32128, 'payu', 'edcc7d707815ac05700c', 'INR', 199, 0, NULL, NULL, 0, 0, 'Harish', 'harish@gmail.com', '8015021359', 'Manojipatti', '', 'Tamil Nadu', 'Thanjavur', '613004', 'India', '2026-01-07 14:43:41.000', '₹'),
 (100, 4, 4, 32128, 'payu', '4aa10775f3c8304033a8', 'INR', 199, 0, NULL, NULL, 0, 0, 'Harish', 'harish@gmail.com', '8015021359', 'Manojipatti', '', 'Tamil Nadu', 'Thanjavur', '613004', 'India', '2026-01-07 14:46:54.000', '₹'),
 (101, 5, 1, 32128, 'payu', 'e305439ba7c5ec1acd2e', 'INR', 1, 0, NULL, NULL, 0, 0, 'Harish', 'harish@gmail.com', '8015021359', 'Manojipatti', '', 'Tamil Nadu', 'Thanjavur', '613004', 'India', '2026-01-07 14:48:37.000', '₹'),
-(102, 6, 1, 27395, 'payu', '3011b21ce850bbe854a4', 'INR', 1, 0, NULL, NULL, 0, 0, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', 'Gopalasamudram', '', 'Tamil Nadu', 'Tiruvarur', '614001', 'India', '2026-01-07 18:14:17.000', '₹');
+(102, 6, 1, 27395, 'payu', '3011b21ce850bbe854a4', 'INR', 1, 0, NULL, NULL, 0, 0, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', 'Gopalasamudram', '', 'Tamil Nadu', 'Tiruvarur', '614001', 'India', '2026-01-07 18:14:17.000', '₹'),
+(103, 7, 1, 22431, 'razorpay', 'pay_S1gF0nMHmK7c7A', 'INR', 1, 0, 'exclusive', '', 18, 0, 'Test', 'deepak@gmail.com', '7777777777', 'kathayee amman kovil street', 'uppukaratheru', 'Tamil Nadu', 'mannargudi', '614001', 'IN', '2026-01-09 11:55:40.000', '₹'),
+(104, 8, 5, 22431, 'razorpay', 'pay_S1gGnq08kcE4YO', 'INR', 1999, 305, 'exclusive', '33AACCZ2135N1Z7', 18, 0, 'Test', 'deepak@gmail.com', '7777777777', 'Gopalasamudram', 'uppukaratheru', 'Tamil Nadu', 'Tiruvarur', '614001', 'India', '2026-01-09 11:57:22.000', '₹'),
+(105, 9, 8, 22431, 'razorpay', 'pay_S1gIIIeZNPho8r', 'INR', 3000, 458, 'exclusive', '33AACCZ2135N1Z7', 18, 0, 'Test', 'deepak@gmail.com', '7777777777', 'Gopalasamudram', 'uppukaratheru', 'Tamil Nadu', 'Tiruvarur', '614001', 'India', '2026-01-09 11:58:47.000', '₹');
 
 -- --------------------------------------------------------
 
@@ -1018,8 +1070,9 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, '2026-02-06 13:44:17.000', 0, 1, '7e82319ddc4a392a7c28b2a8c36f237a9e26ffc101b1712ba736e79e02670819'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2026-02-06 10:18:37.000', 0, 1, '7222a736f02aba0cdb7389c5fb74de3d25e9baf542041c85919ddfc4064b5283'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, 'bd07b614f2798c489c4102a838076a602f26ea3f6cb130923695a5584b22f5a8');
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2026-02-06 10:18:37.000', 0, 1, 'ccd0836f215e4ee7b7227c4a86fa8755a91721bc276b035ef8d240543a565ddf'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, '4addfa4ac0f64bc37a08b8625070d950d83da2e49716ca5590db012fd6ce2367'),
+(22, 22431, 'Test', NULL, '7777777777', '$2y$10$Ved5KWItauFSS6B2kyRy7u21zlqjCUS/Q44XEQTtGcIqnCkJgskMO', 'IN', NULL, 'test', 'test', 3, '2026-01-09 11:53:56.000', NULL, '2027-01-09 07:28:47.000', 0, 8, '518388ce424595a82206eb70a722675416ac501ddb92806357a40d4bc2df50f4');
 
 -- --------------------------------------------------------
 
@@ -1193,6 +1246,22 @@ ALTER TABLE `discounts`
 ALTER TABLE `doctors`
   ADD PRIMARY KEY (`id`),
   ADD KEY `category_id` (`category_id`);
+
+--
+-- Indexes for table `doctor_appointments`
+--
+ALTER TABLE `doctor_appointments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `doctor_id` (`doctor_id`),
+  ADD KEY `customer_id` (`customer_id`),
+  ADD KEY `appointment_date` (`appointment_date`);
+
+--
+-- Indexes for table `doctor_appointment_files`
+--
+ALTER TABLE `doctor_appointment_files`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `doctor_appointment_id` (`doctor_appointment_id`);
 
 --
 -- Indexes for table `doctor_schedule`
@@ -1426,7 +1495,7 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT for table `dashboard_messages`
 --
 ALTER TABLE `dashboard_messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
 
 --
 -- AUTO_INCREMENT for table `departments`
@@ -1453,10 +1522,22 @@ ALTER TABLE `doctors`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
+-- AUTO_INCREMENT for table `doctor_appointments`
+--
+ALTER TABLE `doctor_appointments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `doctor_appointment_files`
+--
+ALTER TABLE `doctor_appointment_files`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `doctor_schedule`
 --
 ALTER TABLE `doctor_schedule`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `employees`
@@ -1564,7 +1645,7 @@ ALTER TABLE `site_settings`
 -- AUTO_INCREMENT for table `subscription_histories`
 --
 ALTER TABLE `subscription_histories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=103;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- AUTO_INCREMENT for table `subscription_plans`
@@ -1582,7 +1663,7 @@ ALTER TABLE `tables`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `website_pages`
@@ -1657,6 +1738,12 @@ ALTER TABLE `discounts`
 --
 ALTER TABLE `doctors`
   ADD CONSTRAINT `fk_doctors_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `doctor_appointment_files`
+--
+ALTER TABLE `doctor_appointment_files`
+  ADD CONSTRAINT `doctor_appointment_files_ibfk_1` FOREIGN KEY (`doctor_appointment_id`) REFERENCES `doctor_appointments` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `employees`
