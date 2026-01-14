@@ -208,6 +208,7 @@ function fetchPlan($plan_id)
 
     return $stmt->fetchObject();
 }
+
 function addPlan(
     $name,
     $amount,
@@ -218,7 +219,7 @@ function addPlan(
     $appointments_limit,
     $customers_limit,
     $services_limit,
-    $menu_limit, // ✅ ADDED: Menu Limit parameter
+    $menu_limit,
     $coupons_limit,
     $manual_payment_methods_limit,
     $free_credits,
@@ -248,7 +249,7 @@ function addPlan(
         'appointments_limit' => $appointments_limit,
         'customers_limit' => $customers_limit,
         'services_limit' => $services_limit,
-        'menu_limit' => $menu_limit, // ✅ ADDED: Menu Limit
+        'menu_limit' => $menu_limit,
         'coupons_limit' => $coupons_limit,
         'manual_payment_methods_limit' => $manual_payment_methods_limit,
         'free_credits' => $free_credits,
@@ -322,17 +323,21 @@ function updatePlan(
     ]);
 }
 
-// Add these functions to your existing database functions file
-
+// Add this function to your existing database functions
 function fetchSubscriptionHistories($limit, $offset, $searchValue = '', $conditions = [])
 {
     $pdo = getDbConnection();
 
     $sql = "SELECT 
                 sh.*,
-                sp.name as plan_name
+                sp.name as plan_name,
+                u.name as customer_name,
+                u.email as customer_email,
+                u.phone as customer_phone,
+                u.user_id
             FROM subscription_histories sh
             LEFT JOIN subscription_plans sp ON sh.plan_id = sp.id
+            LEFT JOIN users u ON sh.user_id = u.id
             WHERE 1=1";
 
     $params = [];
@@ -352,8 +357,13 @@ function fetchSubscriptionHistories($limit, $offset, $searchValue = '', $conditi
     }
 
     if (!empty($conditions['payment_method'])) {
-        $sql .= " AND sh.payment_method = :payment_method";
-        $params[':payment_method'] = $conditions['payment_method'];
+        if ($conditions['payment_method'] === 'manual') {
+            // Show all manual payments (those starting with MP_)
+            $sql .= " AND sh.payment_method LIKE 'MP_%'";
+        } else {
+            $sql .= " AND sh.payment_method = :payment_method";
+            $params[':payment_method'] = $conditions['payment_method'];
+        }
     }
 
     if (!empty($conditions['start_date'])) {
@@ -366,7 +376,7 @@ function fetchSubscriptionHistories($limit, $offset, $searchValue = '', $conditi
         $params[':end_date'] = $conditions['end_date'];
     }
 
-    // Apply search - FIXED: Added invoice_number search properly
+    // Apply search
     if (!empty($searchValue)) {
         $sql .= " AND (
                     sh.invoice_number LIKE :search OR
@@ -402,6 +412,7 @@ function getTotalSubscriptionHistoryRecords()
     return $stmt->fetchColumn();
 }
 
+// KEEP THIS VERSION ONLY (the one that includes manual payment filtering)
 function getFilteredSubscriptionHistoryRecords($searchValue = '', $conditions = [])
 {
     $pdo = getDbConnection();
@@ -409,6 +420,7 @@ function getFilteredSubscriptionHistoryRecords($searchValue = '', $conditions = 
     $sql = "SELECT COUNT(*) as count 
             FROM subscription_histories sh
             LEFT JOIN subscription_plans sp ON sh.plan_id = sp.id
+            LEFT JOIN users u ON sh.user_id = u.id
             WHERE 1=1";
 
     $params = [];
@@ -428,8 +440,12 @@ function getFilteredSubscriptionHistoryRecords($searchValue = '', $conditions = 
     }
 
     if (!empty($conditions['payment_method'])) {
-        $sql .= " AND sh.payment_method = :payment_method";
-        $params[':payment_method'] = $conditions['payment_method'];
+        if ($conditions['payment_method'] === 'manual') {
+            $sql .= " AND sh.payment_method LIKE 'MP_%'";
+        } else {
+            $sql .= " AND sh.payment_method = :payment_method";
+            $params[':payment_method'] = $conditions['payment_method'];
+        }
     }
 
     if (!empty($conditions['start_date'])) {
@@ -442,7 +458,6 @@ function getFilteredSubscriptionHistoryRecords($searchValue = '', $conditions = 
         $params[':end_date'] = $conditions['end_date'];
     }
 
-    // Apply search - FIXED: Same as fetch function
     if (!empty($searchValue)) {
         $sql .= " AND (
                     sh.invoice_number LIKE :search OR
@@ -465,6 +480,7 @@ function getFilteredSubscriptionHistoryRecords($searchValue = '', $conditions = 
     $stmt->execute();
     return $stmt->fetchColumn();
 }
+
 function fetchManagers($limit, $offset, $searchValue, $conditions = [])
 {
     $pdo = getDbConnection();

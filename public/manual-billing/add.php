@@ -69,7 +69,7 @@ $settings = fetchSettings();
 
                         <div class="col-sm-6 mb-5">
                             <label class="required form-label">User</label>
-                            <select name="seller_id" id="sellerSelect" class="form-select form-select-lg form-select-solid" data-control="select2" data-placeholder="Search and select seller" >
+                            <select name="user_id" id="userSelect" class="form-select form-select-lg form-select-solid" data-control="select2" data-placeholder="Search and select user">
                                 <option value="">Select User...</option>
                             </select>
                             <div class="form-text">Search by ID, name, email, or mobile</div>
@@ -105,23 +105,24 @@ $settings = fetchSettings();
                         <div class="col-sm-6 mb-5">
                             <label class="required form-label">Payment Method</label>
                             <select name="payment_method" id="paymentMethodSelect" class="form-select form-select-lg form-select-solid" data-control="select2" data-placeholder="Search and select payment method" required>
-                               
+
                             </select>
                         </div>
-<div class="col-sm-6 mb-5">
-    <label class="form-label">Upload Transaction Screenshot</label>
-    <input type="file"
-           id="transactionImage"
-           accept="image/png,image/jpeg"
-           class="form-control form-control-lg form-control-solid">
-    <div class="form-text">
-        Upload UPI screenshot to auto-detect Transaction ID
-    </div>
-</div>
+
+                        <div class="col-sm-6 mb-5">
+                            <label class="form-label">Upload Transaction Screenshot</label>
+                            <input type="file"
+                                id="transactionImage"
+                                accept="image/png,image/jpeg"
+                                class="form-control form-control-lg form-control-solid">
+                            <div class="form-text">
+                                Upload UPI screenshot to auto-detect Transaction ID
+                            </div>
+                        </div>
 
                         <div class="col-sm-6 mb-5">
                             <label class="form-label">Payment ID / Reference</label>
-                            <input type="text" name="payment_id" class="form-control form-control-lg form-control-solid" placeholder="Transaction ID, UPI Reference, etc.">
+                            <input type="text" name="payment_id" class="form-control form-control-lg form-control-solid" placeholder="Transaction ID, UPI Reference, etc." required>
                         </div>
 
                         <!-- Customer Details -->
@@ -210,10 +211,23 @@ $settings = fetchSettings();
                             </select>
                         </div>
 
-                        <!-- Additional Notes -->
-                        <div class="col-12 mb-5">
-                            <label class="form-label">Additional Notes (Optional)</label>
-                            <textarea name="notes" class="form-control form-control-lg form-control-solid" rows="3" placeholder="Any additional information about this billing..."></textarea>
+                        <div class="col-sm-6 mb-5">
+                            <label class="form-label">GST Number (Optional)</label>
+                            <div class="position-relative">
+                                <input type="text"
+                                    name="gst_number"
+                                    id="gstNumber"
+                                    class="form-control form-control-lg form-control-solid"
+                                    placeholder="33AAACP1935C1Z0"
+                                    maxlength="15"
+                                    pattern="[0-9A-Za-z]{15}"
+                                    title="15-character GST number">
+                                <div class="position-absolute end-0 top-0 mt-2 me-3">
+                                    <span id="gstStatusIcon" style="display: none;"></span>
+                                </div>
+                            </div>
+                            <div class="form-text">Enter 15-character GSTIN for tax invoice (Optional)</div>
+                            <div id="gstValidationMessage" class="mt-1 small"></div>
                         </div>
 
                         <!-- Form Actions -->
@@ -232,7 +246,7 @@ $settings = fetchSettings();
                                 </button>
                             </div>
                         </div>
-                        
+
                     </form>
                 </div>
                 <!--end::Card body-->
