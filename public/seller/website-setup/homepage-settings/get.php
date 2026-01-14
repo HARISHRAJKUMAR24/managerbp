@@ -2,59 +2,95 @@
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json");
+header("Access-Control-Allow-Headers: Authorization");
 
 require_once "../../../../config/config.php";
 require_once "../../../../src/database.php";
 
 $pdo = getDbConnection();
 
-// GET REAL USER ID DIRECTLY FROM REQUEST
-$realUser = $_GET["user_id"] ?? null;
+/* ------------------------------------------------
+   1️⃣ READ TOKEN FROM HEADER
+------------------------------------------------ */
+$headers = getallheaders();
+$auth = $headers['Authorization'] ?? '';
 
-if (!$realUser) {
+if (strpos($auth, 'Bearer ') !== 0) {
     echo json_encode([
         "success" => false,
-        "message" => "user_id missing"
+        "message" => "Unauthorized"
     ]);
     exit;
 }
 
-// VERIFY USER EXISTS USING REAL PRIMARY KEY
-$stmt = $pdo->prepare("SELECT id FROM users WHERE id = :uid LIMIT 1");
-$stmt->execute([":uid" => $realUser]);
+$token = trim(substr($auth, 7));
+
+/* ------------------------------------------------
+   2️⃣ FETCH USER FROM TOKEN
+------------------------------------------------ */
+$stmt = $pdo->prepare("
+    SELECT user_id 
+    FROM users 
+    WHERE api_token = ?
+    LIMIT 1
+");
+$stmt->execute([$token]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
-    echo json_encode(["success" => false, "message" => "Invalid user"]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid token"
+    ]);
     exit;
 }
 
-// GET homepage settings
-$stmt = $pdo->prepare("
-    SELECT id, hero_title, hero_description, hero_image
-    FROM website_settings
-    WHERE user_id = :uid
-");
-$stmt->execute([":uid" => $realUser]);
-$data = $stmt->fetch(PDO::FETCH_ASSOC);
+$user_id = (int)$user['user_id']; // ✅ SAME AS SAVE
 
-if (!$data) {
-    $data = [
+/* ------------------------------------------------
+   3️⃣ FETCH WEBSITE SETTINGS
+------------------------------------------------ */
+$stmt = $pdo->prepare("
+    SELECT hero_title, hero_description, hero_image, banners
+    FROM website_settings
+    WHERE user_id = ?
+    LIMIT 1
+");
+$stmt->execute([$user_id]);
+$row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+/* ------------------------------------------------
+   4️⃣ DEFAULTS + DECODE
+------------------------------------------------ */
+if (!$row) {
+    $row = [
         "hero_title" => "",
         "hero_description" => "",
         "hero_image" => "",
+        "banners" => []
     ];
+} else {
+    $row["banners"] = $row["banners"]
+        ? json_decode($row["banners"], true)
+        : [];
 }
 
+/* ------------------------------------------------
+   5️⃣ IMAGE URL
+------------------------------------------------ */
 $baseURL = "http://localhost/managerbp/public/uploads/";
 
-$data["hero_image_url"] = $data["hero_image"]
-    ? $baseURL . $data["hero_image"]
+$row["hero_image_url"] = $row["hero_image"]
+    ? $baseURL . $row["hero_image"]
     : "";
 
-$data["user_id"] = $realUser;
+$row["user_id"] = $user_id;
 
+/* ------------------------------------------------
+   6️⃣ RESPONSE
+------------------------------------------------ */
 echo json_encode([
     "success" => true,
-    "data" => $data
+    "data" => $row
 ]);
+exit;
