@@ -295,15 +295,15 @@ function getUserPlanLimit($user_id, $resource_type)
     $expiryStmt = $pdo->prepare($expirySql);
     $expiryStmt->execute([$user_id]);
     $userData = $expiryStmt->fetch(PDO::FETCH_ASSOC);
-    
+
     $plan_expired = false;
     $plan_expired_message = '';
-    
+
     if ($userData && $userData['expires_on'] && $userData['expires_on'] !== '0000-00-00 00:00:00') {
         $expiry_date = new DateTime($userData['expires_on']);
         $today = new DateTime('now');
         $plan_expired = ($expiry_date < $today);
-        
+
         if ($plan_expired) {
             $plan_expired_message = "Your plan has expired. Please renew to continue using all features.";
         }
@@ -354,7 +354,7 @@ function getUserPlanLimit($user_id, $resource_type)
     if ($plan_expired) {
         // Get current count for this resource
         $current_count = 0;
-        
+
         if ($resource_type === 'services') {
             // Count only departments + categories for services limit
             $stmt = $pdo->prepare("
@@ -389,7 +389,7 @@ function getUserPlanLimit($user_id, $resource_type)
                 $current_count = $result['count'] ?? 0;
             }
         }
-        
+
         return [
             'can_add' => false,
             'message' => $plan_expired_message,
@@ -654,15 +654,16 @@ function validateResourceLimit($user_id, $resource_type)
 }
 
 
- /* ------------- Get actual resource count for user based on service type ------------- */
-function getUserActualResourcesCount($user_id) {
+/* ------------- Get actual resource count for user based on service type ------------- */
+function getUserActualResourcesCount($user_id)
+{
     $pdo = getDbConnection();
-    
+
     // First get user's service_type_id
     $stmt = $pdo->prepare("SELECT service_type_id FROM users WHERE user_id = ?");
     $stmt->execute([$user_id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$user) {
         return [
             'services_count' => 0,
@@ -671,13 +672,13 @@ function getUserActualResourcesCount($user_id) {
             'menu_items_label' => 'Menu Items'
         ];
     }
-    
+
     $service_type_id = $user['service_type_id'];
     $services_count = 0;
     $menu_items_count = 0;
     $services_label = 'Services';
     $menu_items_label = 'Menu Items';
-    
+
     // Determine what to count based on service_type_id
     switch ($service_type_id) {
         case 1: // HOSPITAL - count categories
@@ -687,7 +688,7 @@ function getUserActualResourcesCount($user_id) {
             $services_count = $result['count'] ?? 0;
             $services_label = 'Categories';
             break;
-            
+
         case 2: // HOTEL - count menu_items
             $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM menu_items WHERE user_id = ?");
             $stmt->execute([$user_id]);
@@ -695,7 +696,7 @@ function getUserActualResourcesCount($user_id) {
             $menu_items_count = $result['count'] ?? 0;
             $services_label = 'Menu Items';
             break;
-            
+
         case 3: // OTHER - count departments
             $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM departments WHERE user_id = ?");
             $stmt->execute([$user_id]);
@@ -703,7 +704,7 @@ function getUserActualResourcesCount($user_id) {
             $services_count = $result['count'] ?? 0;
             $services_label = 'Services';
             break;
-            
+
         default:
             // Count both as fallback
             $stmt = $pdo->prepare("
@@ -718,7 +719,7 @@ function getUserActualResourcesCount($user_id) {
             $menu_items_count = $result['menu_count'] ?? 0;
             break;
     }
-    
+
     return [
         'services_count' => $services_count,
         'services_label' => $services_label,
@@ -728,13 +729,14 @@ function getUserActualResourcesCount($user_id) {
 }
 
 /* ------------- Enhanced version of getUserPlanLimit with actual counts display ------------- */
-function getUserPlanLimitWithActual($user_id, $resource_type) {
+function getUserPlanLimitWithActual($user_id, $resource_type)
+{
     // First get the standard plan limit
     $planLimit = getUserPlanLimit($user_id, $resource_type);
-    
+
     // Get actual resource counts based on service type
     $actualCounts = getUserActualResourcesCount($user_id);
-    
+
     // Update the response based on resource type
     if ($resource_type === 'services') {
         $planLimit['actual_count'] = $actualCounts['services_count'];
@@ -751,7 +753,7 @@ function getUserPlanLimitWithActual($user_id, $resource_type) {
             'coupons' => 'coupons',
             'manual_payment_methods' => 'manual_payment_methods'
         ];
-        
+
         if (isset($table_map[$resource_type])) {
             $table = $table_map[$resource_type];
             $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE user_id = ?");
@@ -761,7 +763,7 @@ function getUserPlanLimitWithActual($user_id, $resource_type) {
             $planLimit['label'] = ucfirst(str_replace('_', ' ', $resource_type));
         }
     }
-    
+
     return $planLimit;
 }
 
@@ -769,14 +771,15 @@ function getUserPlanLimitWithActual($user_id, $resource_type) {
 
 /* ------------- Get actual customer count for a specific user
  * This counts how many customers belong to a specific user_id ------------- */
-function getActualCustomerCount($user_id) {
+function getActualCustomerCount($user_id)
+{
     $pdo = getDbConnection();
-    
+
     try {
         $stmt = $pdo->prepare("SELECT COUNT(*) as customer_count FROM customers WHERE user_id = ?");
         $stmt->execute([$user_id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         return $result['customer_count'] ?? 0;
     } catch (Exception $e) {
         error_log("Error getting customer count: " . $e->getMessage());
@@ -787,16 +790,63 @@ function getActualCustomerCount($user_id) {
 /**
  * Get customer limit info with actual count
  */
-function getCustomerLimitWithCount($user_id) {
+function getCustomerLimitWithCount($user_id)
+{
     // Get plan limit
     $planLimit = getUserPlanLimit($user_id, 'customers');
-    
+
     // Get actual count
     $actualCount = getActualCustomerCount($user_id);
-    
+
     // Combine the data
     $planLimit['actual_count'] = $actualCount;
     $planLimit['label'] = 'Customers';
-    
+
     return $planLimit;
+}
+
+
+/*_____________________________________________________________________________________*/
+
+
+// Get Indian state code for TIN
+function get_state($state)
+{
+    $indian_tin = array(
+        'Andhra Pradesh' => '28',
+        'Arunachal Pradesh' => '12',
+        'Assam' => '18',
+        'Bihar' => '10',
+        'Chhattisgarh' => '22',
+        'Goa' => '30',
+        'Gujarat' => '24',
+        'Haryana' => '06',
+        'Himachal Pradesh' => '02',
+        'Jharkhand' => '20',
+        'Karnataka' => '29',
+        'Kerala' => '32',
+        'Madhya Pradesh' => '23',
+        'Maharashtra' => '27',
+        'Manipur' => '14',
+        'Meghalaya' => '17',
+        'Mizoram' => '15',
+        'Nagaland' => '13',
+        'Odisha' => '21',
+        'Punjab' => '03',
+        'Rajasthan' => '08',
+        'Sikkim' => '11',
+        'Tamil Nadu' => '33',
+        'Telangana' => '36',
+        'Tripura' => '16',
+        'Uttar Pradesh' => '09',
+        'Uttarakhand' => '05',
+        'West Bengal' => '19'
+    );
+
+    // Check if the state is valid
+    if (array_key_exists($state, $indian_tin)) {
+        return $indian_tin[$state];
+    } else {
+        return null;
+    }
 }
