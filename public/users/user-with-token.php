@@ -9,7 +9,7 @@ require_once "../../src/database.php";
 $raw = file_get_contents("php://input");
 $input = json_decode($raw, true);
 
-$token = $_COOKIE["token"] ?? ($input["token"] ?? "");
+$token = $input["token"] ?? "";
 
 if (!$token) {
     echo json_encode(["success" => false, "message" => "Missing token"]);
@@ -70,5 +70,3 @@ echo json_encode([
         "siteSettings" => $siteSettings ?? []
     ]
 ]);
-
-?>

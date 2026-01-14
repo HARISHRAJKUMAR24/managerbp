@@ -509,12 +509,57 @@ renderTemplate('header');
 <!-- Hidden field for user_id -->
 <input type="hidden" id="user_id_hidden" value="<?= $user->user_id ?>">
 
+
+
 <!--include:Footer-->
 <?php renderTemplate('footer'); ?>
 <!--end:Footer-->
 
+
 <!--begin::Vendors Javascript(used for this page only)-->
 <script src="assets/plugins/custom/jquery/jquery-3.7.1.min.js"></script>
+
+<script>
+$(document).on('click', '#loginBtn', function () {
+    const userId = $('#user_id_hidden').val();
+
+    $.post(
+        '/managerbp/public/ajax/create-manager-login-token.php',
+        { user_id: userId }
+    )
+    .done(function (res) {
+        console.log("SSO response:", res);
+        let data;
+        try {
+            data = typeof res === 'string' ? JSON.parse(res) : res;
+        } catch (e) {
+            alert('Invalid server response');
+            console.log(res);
+            return;
+        }
+
+        if (data.success && data.token) {
+                    console.log("Opening SSO with token:", data.token); // 👈 ADD
+
+            // ✅ OPEN SSO FLOW IN NEW TAB
+            window.open(
+  'http://localhost:3000/sso?token=' + data.token,
+                '_blank'
+            );
+        } else {
+            alert('Token generation failed');
+            console.log(data);
+        }
+    })
+    .fail(function (xhr) {
+        alert('AJAX request failed');
+        console.log(xhr.status, xhr.responseText);
+    });
+});
+</script>
+
+
+
 <script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
