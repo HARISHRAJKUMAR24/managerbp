@@ -132,6 +132,7 @@ renderTemplate('header');
                                                 <option value="razorpay">Razorpay</option>
                                                 <option value="phone pay">Phone Pay</option>
                                                 <option value="payu">PayU</option>
+                                                 <option value="manual">Manual Payment</option>
                                             </select>
                                         </div>
                                         

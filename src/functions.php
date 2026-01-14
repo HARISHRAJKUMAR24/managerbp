@@ -284,11 +284,30 @@ function isNewlyCreatedSeller($sellerCreatedAt, $messageCreatedAt)
 
 
 /**
- * Get user's plan limit for a specific resource
+ * Get user's plan limit for a specific resource WITH EXPIRY CHECK
  */
 function getUserPlanLimit($user_id, $resource_type)
 {
     $pdo = getDbConnection();
+
+    // First check if user's plan is expired
+    $expirySql = "SELECT plan_id, expires_on FROM users WHERE user_id = ?";
+    $expiryStmt = $pdo->prepare($expirySql);
+    $expiryStmt->execute([$user_id]);
+    $userData = $expiryStmt->fetch(PDO::FETCH_ASSOC);
+    
+    $plan_expired = false;
+    $plan_expired_message = '';
+    
+    if ($userData && $userData['expires_on'] && $userData['expires_on'] !== '0000-00-00 00:00:00') {
+        $expiry_date = new DateTime($userData['expires_on']);
+        $today = new DateTime('now');
+        $plan_expired = ($expiry_date < $today);
+        
+        if ($plan_expired) {
+            $plan_expired_message = "Your plan has expired. Please renew to continue using all features.";
+        }
+    }
 
     // Map resource types to column names
     $column_map = [
@@ -313,7 +332,9 @@ function getUserPlanLimit($user_id, $resource_type)
             'message' => 'Invalid resource type: ' . $resource_type,
             'current' => 0,
             'limit' => 0,
-            'remaining' => 0
+            'remaining' => 0,
+            'plan_expired' => $plan_expired,
+            'expiry_message' => $plan_expired_message
         ];
     }
 
@@ -329,7 +350,58 @@ function getUserPlanLimit($user_id, $resource_type)
     $stmt->execute([$user_id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // ✅ KEY CHANGE: Allow 1 resource for users without a plan
+    // If plan expired, restrict to 0 for all resources
+    if ($plan_expired) {
+        // Get current count for this resource
+        $current_count = 0;
+        
+        if ($resource_type === 'services') {
+            // Count only departments + categories for services limit
+            $stmt = $pdo->prepare("
+                SELECT 
+                    (SELECT COUNT(*) FROM departments WHERE user_id = ?) +
+                    (SELECT COUNT(*) FROM categories WHERE user_id = ?) as total_count
+            ");
+            $stmt->execute([$user_id, $user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $current_count = $result['total_count'] ?? 0;
+        } elseif ($resource_type === 'menu_items') {
+            // Count menu items for menu limit
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM menu_items WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $current_count = $result['count'] ?? 0;
+        } else {
+            // Normal counting for other resources
+            $table_map = [
+                'appointments' => 'appointments',
+                'customers' => 'customers',
+                'coupons' => 'coupons',
+                'manual_payment_methods' => 'manual_payment_methods'
+            ];
+
+            $current_count = 0;
+            if (isset($table_map[$resource_type])) {
+                $table = $table_map[$resource_type];
+                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE user_id = ?");
+                $stmt->execute([$user_id]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $current_count = $result['count'] ?? 0;
+            }
+        }
+        
+        return [
+            'can_add' => false,
+            'message' => $plan_expired_message,
+            'current' => $current_count,
+            'limit' => 0,
+            'remaining' => 0,
+            'plan_expired' => true,
+            'expiry_message' => $plan_expired_message
+        ];
+    }
+
+    // ✅ User without a plan (new user) - allow 1 resource
     if (!$user || $user['plan_id'] === null) {
         $limit = 1; // Allow only 1 resource for users without plan
 
@@ -351,7 +423,9 @@ function getUserPlanLimit($user_id, $resource_type)
                     'message' => "You can only create 1 without a plan.<br>Please subscribe to a plan to add more.",
                     'current' => $current_count,
                     'limit' => $limit,
-                    'remaining' => 0
+                    'remaining' => 0,
+                    'plan_expired' => false,
+                    'expiry_message' => ''
                 ];
             }
 
@@ -360,7 +434,9 @@ function getUserPlanLimit($user_id, $resource_type)
                 'message' => "You can only create 1 without a plan.<br>Please subscribe to a plan to add more.",
                 'current' => $current_count,
                 'limit' => $limit,
-                'remaining' => $limit - $current_count
+                'remaining' => $limit - $current_count,
+                'plan_expired' => false,
+                'expiry_message' => ''
             ];
         } elseif ($resource_type === 'menu_items') {
             // Count menu items for menu limit
@@ -375,7 +451,9 @@ function getUserPlanLimit($user_id, $resource_type)
                     'message' => "You can only create 1 menu item without a plan.<br>Please subscribe to a plan to add more.",
                     'current' => $current_count,
                     'limit' => $limit,
-                    'remaining' => 0
+                    'remaining' => 0,
+                    'plan_expired' => false,
+                    'expiry_message' => ''
                 ];
             }
 
@@ -384,7 +462,9 @@ function getUserPlanLimit($user_id, $resource_type)
                 'message' => "You can create 1 menu item without a plan. Subscribe to add more.",
                 'current' => $current_count,
                 'limit' => $limit,
-                'remaining' => $limit - $current_count
+                'remaining' => $limit - $current_count,
+                'plan_expired' => false,
+                'expiry_message' => ''
             ];
         } else {
             // Normal counting for other resources
@@ -401,7 +481,7 @@ function getUserPlanLimit($user_id, $resource_type)
                 $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE user_id = ?");
                 $stmt->execute([$user_id]);
                 $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                $current_count = $result['count'];
+                $current_count = $result['count'] ?? 0;
             }
 
             if ($current_count >= $limit) {
@@ -410,7 +490,9 @@ function getUserPlanLimit($user_id, $resource_type)
                     'message' => "You can only create 1 {$resource_type} without a plan.<br>Please subscribe to a plan to add more.",
                     'current' => $current_count,
                     'limit' => $limit,
-                    'remaining' => 0
+                    'remaining' => 0,
+                    'plan_expired' => false,
+                    'expiry_message' => ''
                 ];
             }
 
@@ -419,7 +501,9 @@ function getUserPlanLimit($user_id, $resource_type)
                 'message' => "You can create 1 {$resource_type} without a plan. Subscribe to add more.",
                 'current' => $current_count,
                 'limit' => $limit,
-                'remaining' => $limit - $current_count
+                'remaining' => $limit - $current_count,
+                'plan_expired' => false,
+                'expiry_message' => ''
             ];
         }
     }
@@ -433,7 +517,9 @@ function getUserPlanLimit($user_id, $resource_type)
             'message' => 'Unlimited usage',
             'current' => 0,
             'limit' => 'unlimited',
-            'remaining' => 'unlimited'
+            'remaining' => 'unlimited',
+            'plan_expired' => false,
+            'expiry_message' => ''
         ];
     }
 
@@ -473,7 +559,7 @@ function getUserPlanLimit($user_id, $resource_type)
             $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE user_id = ?");
             $stmt->execute([$user_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            $current_count = $result['count'];
+            $current_count = $result['count'] ?? 0;
         }
     }
 
@@ -484,7 +570,9 @@ function getUserPlanLimit($user_id, $resource_type)
             'message' => "Your plan includes {$limit_value} free credits",
             'current' => 0,
             'limit' => $limit_value,
-            'remaining' => $limit_value
+            'remaining' => $limit_value,
+            'plan_expired' => false,
+            'expiry_message' => ''
         ];
     }
 
@@ -494,7 +582,9 @@ function getUserPlanLimit($user_id, $resource_type)
             'message' => "You have reached your limit ({$limit}).<br>Please upgrade your plan to add more.",
             'current' => $current_count,
             'limit' => $limit,
-            'remaining' => 0
+            'remaining' => 0,
+            'plan_expired' => false,
+            'expiry_message' => ''
         ];
     }
 
@@ -503,7 +593,9 @@ function getUserPlanLimit($user_id, $resource_type)
         'message' => "You can add " . ($limit - $current_count) . " more.",
         'current' => $current_count,
         'limit' => $limit,
-        'remaining' => $limit - $current_count
+        'remaining' => $limit - $current_count,
+        'plan_expired' => false,
+        'expiry_message' => ''
     ];
 }
 
@@ -517,7 +609,7 @@ function canUserAddResource($user_id, $resource_type)
 }
 
 /**
- * Get user's resource usage summary
+ * Get user's resource usage summary WITH EXPIRY CHECK
  */
 function getUserResourceUsage($user_id, $resource_type = null)
 {
@@ -538,7 +630,7 @@ function getUserResourceUsage($user_id, $resource_type = null)
 }
 
 /**
- * Validate resource limit before adding (use in your API files)
+ * Validate resource limit before adding (use in your API files) WITH EXPIRY CHECK
  */
 function validateResourceLimit($user_id, $resource_type)
 {
@@ -551,7 +643,9 @@ function validateResourceLimit($user_id, $resource_type)
             'message' => $result['message'],
             'current' => $result['current'],
             'limit' => $result['limit'],
-            'remaining' => $result['remaining']
+            'remaining' => $result['remaining'],
+            'plan_expired' => $result['plan_expired'] ?? false,
+            'expiry_message' => $result['expiry_message'] ?? ''
         ]);
         exit();
     }
@@ -560,9 +654,7 @@ function validateResourceLimit($user_id, $resource_type)
 }
 
 
-/**
- * Get actual resource count for user based on service type
- */
+ /* ------------- Get actual resource count for user based on service type ------------- */
 function getUserActualResourcesCount($user_id) {
     $pdo = getDbConnection();
     
@@ -635,9 +727,7 @@ function getUserActualResourcesCount($user_id) {
     ];
 }
 
-/**
- * Enhanced version of getUserPlanLimit with actual counts display
- */
+/* ------------- Enhanced version of getUserPlanLimit with actual counts display ------------- */
 function getUserPlanLimitWithActual($user_id, $resource_type) {
     // First get the standard plan limit
     $planLimit = getUserPlanLimit($user_id, $resource_type);
@@ -677,10 +767,8 @@ function getUserPlanLimitWithActual($user_id, $resource_type) {
 
 
 
-/**
- * Get actual customer count for a specific user
- * This counts how many customers belong to a specific user_id
- */
+/* ------------- Get actual customer count for a specific user
+ * This counts how many customers belong to a specific user_id ------------- */
 function getActualCustomerCount($user_id) {
     $pdo = getDbConnection();
     

@@ -19,12 +19,16 @@ $(document).ready(function () {
     columns: [
       { data: "checkbox" },
       { data: "invoice_number" },
-      { data: "plan_name" },
       { data: "customer_info" },
+      { data: "plan_name" },
       { data: "amount" },
       { data: "payment_method" },
       { data: "payment_id" }
-    ]
+    ],
+    createdRow: function (row, data, dataIndex) {
+      // Initialize tooltips
+      $('[data-bs-toggle="tooltip"]', row).tooltip();
+    }
   });
 
   // Search filter (invoice, payment ID, customer, plan)
@@ -97,11 +101,32 @@ $(document).ready(function () {
     
     // Payment method filter
     if (paymentMethodFilter) {
+      let paymentLabel = '';
+      let paymentIcon = 'ki-outline ki-credit-cart';
+      
+      switch(paymentMethodFilter) {
+        case 'manual':
+          paymentLabel = 'Payment: Manual Payments';
+          paymentIcon = 'ki-outline ki-user-tick';
+          break;
+        case 'razorpay':
+          paymentLabel = 'Payment: Razorpay';
+          break;
+        case 'phone pay':
+          paymentLabel = 'Payment: Phone Pay';
+          break;
+        case 'payu':
+          paymentLabel = 'Payment: PayU';
+          break;
+        default:
+          paymentLabel = `Payment: ${paymentMethodFilter.charAt(0).toUpperCase() + paymentMethodFilter.slice(1)}`;
+      }
+      
       filters.push({
         type: 'paymentMethod',
         value: paymentMethodFilter,
-        label: `Payment: ${paymentMethodFilter.charAt(0).toUpperCase() + paymentMethodFilter.slice(1)}`,
-        icon: 'ki-outline ki-credit-cart'
+        label: paymentLabel,
+        icon: paymentIcon
       });
     }
     
@@ -178,6 +203,11 @@ $(document).ready(function () {
     
     updateAppliedFilters();
     table.draw();
+  });
+  
+  // Initialize tooltips on table redraw
+  table.on('draw', function () {
+    $('[data-bs-toggle="tooltip"]').tooltip();
   });
   
   // Update applied filters on page load

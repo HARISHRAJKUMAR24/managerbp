@@ -3,21 +3,25 @@ $(document).ready(function () {
 
     // Initialize variables
     let plans = [];
-    let sellers = [];
+    let users = [];
     let paymentMethods = [];
     let currencies = [];
     let defaultCurrency = 'INR';
     let pincodeDebounceTimer = null;
 
-    // Enhanced alert function
-    function showAlert(type, message, details = '') {
-        $('.custom-alert').remove();
+    // Store user data in a map
+    const userDataMap = new Map();
 
-        const alertClass = {
-            success: 'alert-success',
-            error: 'alert-danger',
-            warning: 'alert-warning',
-            info: 'alert-info'
+    // Toast notification function (replaces showAlert)
+    function showToast(message, type = 'success') {
+        // Remove existing toasts
+        $('.custom-toast').remove();
+
+        const toastClass = {
+            success: 'bg-success text-white',
+            error: 'bg-danger text-white',
+            warning: 'bg-warning text-white',
+            info: 'bg-info text-white'
         };
 
         const icon = {
@@ -27,33 +31,69 @@ $(document).ready(function () {
             info: 'ℹ'
         };
 
-        let alertContent = `
-            <div class="custom-alert alert ${alertClass[type]} alert-dismissible fade show position-fixed" 
+        const toastHtml = `
+            <div class="custom-toast toast ${toastClass[type]} show position-fixed" 
                  style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 400px;">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                <div class="d-flex align-items-center">
+                <div class="toast-header ${toastClass[type]} border-0">
+                    <strong class="me-auto">${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body d-flex align-items-center">
                     <span class="fs-4 me-3">${icon[type]}</span>
-                    <div>
-                        <strong>${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
-                        <div class="mt-1">${message}</div>
+                    <div>${message}</div>
+                </div>
+            </div>
         `;
 
-        if (details) {
-            alertContent += `<small class="d-block mt-2 opacity-75">${details}</small>`;
-        }
+        const toast = $(toastHtml);
+        $('body').append(toast);
 
-        alertContent += `
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
+    // Modal dialog function for success/error
+    function showModal(title, message, type = 'success') {
+        // Remove existing modal if any
+        $('#manualBillingModal').remove();
+
+        const modalHtml = `
+            <div class="modal fade" id="manualBillingModal" tabindex="-1" aria-labelledby="manualBillingModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header ${type === 'success' ? 'bg-success text-white' : 'bg-danger text-white'}">
+                            <h5 class="modal-title" id="manualBillingModalLabel">${title}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center py-4">
+                                <div class="mb-4">
+                                    ${type === 'success'
+                ? '<i class="ki-duotone ki-check-circle fs-2hx text-success"><span class="path1"></span><span class="path2"></span></i>'
+                : '<i class="ki-duotone ki-cross-circle fs-2hx text-danger"><span class="path1"></span><span class="path2"></span></i>'
+            }
+                                </div>
+                                <h4 class="mb-3">${message}</h4>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
 
-        const alert = $(alertContent);
-        $('body').append(alert);
+        $('body').append(modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('manualBillingModal'));
+        modal.show();
 
-        setTimeout(() => {
-            alert.alert('close');
-        }, type === 'success' ? 5000 : 8000);
+        // Remove modal from DOM after hiding
+        $('#manualBillingModal').on('hidden.bs.modal', function () {
+            $(this).remove();
+        });
     }
 
     // Load data from server
@@ -65,39 +105,34 @@ $(document).ready(function () {
             type: 'GET',
             dataType: 'json',
             success: function (response) {
+                console.log('API Response:', response);
+
                 if (response.success) {
                     plans = response.data.plans || [];
-                    sellers = response.data.sellers || [];
+                    users = response.data.users || [];
                     paymentMethods = response.data.payment_methods || [];
                     currencies = response.data.currencies || [];
                     defaultCurrency = response.data.default_currency || 'INR';
 
-                    console.log(`Loaded ${plans.length} plans, ${sellers.length} sellers`);
-
-                    if (plans.length === 0) {
-                        showAlert('warning', 'No active plans found in database');
-                    }
-
-                    if (sellers.length === 0) {
-                        showAlert('warning', 'No active sellers found in database');
-                    }
+                    console.log(`Loaded ${plans.length} plans, ${users.length} users`);
 
                     populateDropdowns();
                     setupEventListeners();
                     initializeSelect2();
 
-                    if (plans.length > 0 && sellers.length > 0) {
-                        showAlert('success', 'Data loaded successfully');
+                    // Show brief toast when data loads
+                    if (plans.length > 0 && users.length > 0) {
+                        setTimeout(() => {
+                            //showToast('Ready to create manual billing', 'info');
+                        }, 1000);
                     }
                 } else {
-                    showAlert('error', 'Failed to load data', response.error);
-                    // Removed fallback data loading
+                    showModal('Error', 'Failed to load data: ' + response.error, 'error');
                 }
             },
             error: function (xhr, status, error) {
                 console.error('AJAX Error:', error);
-                showAlert('error', 'Connection failed', 'Cannot connect to server');
-                // Removed fallback data loading
+                showModal('Connection Error', 'Cannot connect to server. Please check your internet connection.', 'error');
             }
         });
     }
@@ -111,51 +146,61 @@ $(document).ready(function () {
         $planSelect.empty();
         $planSelect.append('<option value="">Select Plan</option>');
 
-        if (plans.length === 0) {
-            $planSelect.append('<option value="" disabled>No plans available</option>');
-        } else {
-            plans.forEach(plan => {
-                const durationMonths = Math.floor(plan.duration / 30);
-                $planSelect.append(`
-                    <option value="${plan.id}" 
-                            data-amount="${plan.amount}" 
-                            data-duration-months="${durationMonths}">
-                        ${plan.name} - ₹${plan.amount} for ${durationMonths} months
-                    </option>
-                `);
+        plans.forEach(plan => {
+            const durationMonths = Math.floor(plan.duration / 30);
+            $planSelect.append(`
+                <option value="${plan.id}" 
+                        data-amount="${plan.amount}" 
+                        data-duration-months="${durationMonths}">
+                    ${plan.name} - ₹${plan.amount} for ${durationMonths} months
+                </option>
+            `);
+        });
+
+        // Populate users dropdown
+        const $userSelect = $('#userSelect');
+        $userSelect.empty();
+        $userSelect.append('<option value="">Select User</option>');
+
+        // Clear previous map
+        userDataMap.clear();
+
+        users.forEach(user => {
+            // Store user data in map
+            userDataMap.set(user.id.toString(), {
+                id: user.id,
+                name: user.name || '',
+                email: user.email || '',
+                mobile: user.mobile || '',
+                site_name: user.site_name || '',
+                country: user.country || '',
+                address_1: user.address_1 || '',
+                address_2: user.address_2 || '',
+                state: user.state || '',
+                city: user.city || '',
+                pin_code: user.pin_code || '',
+                last_country: user.last_country || user.country || '',
+                currency: user.currency || defaultCurrency,
+                currency_symbol: user.currency_symbol || '₹',
+                gst_number: user.gst_number || ''
             });
-        }
 
-        // Populate sellers dropdown (basic for Select2)
-        const $sellerSelect = $('#sellerSelect');
-        $sellerSelect.empty();
-        $sellerSelect.append('<option value="">Select Seller</option>');
+            // Simple option
+            $userSelect.append(`
+                <option value="${user.id}">
+                    ${user.id} - ${user.name} (${user.site_name || 'No Site'})
+                </option>
+            `);
+        });
 
-        if (sellers.length === 0) {
-            $sellerSelect.append('<option value="" disabled>No sellers available</option>');
-        } else {
-            sellers.forEach(seller => {
-                $sellerSelect.append(`
-                    <option value="${seller.id}"
-                            data-name="${seller.name || ''}"
-                            data-email="${seller.email || ''}"
-                            data-mobile="${seller.mobile || ''}"
-                            data-state="${seller.state || ''}"
-                            data-city="${seller.city || ''}"
-                            data-pincode="${seller.pincode || ''}"
-                            data-address1="${seller.address_1 || ''}"
-                            data-address2="${seller.address_2 || ''}">
-                        ${seller.id} - ${seller.name} (${seller.site_name || 'No Site'})
-                    </option>
-                `);
-            });
-        }
+        console.log('User data map created with', userDataMap.size, 'entries');
 
-        // Populate payment methods
+        // Populate payment methods - without MP_ prefix in dropdown
         const $paymentSelect = $('select[name="payment_method"]');
         $paymentSelect.empty();
         $paymentSelect.append('<option value="">Select Payment Method</option>');
         paymentMethods.forEach(method => {
+            // Show normal names in dropdown but store with MP_ prefix in database
             $paymentSelect.append(`<option value="${method.value}">${method.label}</option>`);
         });
 
@@ -173,61 +218,123 @@ $(document).ready(function () {
         });
 
         $('#currencyDisplay').text(defaultCurrency);
-
-        console.log('Dropdowns populated');
     }
 
-    // Initialize Select2 for seller dropdown
+    // Initialize Select2
     function initializeSelect2() {
-        $('#sellerSelect').select2({
-            placeholder: "Select a seller",
+        $('#userSelect').select2({
+            placeholder: "Select a user",
             allowClear: true,
-            width: '100%',
-            templateResult: formatSellerOption,
-            templateSelection: formatSellerSelection,
-            escapeMarkup: function (m) { return m; }
+            width: '100%'
         });
     }
 
-    // Format seller option in dropdown
-    function formatSellerOption(seller) {
-        if (!seller.id) return seller.text;
+    // Auto-fill user details
+    function autoFillUserDetails(userData) {
+        console.log('Auto-filling user details:', userData);
 
-        const $option = $(seller.element);
-        const sellerId = $option.val();
-        const sellerName = $option.data('name') || '';
-        const sellerEmail = $option.data('email') || '';
-        const sellerMobile = $option.data('mobile') || '';
-        const sellerSite = $option.text().match(/\(([^)]+)\)/)?.[1] || 'No Site';
-
-        return $(`
-            <div>
-                <strong>${sellerId} - ${sellerName}</strong>
-                <div class="small text-muted">
-                    Site: ${sellerSite} | Email: ${sellerEmail} | Mobile: ${sellerMobile}
-                </div>
-            </div>
-        `);
-    }
-
-    // Format selected seller
-    function formatSellerSelection(seller) {
-        if (!seller.id) return seller.text;
-
-        const $option = $(seller.element);
-        const sellerId = $option.val();
-        const sellerName = $option.data('name') || '';
-
-        return `${sellerId} - ${sellerName}`;
-    }
-
-    // Get address from pincode API
-    function getAddressFromPincode(pincode) {
-        if (!pincode || pincode.length !== 6) {
+        if (!userData) {
+            console.error('No user data provided');
             return;
         }
 
-        // Show loading indicator
+        // Fill basic info
+        $('input[name="customer_name"]').val(userData.name || '');
+        $('input[name="customer_email"]').val(userData.email || '');
+        $('input[name="customer_mobile"]').val(userData.mobile || '');
+
+        // Country mapping
+        const countryMap = {
+            'IN': 'IN', 'India': 'IN',
+            'US': 'US', 'United States': 'US',
+            'GB': 'GB', 'United Kingdom': 'GB',
+            'AE': 'AE', 'United Arab Emirates': 'AE',
+            'SG': 'SG', 'Singapore': 'SG',
+            'MY': 'MY', 'Malaysia': 'MY'
+        };
+
+        let countryValue = userData.last_country || userData.country || '';
+        const countryCode = countryMap[countryValue] || 'IN';
+        $('select[name="country_code"]').val(countryCode).trigger('change');
+
+        // Fill address if available
+        if (userData.address_1) {
+            $('input[name="address_1"]').val(userData.address_1 || '');
+            $('input[name="address_2"]').val(userData.address_2 || '');
+            $('input[name="state"]').val(userData.state || '');
+            $('input[name="city"]').val(userData.city || '');
+            $('input[name="pincode"]').val(userData.pin_code || '');
+
+            if (userData.currency) {
+                $('select[name="currency"]').val(userData.currency).trigger('change');
+                $('#currencyDisplay').text(userData.currency);
+            }
+
+            if (userData.gst_number) {
+                $('#gstNumber').val(userData.gst_number);
+                validateGSTNumber(userData.gst_number);
+            }
+
+            // showToast(`Loaded details for ${userData.name}`, 'info');
+        } else {
+            // Clear address fields if no history
+            $('input[name="address_1"]').val('');
+            $('input[name="address_2"]').val('');
+            $('input[name="state"]').val('');
+            $('input[name="city"]').val('');
+            $('input[name="pincode"]').val('');
+            $('#gstNumber').val('');
+            clearGSTValidation();
+
+            showToast(`No previous address found for ${userData.name}. Please enter manually.`, 'info');
+        }
+    }
+
+    // GST Validation
+    function validateGSTNumber(gstNumber) {
+        const gstInput = $('#gstNumber');
+        const validationMessage = $('#gstValidationMessage');
+
+        gstInput.removeClass('is-valid is-invalid');
+        validationMessage.removeClass('text-success text-danger');
+        validationMessage.html('');
+
+        if (!gstNumber || gstNumber.trim() === '') {
+            return true;
+        }
+
+        const cleanGST = gstNumber.trim().toUpperCase();
+        const gstPattern = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[0-9A-Z]{1}$/;
+
+        if (!gstPattern.test(cleanGST)) {
+            gstInput.addClass('is-invalid');
+            validationMessage.addClass('text-danger');
+            validationMessage.html('<i class="fas fa-times-circle me-1"></i> Invalid GST format. Example: 33AAACP1935C1Z0');
+            return false;
+        }
+
+        const stateCode = parseInt(cleanGST.substring(0, 2));
+        if (stateCode < 1 || stateCode > 38) {
+            gstInput.addClass('is-invalid');
+            validationMessage.addClass('text-danger');
+            validationMessage.html('<i class="fas fa-times-circle me-1"></i> Invalid state code in GST number');
+            return false;
+        }
+
+        gstInput.addClass('is-valid');
+        validationMessage.addClass('text-success');
+        validationMessage.html('<i class="fas fa-check-circle me-1"></i> Valid GST number');
+        return true;
+    }
+
+    // Clear GST validation
+    function clearGSTValidation() {
+        $('#gstNumber').removeClass('is-valid is-invalid');
+        $('#gstValidationMessage').html('');
+    }
+
+    // Get address from pincode API (without alert)
+    function getAddressFromPincode(pincode) {
         const $pincodeInput = $('input[name="pincode"]');
         const originalBorder = $pincodeInput.css('border-color');
         $pincodeInput.css('border-color', '#009ef7');
@@ -240,20 +347,19 @@ $(document).ready(function () {
                 if (response && response[0] && response[0].Status === "Success") {
                     const postOffice = response[0].PostOffice[0];
 
-                    // Fill the address fields
-                    $('input[name="state"]').val(postOffice.State);
-                    $('input[name="city"]').val(postOffice.District);
-                    $('input[name="address_1"]').val(postOffice.Name + ', ' + postOffice.Block);
+                    // Only fill if fields are empty
+                    if (!$('input[name="state"]').val()) $('input[name="state"]').val(postOffice.State);
+                    if (!$('input[name="city"]').val()) $('input[name="city"]').val(postOffice.District);
+                    if (!$('input[name="address_1"]').val()) $('input[name="address_1"]').val(postOffice.Name + ', ' + postOffice.Block);
 
-                    showAlert('success', 'Address fetched successfully');
+                    // showToast('Address fetched from postal code', 'success');
                 } else {
-                    showAlert('warning', 'No address found for this pincode');
+                    showToast('No address found for this postal code', 'warning');
                 }
                 $pincodeInput.css('border-color', originalBorder);
             },
-            error: function (xhr, status, error) {
-                console.error('Pincode API Error:', error);
-                showAlert('error', 'Failed to fetch address. Please enter manually.');
+            error: function () {
+                showToast('Failed to fetch address. Please enter manually.', 'error');
                 $pincodeInput.css('border-color', originalBorder);
             }
         });
@@ -269,7 +375,6 @@ $(document).ready(function () {
 
             if (amount) $('input[name="amount"]').val(amount);
             if (durationMonths) {
-                // Set duration based on months
                 if (durationMonths >= 12) {
                     $('input[name="duration_value"]').val(Math.floor(durationMonths / 12));
                     $('select[name="duration_type"]').val('year');
@@ -280,62 +385,46 @@ $(document).ready(function () {
             }
         });
 
-        // Seller selection (using Select2 change event)
-        $('#sellerSelect').on('change', function () {
-            const selected = $(this).find('option:selected');
+        // User selection
+        $('#userSelect').on('change', function () {
+            const userId = $(this).val();
+            console.log('User selected:', userId);
 
-            if (selected.val()) {
-                $('input[name="customer_name"]').val(selected.data('name') || '');
-                $('input[name="customer_email"]').val(selected.data('email') || '');
-                $('input[name="customer_mobile"]').val(selected.data('mobile') || '');
-                $('input[name="state"]').val(selected.data('state') || '');
-                $('input[name="city"]').val(selected.data('city') || '');
-                $('input[name="pincode"]').val(selected.data('pincode') || '');
-                $('input[name="address_1"]').val(selected.data('address1') || '');
-                $('input[name="address_2"]').val(selected.data('address2') || '');
+            if (userId) {
+                const userData = userDataMap.get(userId.toString());
+                console.log('Retrieved user data:', userData);
+
+                if (userData) {
+                    autoFillUserDetails(userData);
+                } else {
+                    showToast('User data not found', 'error');
+                }
+            } else {
+                clearUserFields();
             }
         });
 
-        // Pincode change with debounce
+        // GST validation
+        $('#gstNumber').on('input blur', function () {
+            validateGSTNumber($(this).val());
+        });
+
+        // Pincode auto-fill (silent - no confirm dialog)
         $('input[name="pincode"]').on('input', function () {
             const pincode = $(this).val().trim();
-
-            // Clear previous timer
             clearTimeout(pincodeDebounceTimer);
 
-            // Only fetch if pincode is 6 digits
             if (pincode.length === 6 && /^\d+$/.test(pincode)) {
-                // Debounce to avoid too many API calls
                 pincodeDebounceTimer = setTimeout(() => {
-                    // Check if state and city are empty before fetching
                     const currentState = $('input[name="state"]').val();
                     const currentCity = $('input[name="city"]').val();
+                    const currentAddress = $('input[name="address_1"]').val();
 
-                    if (!currentState && !currentCity) {
+                    // Only fetch if all address fields are empty
+                    if (!currentState && !currentCity && !currentAddress) {
                         getAddressFromPincode(pincode);
-                    } else {
-                        // Ask user if they want to override
-                        if (confirm('Address fields already filled. Do you want to fetch from pincode?')) {
-                            getAddressFromPincode(pincode);
-                        }
                     }
-                }, 800); // 800ms debounce
-            }
-        });
-
-        // Pincode on blur (when user leaves the field)
-        $('input[name="pincode"]').on('blur', function () {
-            const pincode = $(this).val().trim();
-
-            if (pincode.length === 6 && /^\d+$/.test(pincode)) {
-                // Check if address fields are empty
-                const state = $('input[name="state"]').val();
-                const city = $('input[name="city"]').val();
-                const address1 = $('input[name="address_1"]').val();
-
-                if (!state && !city && !address1) {
-                    getAddressFromPincode(pincode);
-                }
+                }, 1000);
             }
         });
 
@@ -349,22 +438,37 @@ $(document).ready(function () {
             e.preventDefault();
             submitForm();
         });
+    }
 
-        // Clear address when pincode is cleared
-        $('input[name="pincode"]').on('change', function () {
-            if ($(this).val().trim() === '') {
-                $('input[name="state"]').val('');
-                $('input[name="city"]').val('');
-                $('input[name="address_1"]').val('');
-            }
-        });
+    // Clear user fields
+    function clearUserFields() {
+        $('input[name="customer_name"]').val('');
+        $('input[name="customer_email"]').val('');
+        $('input[name="customer_mobile"]').val('');
+        $('input[name="address_1"]').val('');
+        $('input[name="address_2"]').val('');
+        $('input[name="state"]').val('');
+        $('input[name="city"]').val('');
+        $('input[name="pincode"]').val('');
+        $('select[name="country_code"]').val('IN').trigger('change');
+        $('select[name="currency"]').val(defaultCurrency).trigger('change');
+        $('#gstNumber').val('');
+        clearGSTValidation();
     }
 
     // Submit form
     function submitForm() {
+        // Validate GST first
+        const gstNumber = $('#gstNumber').val();
+        if (gstNumber && !validateGSTNumber(gstNumber)) {
+            showModal('Validation Error', 'Please enter a valid GST number or remove it', 'error');
+            $('#gstNumber').focus();
+            return;
+        }
+
         const formData = {
             plan_id: $('select[name="plan_id"]').val(),
-            seller_id: $('#sellerSelect').val(),
+            user_id: $('#userSelect').val(),
             amount: $('input[name="amount"]').val(),
             duration_value: $('input[name="duration_value"]').val(),
             duration_type: $('select[name="duration_type"]').val(),
@@ -380,37 +484,35 @@ $(document).ready(function () {
             address_2: $('input[name="address_2"]').val(),
             currency: $('select[name="currency"]').val(),
             country_code: $('select[name="country_code"]').val(),
+            gst_number: gstNumber || '',
             notes: $('textarea[name="notes"]').val()
         };
 
         // Validation
-        const required = ['plan_id', 'seller_id', 'amount', 'duration_value', 'duration_type', 'payment_method',
+        const required = ['plan_id', 'user_id', 'amount', 'duration_value', 'duration_type', 'payment_method',
             'customer_name', 'customer_email', 'customer_mobile', 'state',
             'city', 'pincode', 'address_1', 'currency', 'country_code'];
 
         for (const field of required) {
             if (!formData[field]) {
                 const fieldName = field.replace(/_/g, ' ');
-                showAlert('error', `Please fill in: ${fieldName}`);
+                showModal('Validation Error', `Please fill in: ${fieldName}`, 'error');
                 $(`[name="${field}"]`).focus();
                 return;
             }
         }
 
-        // Validate pincode length
         if (formData.pincode.length !== 6) {
-            showAlert('error', 'Pincode must be 6 digits');
+            showModal('Validation Error', 'Pincode must be 6 digits', 'error');
             $('input[name="pincode"]').focus();
             return;
         }
 
-        // Show loading
         const $btn = $('#submitBtn');
         $btn.prop('disabled', true);
         $btn.find('.indicator-label').hide();
         $btn.find('.indicator-progress').show();
 
-        // Submit
         $.ajax({
             url: BASE_URL + 'ajax/manual-billing/add.php',
             type: 'POST',
@@ -422,73 +524,63 @@ $(document).ready(function () {
                 $btn.find('.indicator-progress').hide();
 
                 if (response.success) {
-                    showAlert('success', response.message);
+                    showModal('Success', response.message, 'success');
                     resetForm();
                 } else {
-                    showAlert('error', response.message || 'Failed to create billing');
+                    showModal('Error', response.message || 'Failed to create manual billing', 'error');
                 }
             },
-            error: function (xhr) {
+            error: function (xhr, status, error) {
                 $btn.prop('disabled', false);
                 $btn.find('.indicator-label').show();
                 $btn.find('.indicator-progress').hide();
-                showAlert('error', 'Network error');
+                showModal('Network Error', 'Unable to connect to server. Please try again.', 'error');
             }
         });
     }
-    // ===============================
-    // Browser OCR using Tesseract.js
-    // Razorpay + UPI Support
-    // ===============================
+
+    // OCR functionality (optional)
     $('#transactionImage').on('change', async function () {
         const file = this.files[0];
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
-            showAlert('error', 'Invalid file', 'Upload an image only');
+            showToast('Please upload an image file (PNG/JPG)', 'error');
             return;
         }
 
-        showAlert('info', 'Processing screenshot...', 'Reading payment details');
+        showToast('Processing screenshot for payment details...', 'info');
 
         try {
             const { data: { text } } = await Tesseract.recognize(
                 file,
                 'eng',
-                {
-                    logger: m => console.log(m)
-                }
+                { logger: m => console.log(m) }
             );
-
-            console.log('OCR RAW TEXT:', text);
 
             const paymentId = extractPaymentId(text);
 
             if (paymentId) {
                 $('input[name="payment_id"]').val(paymentId);
-                showAlert('success', 'Payment ID detected', paymentId);
+                showToast('Payment ID detected from screenshot', 'success');
             } else {
-                showAlert('warning', 'Payment ID not found', 'Please enter manually');
+                showToast('Payment ID not found. Please enter manually.', 'warning');
             }
 
         } catch (error) {
             console.error(error);
-            showAlert('error', 'OCR failed', 'Unable to read screenshot');
+            showToast('Failed to read screenshot. Please enter payment ID manually.', 'error');
         }
     });
 
-    // ===============================
-    // Extract Razorpay / UPI IDs
-    // ===============================
     function extractPaymentId(text) {
-
         const patterns = [
-            /pay_[A-Za-z0-9]+/,            // Razorpay
-            /\b[a-f0-9]{32}\b/i,           // PhonePe (32-char hex)
-            /UTR[:\s]*([A-Z0-9]+)/i,       // UPI UTR
+            /pay_[A-Za-z0-9]+/,
+            /\b[a-f0-9]{32}\b/i,
+            /UTR[:\s]*([A-Z0-9]+)/i,
             /Transaction\s*ID[:\s]*([A-Z0-9]+)/i,
             /Payment\s*ID[:\s]*([A-Z0-9_]+)/i,
-            /\b[A-Z0-9]{12,20}\b/          // Generic fallback
+            /\b[A-Z0-9]{12,20}\b/
         ];
 
         for (let pattern of patterns) {
@@ -502,19 +594,34 @@ $(document).ready(function () {
     }
 
     // Reset form
-    window.resetForm = function () {
-        $('#manualBillingForm')[0].reset();
-        $('select[name="plan_id"], select[name="payment_method"]')
-            .prop('selectedIndex', 0);
-        $('#sellerSelect').val('').trigger('change');
-        $('select[name="currency"]').val(defaultCurrency);
-        $('select[name="country_code"]').val('IN');
-        $('select[name="duration_type"]').val('year');
-        $('#currencyDisplay').text(defaultCurrency);
-        showAlert('info', 'Form reset');
-    }
+   window.resetForm = function () {
+    // Reset the entire form
+    $('#manualBillingForm')[0].reset();
+    
+    // Reset select fields
+    $('select[name="plan_id"]').val('').trigger('change');
+    $('select[name="payment_method"]').val('').trigger('change');
+    $('#userSelect').val('').trigger('change');
+    $('select[name="currency"]').val(defaultCurrency).trigger('change');
+    $('select[name="country_code"]').val('IN').trigger('change');
+    $('select[name="duration_type"]').val('year').trigger('change');
+    
+    // Reset display fields
+    $('#currencyDisplay').text(defaultCurrency);
+    
+    // Clear amount and duration fields
+    $('input[name="amount"]').val('');
+    $('input[name="duration_value"]').val('1');
+    
+    // Clear GST validation
+    clearGSTValidation();
+    
+    // Clear user fields
+    clearUserFields();
+    
+    showToast('Form has been reset', 'info');
+}
 
     // Start
-    console.log('Starting manual billing...');
     loadData();
 });
