@@ -76,12 +76,13 @@ if (!$paymentDetails) {
         }
     }
     
-    // Calculate GST based on exclusive plan
-    $amount = 199; // Example amount
+    // Calculate GST based on exclusive plan - Correct calculation
+    $totalAmount = 199; // Example total amount (inclusive of GST)
     $gstPercentage = 18;
-    $gstAmount = ($amount * $gstPercentage) / 100;
-    $subTotal = $amount;
-    $total = $subTotal + $gstAmount;
+    
+    // For exclusive GST: GST = (Total Amount * GST%) / (100 + GST%)
+    $gstAmount = round(($totalAmount * $gstPercentage) / (100 + $gstPercentage));
+    $baseAmount = $totalAmount - $gstAmount;
     
     // GST breakdown (Tamil Nadu example)
     $customerState = "Tamil Nadu";
@@ -89,10 +90,12 @@ if (!$paymentDetails) {
     $isSameState = strcasecmp(trim($customerState), trim($companyState)) === 0;
     
     if ($isSameState) {
-        $sgstAmount = floor($gstAmount / 2);
+        // For same state: CGST + SGST (50% each)
+        $sgstAmount = round($gstAmount / 2);
         $cgstAmount = $gstAmount - $sgstAmount;
         $igstAmount = 0;
     } else {
+        // For different state: IGST (full amount)
         $sgstAmount = 0;
         $cgstAmount = 0;
         $igstAmount = $gstAmount;
@@ -137,12 +140,12 @@ if (!$paymentDetails) {
                 "payment_id" => "pay_" . $invoiceNumber,
                 "currency" => $currency,
                 "currency_symbol" => $currency_symbol,
-                "amount" => $amount,
+                "amount" => $baseAmount, // Base amount without GST
                 "gst_amount" => $gstAmount,
                 "gst_type" => "exclusive",
                 "gst_percentage" => $gstPercentage,
                 "discount" => 0,
-                "total" => $total,
+                "total" => $totalAmount,
                 "place_of_supply" => $customerState,
                 "country_of_supply" => "India",
                 "amount_in_words" => "One Hundred And Ninety Nine INR",
@@ -154,8 +157,8 @@ if (!$paymentDetails) {
                 [
                     "description" => $planName . " Subscription",
                     "quantity" => 1,
-                    "unit_price" => $amount,
-                    "total" => $amount
+                    "unit_price" => $totalAmount, // Show total price for the item
+                    "total" => $totalAmount
                 ]
             ]
         ]
@@ -186,10 +189,24 @@ $customerState = $paymentDetails['state'] ?? '';
 $companyState = "Tamil Nadu"; // Company is in Tamil Nadu
 $isSameState = strcasecmp(trim($customerState), trim($companyState)) === 0;
 
-$amount = intval($paymentDetails['amount']);
+$totalAmount = intval($paymentDetails['amount']); // Total amount received
 $gstPercentage = intval($paymentDetails['gst_percentage']);
-$gstAmount = intval($paymentDetails['gst_amount']);
 $discount = intval($paymentDetails['discount']);
+
+// Calculate GST based on GST type
+$gstAmount = 0;
+$baseAmount = 0;
+
+if ($paymentDetails['gst_type'] === 'exclusive') {
+    // For exclusive GST: Calculate GST from total amount
+    // GST = (Total Amount * GST%) / (100 + GST%)
+    $gstAmount = round(($totalAmount * $gstPercentage) / (100 + $gstPercentage));
+    $baseAmount = $totalAmount - $gstAmount;
+} else {
+    // For inclusive GST: GST is already included in the amount
+    $gstAmount = intval($paymentDetails['gst_amount']);
+    $baseAmount = $totalAmount - $gstAmount;
+}
 
 // Calculate GST components
 $sgstAmount = 0;
@@ -199,7 +216,7 @@ $igstAmount = 0;
 if ($paymentDetails['gst_type'] === 'exclusive' && $gstAmount > 0) {
     if ($isSameState) {
         // For same state: SGST + CGST (50% each)
-        $sgstAmount = floor($gstAmount / 2);
+        $sgstAmount = round($gstAmount / 2);
         $cgstAmount = $gstAmount - $sgstAmount;
     } else {
         // For different state: IGST (full amount)
@@ -207,9 +224,11 @@ if ($paymentDetails['gst_type'] === 'exclusive' && $gstAmount > 0) {
     }
 }
 
-// Calculate totals
-$subTotal = $amount - $discount;
-$total = $subTotal + $gstAmount;
+// Apply discount to base amount
+$baseAmountAfterDiscount = $baseAmount - $discount;
+
+// Calculate final total
+$finalTotal = $baseAmountAfterDiscount + $gstAmount;
 
 // Amount in words function
 function amountInWords($number) {
@@ -267,7 +286,7 @@ function amountInWords($number) {
     return ucfirst($result) . " INR" . $points;
 }
 
-$amountInWords = amountInWords($total);
+$amountInWords = amountInWords($finalTotal);
 
 // Format the response
 $formattedResponse = [
@@ -309,26 +328,26 @@ $formattedResponse = [
             "payment_id" => $paymentDetails['payment_id'],
             "currency" => $paymentDetails['currency'] ?? $currency,
             "currency_symbol" => $paymentDetails['currency_symbol'] ?? $currency_symbol,
-            "amount" => $amount,
+            "amount" => $baseAmountAfterDiscount, // Base amount after discount (without GST)
             "gst_amount" => $gstAmount,
             "gst_type" => $paymentDetails['gst_type'],
             "gst_percentage" => $gstPercentage,
             "discount" => $discount,
-            "total" => $total,
+            "total" => $finalTotal,
             "place_of_supply" => $paymentDetails['state'] ?? "Tamil Nadu",
             "country_of_supply" => $paymentDetails['country'] ?? "India",
             "amount_in_words" => $amountInWords,
             "sgst_amount" => $sgstAmount,
             "cgst_amount" => $cgstAmount,
             "igst_amount" => $igstAmount,
-            "subtotal" => $subTotal
+            "subtotal" => $baseAmountAfterDiscount
         ],
         "items" => [
             [
                 "description" => $paymentDetails['plan_name'] . " Subscription",
                 "quantity" => 1,
-                "unit_price" => $amount,
-                "total" => $amount
+                "unit_price" => $finalTotal, // Show total price
+                "total" => $finalTotal
             ]
         ]
     ]
