@@ -48,7 +48,7 @@ unset($data["token"]);
 unset($data["created_at"]);
 
 /* --------------------------------------
-   ALLOWED CATEGORY + DOCTOR FIELDS
+   ALLOWED CATEGORY + DOCTOR + HSN FIELDS
 --------------------------------------*/
 $allowedFields = [
     "name",
@@ -62,7 +62,10 @@ $allowedFields = [
     "qualification",
     "experience",
     "reg_number",
-    "doctor_image"
+    "doctor_image",
+    
+    // ✅ NEW HSN FIELD
+    "hsn_code"
 ];
 
 /* --------------------------------------
@@ -103,6 +106,7 @@ $stmt->execute($params);
 --------------------------------------*/
 echo json_encode([
     "success" => true,
-    "message" => "Category & Doctor details updated successfully"
+    "message" => "Category, Doctor & HSN details updated successfully"
 ]);
 exit();
+?>

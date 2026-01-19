@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
-require_once "../../../src/functions.php"; // ✅ ADDED
+require_once "../../../src/functions.php";
 
 $pdo = getDbConnection();
 
@@ -50,7 +50,7 @@ if (!$user) {
 $user_id = $user->user_id;
 
 /* ----------------------------------------------------
-   ✅ CHECK SERVICES LIMIT (departments + categories + menu_items)
+   ✅ CHECK SERVICES LIMIT
 -----------------------------------------------------*/
 validateResourceLimit($user_id, 'services');
 
@@ -80,18 +80,22 @@ $fields = [
     "image"               => trim($data["image"] ?? ""),
     "meta_title"          => $data["meta_title"] ?? null,
     "meta_description"    => $data["meta_description"] ?? null,
+    
+    // Main type with HSN
     "type_main_name"      => $data["type_main_name"] ?? null,
     "type_main_amount"    => ($data["type_main_amount"] !== "" ? floatval($data["type_main_amount"]) : null),
+    "type_main_hsn"       => $data["type_main_hsn"] ?? null,
 ];
 
 /* ----------------------------------------------------
-   ADD 25 DYNAMIC TYPES
+   ADD 25 DYNAMIC TYPES WITH HSN
 -----------------------------------------------------*/
 for ($i = 1; $i <= 25; $i++) {
     $fields["type_{$i}_name"] = $data["type_{$i}_name"] ?? null;
     $fields["type_{$i}_amount"] = ($data["type_{$i}_amount"] !== "" && isset($data["type_{$i}_amount"]))
         ? floatval($data["type_{$i}_amount"])
         : null;
+    $fields["type_{$i}_hsn"] = $data["type_{$i}_hsn"] ?? null;
 }
 
 /* ----------------------------------------------------

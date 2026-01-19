@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
-require_once "../../../src/functions.php"; // ✅ ADDED
+require_once "../../../src/functions.php";
 
 $pdo = getDbConnection();
 
@@ -46,7 +46,7 @@ if (!$user) {
 $user_id = $user->user_id;
 
 /* --------------------------------------
-   ✅ CHECK SERVICES LIMIT (departments + categories + menu_items)
+   ✅ CHECK SERVICES LIMIT
 ---------------------------------------*/
 validateResourceLimit($user_id, 'services');
 
@@ -65,7 +65,7 @@ $meta_title = $data["meta_title"] ?? null;
 $meta_desc  = $data["meta_description"] ?? null;
 
 /* --------------------------------------
-   DOCTOR FIELDS (INSIDE CATEGORY)
+   DOCTOR FIELDS (INSIDE CATEGORY) WITH HSN
 ---------------------------------------*/
 $doctor_name    = $data["doctor_name"] ?? null;
 $specialization = $data["specialization"] ?? null;
@@ -73,6 +73,7 @@ $qualification  = $data["qualification"] ?? null;
 $experience     = $data["experience"] ?? null;
 $reg_number     = $data["reg_number"] ?? null;
 $doctor_image   = $data["doctor_image"] ?? null;
+$hsn_code       = $data["hsn_code"] ?? null; // ✅ NEW HSN FIELD
 
 /* --------------------------------------
    AUTO CATEGORY CODE
@@ -80,7 +81,7 @@ $doctor_image   = $data["doctor_image"] ?? null;
 $category_code = "CAT_" . uniqid();
 
 /* --------------------------------------
-   INSERT INTO CATEGORIES (WITH DOCTOR)
+   INSERT INTO CATEGORIES (WITH DOCTOR + HSN)
 ---------------------------------------*/
 $sql = "INSERT INTO categories
 (
@@ -96,6 +97,7 @@ $sql = "INSERT INTO categories
     experience,
     reg_number,
     doctor_image,
+    hsn_code,
     created_at
 )
 VALUES
@@ -112,6 +114,7 @@ VALUES
     :exp,
     :reg,
     :img,
+    :hsn,
     NOW(3)
 )";
 
@@ -129,7 +132,8 @@ $ok = $stmt->execute([
     ":qual"  => $qualification,
     ":exp"   => $experience,
     ":reg"   => $reg_number,
-    ":img"   => $doctor_image
+    ":img"   => $doctor_image,
+    ":hsn"   => $hsn_code // ✅ NEW HSN FIELD
 ]);
 
 if (!$ok) {
@@ -145,8 +149,9 @@ if (!$ok) {
 ---------------------------------------*/
 echo json_encode([
     "success" => true,
-    "message" => "Category + Doctor saved successfully",
+    "message" => "Category + Doctor + HSN saved successfully",
     "category_id" => $category_code,
     "id" => $pdo->lastInsertId()
 ]);
 exit();
+?>

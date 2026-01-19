@@ -64,13 +64,11 @@ if (!$department) {
 /* ----------------------------------------------------
    HANDLE ADDITIONAL IMAGES
 -----------------------------------------------------*/
-
 $baseImageUrl = "http://localhost/managerbp/public/uploads/";
 $additionalImages = $data["additionalImages"] ?? null;
 unset($data["additionalImages"]); // Remove before update
 
 if (is_array($additionalImages)) {
-
     // Delete old images
     $pdo->prepare("
         DELETE FROM department_additional_images 
@@ -83,7 +81,6 @@ if (is_array($additionalImages)) {
     ");
 
     foreach ($additionalImages as $img) {
-
         // Convert full url → relative
         if (strpos($img, $baseImageUrl) === 0) {
             $img = substr($img, strlen($baseImageUrl));
@@ -103,9 +100,9 @@ $fields = [];
 $bindValues = [];
 
 foreach ($data as $key => $value) {
-
     if ($value === '') $value = null;
 
+    // Convert amount fields to float
     if (strpos($key, '_amount') !== false && $value !== null) {
         $value = floatval($value);
     }

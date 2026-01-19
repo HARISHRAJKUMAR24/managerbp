@@ -31,7 +31,7 @@ if (!$category_id) {
 $baseImageUrl = "http://localhost/managerbp/public/uploads/";
 
 /* -----------------------------------------
-   TOKEN AUTHENTICATION (Optional but recommended)
+   TOKEN AUTHENTICATION
 ----------------------------------------- */
 $token = $_GET['token'] ?? ($_COOKIE['token'] ?? '');
 $user_id = $_GET['user_id'] ?? '';
@@ -58,8 +58,7 @@ if (!$user) {
 }
 
 /* -----------------------------------------
-   FETCH CATEGORY + DOCTOR FIELDS
-   Check if user owns this category (security)
+   FETCH CATEGORY + DOCTOR + HSN FIELDS
 ----------------------------------------- */
 $sql = "SELECT
             id,
@@ -77,6 +76,9 @@ $sql = "SELECT
             experience,
             reg_number,
             doctor_image,
+            
+            -- ✅ NEW HSN FIELD
+            hsn_code,
 
             created_at
         FROM categories
@@ -129,6 +131,7 @@ echo json_encode([
         "experience"     => $category["experience"],
         "reg_number"     => $category["reg_number"],
         "doctor_image"   => $category["doctor_image"],
+        "hsn_code"       => $category["hsn_code"], // ✅ NEW HSN FIELD
 
         // Nested doctor_details (for your frontend structure)
         "doctor_details" => [
@@ -137,8 +140,10 @@ echo json_encode([
             "qualification"  => $category["qualification"],
             "experience"     => $category["experience"],
             "reg_number"     => $category["reg_number"],
-            "doctor_image"   => $category["doctor_image"]
+            "doctor_image"   => $category["doctor_image"],
+            "hsn_code"       => $category["hsn_code"] // ✅ NEW HSN FIELD
         ]
     ]
 ]);
 exit();
+?>
