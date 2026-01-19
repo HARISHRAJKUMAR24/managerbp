@@ -49,6 +49,21 @@ if ($siteSettings) {
         : null;
 }
 
+// 👉 FUNCTION TO GET SUSPENSION REASON
+function getSuspendReason($pdo, $user_id) {
+    $q = $pdo->prepare("
+        SELECT reason 
+        FROM suspend_users 
+        WHERE user_id = ? 
+        ORDER BY id DESC 
+        LIMIT 1
+    ");
+    $q->execute([$user_id]);
+    $row = $q->fetch(PDO::FETCH_ASSOC);
+    return $row["reason"] ?? "";
+}
+
+
 echo json_encode([
     "success" => true,
     "data" => [
@@ -64,8 +79,11 @@ echo json_encode([
         "siteSlug"  => $user->site_slug,
         "siteName"  => $user->site_name,
 
-        // 🔥 THIS LINE FIXES EVERYTHING
         "service_type_id" => (int)$user->service_type_id,
+
+        // ⭐ ADD THESE LINES ⭐
+        "is_suspended" => (int)$user->is_suspended,
+        "suspension_reason" => $user->is_suspended ? getSuspendReason($pdo, $user->user_id) : null,
 
         "siteSettings" => $siteSettings ?? []
     ]
