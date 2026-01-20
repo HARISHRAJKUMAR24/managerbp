@@ -11,8 +11,17 @@ if (!$id) {
     exit;
 }
 
+/* ===============================
+   FETCH MANUAL PAYMENT METHOD
+================================ */
 $stmt = $pdo->prepare("
-    SELECT id, name, instructions, icon, image
+    SELECT 
+        id,
+        name,
+        instructions,
+        upi_id,      -- 🔥 ADDED
+        icon,
+        image
     FROM manual_payment_methods
     WHERE id = ? AND user_id = ?
     LIMIT 1
@@ -29,6 +38,9 @@ if (!$data) {
     exit;
 }
 
+/* ===============================
+   RESPONSE
+================================ */
 echo json_encode([
     "success" => true,
     "data" => $data

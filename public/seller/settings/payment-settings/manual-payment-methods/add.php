@@ -28,7 +28,7 @@ require_once dirname(__DIR__, 5) . "/src/database.php";
 $pdo = getDbConnection();
 
 /* ===============================
-   AUTH (ONCE, CORRECT)
+   AUTH
 ================================ */
 $headers = getallheaders();
 $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
@@ -60,14 +60,14 @@ if (!$user) {
     exit;
 }
 
-$user_id = (int)$user['user_id']; // ✅ MATCHES FK
-
+$user_id = (int)$user['user_id'];
 
 /* ===============================
    INPUT
 ================================ */
 $name = $_POST['name'] ?? '';
 $instructions = $_POST['instructions'] ?? '';
+$upi_id = $_POST['upi_id'] ?? null;   // ✅ NEW FIELD
 
 if ($name === '' || $instructions === '') {
     echo json_encode([
@@ -78,10 +78,7 @@ if ($name === '' || $instructions === '') {
 }
 
 /* ===============================
-   FILE UPLOADS
-================================ */
-/* ===============================
-   FILE UPLOADS (NEW STRUCTURE)
+   FILE UPLOAD HANDLING
 ================================ */
 
 $year  = date('Y');
@@ -93,8 +90,8 @@ $basePublicPath = dirname(__DIR__, 5) . "/public/uploads/sellers/{$user_id}/manu
 /* ---------- LOGO ---------- */
 $iconPath = null;
 if (!empty($_FILES['icon']['name'])) {
-    $logoDir = "{$basePublicPath}/logo/{$year}/{$month}/{$day}/";
 
+    $logoDir = "{$basePublicPath}/logo/{$year}/{$month}/{$day}/";
     if (!is_dir($logoDir)) {
         mkdir($logoDir, 0777, true);
     }
@@ -102,15 +99,14 @@ if (!empty($_FILES['icon']['name'])) {
     $logoName = time() . "_logo_" . basename($_FILES['icon']['name']);
     move_uploaded_file($_FILES['icon']['tmp_name'], $logoDir . $logoName);
 
-    // path stored in DB (relative to public/)
     $iconPath = "uploads/sellers/{$user_id}/manual_payment/logo/{$year}/{$month}/{$day}/{$logoName}";
 }
 
-/* ---------- IMAGE / QR ---------- */
+/* ---------- QR IMAGE ---------- */
 $imagePath = null;
 if (!empty($_FILES['image']['name'])) {
-    $imageDir = "{$basePublicPath}/image/{$year}/{$month}/{$day}/";
 
+    $imageDir = "{$basePublicPath}/image/{$year}/{$month}/{$day}/";
     if (!is_dir($imageDir)) {
         mkdir($imageDir, 0777, true);
     }
@@ -118,22 +114,22 @@ if (!empty($_FILES['image']['name'])) {
     $imageName = time() . "_image_" . basename($_FILES['image']['name']);
     move_uploaded_file($_FILES['image']['tmp_name'], $imageDir . $imageName);
 
-    // path stored in DB (relative to public/)
     $imagePath = "uploads/sellers/{$user_id}/manual_payment/image/{$year}/{$month}/{$day}/{$imageName}";
 }
 
 /* ===============================
-   INSERT
+   INSERT QUERY (UPDATED)
 ================================ */
 $stmt = $pdo->prepare("
     INSERT INTO manual_payment_methods
-    (user_id, name, instructions, icon, image, created_at)
-    VALUES (?, ?, ?, ?, ?, NOW(3))
+    (user_id, name, upi_id, instructions, icon, image, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, NOW(3))
 ");
 
 $stmt->execute([
     $user_id,
     $name,
+    $upi_id,   // ✅ NEW FIELD
     $instructions,
     $iconPath,
     $imagePath

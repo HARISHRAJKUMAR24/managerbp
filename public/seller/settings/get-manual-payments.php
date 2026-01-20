@@ -40,8 +40,9 @@ if (!$user_id) {
 try {
     $pdo = getDbConnection();
 
+    // ✅ NOW includes upi_id
     $stmt = $pdo->prepare(
-        "SELECT id, name, icon, instructions, image 
+        "SELECT id, name, icon, instructions, image, upi_id
          FROM manual_payment_methods 
          WHERE user_id = ?
          ORDER BY id DESC"

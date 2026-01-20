@@ -38,7 +38,7 @@ if (!$payload || !isset($payload['customer_id'])) {
 $pdo = getDbConnection();
 
 $stmt = $pdo->prepare("
-  SELECT customer_id, name, phone, email
+  SELECT customer_id, name, phone, email , photo 
   FROM customers
   WHERE customer_id = ?
   LIMIT 1
@@ -51,4 +51,4 @@ if (!$customer) {
     exit;
 }
 
-echo json_encode($customer);
+echo json_encode($customer); 

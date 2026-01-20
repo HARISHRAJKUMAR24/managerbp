@@ -35,8 +35,8 @@ error_log("LOGIN PARSED DATA: " . print_r($data, true));
 
 $phone = trim(
     $data["phone"]
-    ?? $data["user"]
-    ?? ""
+        ?? $data["user"]
+        ?? ""
 );
 
 $password = $data["password"] ?? "";
@@ -53,7 +53,7 @@ if ($phone === "" || $password === "") {
    FIND CUSTOMER (NO SLUG)
 ================================ */
 $stmt = $pdo->prepare("
-    SELECT customer_id, name, phone, password, user_id
+    SELECT customer_id, name, phone,photo, password, user_id
     FROM customers
     WHERE phone = ?
     LIMIT 1
@@ -111,6 +111,8 @@ echo json_encode([
     "token"    => $token,
     "customer" => [
         "customer_id" => $customer["customer_id"],
+        "user_id"     => (int)$customer["user_id"], // ✅ ADD THIS
+
         "name"        => $customer["name"],
         "phone"       => $customer["phone"]
     ]

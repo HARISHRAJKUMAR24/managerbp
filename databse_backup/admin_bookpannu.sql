@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 19, 2026 at 01:56 PM
+-- Generation Time: Jan 20, 2026 at 12:34 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -205,7 +205,8 @@ CREATE TABLE `customers` (
 
 INSERT INTO `customers` (`id`, `customer_id`, `user_id`, `name`, `email`, `phone`, `slug`, `password`, `photo`, `created_at`) VALUES
 (21, 484548, 85960, 'sdfsd', NULL, '+915555555555', 'sorry_sir', '$2y$10$cXw.2xMSMZqPbYxoI.C9veb6z/aZA7Ax2nRH9yQTAX95A2hYEbuLK', NULL, '2026-01-14 18:02:39.041'),
-(22, 695539, 85960, 'Deepak C', 'deepakchitravel@gmail.com', '+919345604653', '', '$2y$10$GnkmnYb97SjsBfZlo7KrKeNNh6UTk5prrpqkVCpreeCo35x0IWwzm', NULL, '2026-01-19 10:46:44.025');
+(22, 695539, 85960, 'Deepak', '', '+919345604653', '', '$2y$10$GnkmnYb97SjsBfZlo7KrKeNNh6UTk5prrpqkVCpreeCo35x0IWwzm', 'sellers/85960/customers/2026/01/20/profile_1768904920.webp', '2026-01-19 10:46:44.025'),
+(23, 774100, 85960, 'Barani', 'barani@gmail.com', '+918888888888', '', '$2y$10$l9mrmTpPRvs3cO/TU1tMFuK/XUtNUEWpPly5FIFaC6YwqxQo9w1Ii', NULL, '2026-01-20 16:42:44.852');
 
 -- --------------------------------------------------------
 
@@ -496,7 +497,6 @@ CREATE TABLE `doctor_schedule` (
 --
 
 INSERT INTO `doctor_schedule` (`id`, `user_id`, `category_id`, `name`, `slug`, `amount`, `token_limit`, `description`, `specialization`, `qualification`, `experience`, `doctor_image`, `weekly_schedule`, `meta_title`, `meta_description`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `created_at`, `updated_at`, `leave_dates`) VALUES
-(25, 85960, 49, 'vf', 'vf-fd', 443.00, 2, '', 'fd', 'df', 1, 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"02:02\",\"to\":\"05:05\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"66\"}]},\"Mon\":{\"enabled\":false,\"slots\":[]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', 'sfwer', 'werwer', 'AF', 'BDS', 'Ashkāsham', '6666666', '34wqer', 'https://maps.google.com/maps?q=34wqer%20Ashk%C4%81sham%206666666&z=15&output=embed', '2026-01-09 10:37:54', '2026-01-13 17:35:23', '[\"2026-01-13\",\"2026-01-16\",\"2026-01-27\",\"2026-04-02\"]'),
 (29, 85960, 52, 'Deepak', 'deepak-dental', 57.00, 1, 'dsf', 'Dental', 'MBBS', 4, 'sellers/85960/doctors/2026/01/19/1768817662_696e03fe3db09.webp', '{\"Sun\":{\"enabled\":false,\"slots\":[]},\"Mon\":{\"enabled\":true,\"slots\":[{\"from\":\"02:22\",\"to\":\"07:07\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"44\"}]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-19 15:46:46', '2026-01-19 15:46:46', '[\"2026-01-19\",\"2026-01-21\"]');
 
 -- --------------------------------------------------------
@@ -693,6 +693,7 @@ CREATE TABLE `manual_payment_methods` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
+  `upi_id` varchar(255) DEFAULT NULL,
   `icon` varchar(255) DEFAULT NULL,
   `instructions` longtext NOT NULL,
   `image` varchar(255) DEFAULT NULL,
@@ -703,10 +704,11 @@ CREATE TABLE `manual_payment_methods` (
 -- Dumping data for table `manual_payment_methods`
 --
 
-INSERT INTO `manual_payment_methods` (`id`, `user_id`, `name`, `icon`, `instructions`, `image`, `created_at`) VALUES
-(12, 32128, 'upi', 'uploads/sellers/32128/manual_payment/logo/2026/01/13/1768283552_logo_airpots.webp', '\r\n\r\n', 'uploads/sellers/32128/manual_payment/image/2026/01/13/1768283552_image_keyboard.webp', '2026-01-13 11:22:32.652'),
-(13, 32128, 'phonepay', 'uploads/sellers/32128/manual_payment/logo/2026/01/13/1768304192_logo_smartwatch.webp', 'none', 'uploads/sellers/32128/manual_payment/image/2026/01/13/1768304192_image_keyboard.webp', '2026-01-13 17:06:32.344'),
-(14, 85960, 'UPI Payment', 'uploads/sellers/85960/manual_payment/logo/2026/01/19/1768825967_logo_airpots.webp', '📱 **How to Pay via UPI:**\r\n\r\nsdf', 'uploads/sellers/85960/manual_payment/image/2026/01/19/1768825967_image_apple.webp', '2026-01-19 18:02:47.814');
+INSERT INTO `manual_payment_methods` (`id`, `user_id`, `name`, `upi_id`, `icon`, `instructions`, `image`, `created_at`) VALUES
+(12, 32128, 'upi', NULL, 'uploads/sellers/32128/manual_payment/logo/2026/01/13/1768283552_logo_airpots.webp', '\r\n\r\n', 'uploads/sellers/32128/manual_payment/image/2026/01/13/1768283552_image_keyboard.webp', '2026-01-13 11:22:32.652'),
+(13, 32128, 'phonepay', NULL, 'uploads/sellers/32128/manual_payment/logo/2026/01/13/1768304192_logo_smartwatch.webp', 'none', 'uploads/sellers/32128/manual_payment/image/2026/01/13/1768304192_image_keyboard.webp', '2026-01-13 17:06:32.344'),
+(14, 85960, 'UPI Payment', 'admin@gmail.com', 'uploads/sellers/85960/manual_payment/logo/2026/01/19/1768825967_logo_airpots.webp', '📱 **How to Pay via UPI:**\r\n\r\nsdf', 'uploads/sellers/85960/manual_payment/image/2026/01/19/1768825967_image_apple.webp', '2026-01-19 18:02:47.814'),
+(15, 32128, 'dsf', 'deepak@gmail.com', 'uploads/sellers/32128/manual_payment/logo/2026/01/20/1768885566_logo_moto.webp', 'sdf', 'uploads/sellers/32128/manual_payment/image/2026/01/20/1768885566_image_oppo.jpg', '2026-01-20 10:36:06.874');
 
 -- --------------------------------------------------------
 
@@ -1182,8 +1184,8 @@ CREATE TABLE `site_settings` (
 
 INSERT INTO `site_settings` (`id`, `user_id`, `logo`, `favicon`, `phone`, `whatsapp`, `email`, `currency`, `country`, `state`, `address`, `meta_title`, `meta_description`, `sharing_image_preview`, `gst_number`, `gst_type`, `tax_percent`, `facebook`, `twitter`, `instagram`, `linkedin`, `youtube`, `pinterest`, `cash_in_hand`, `razorpay_key_id`, `phonepe_salt_key`, `phonepe_salt_index`, `phonepe_merchant_id`, `payu_api_key`, `payu_salt`, `razorpay_secret_key`) VALUES
 (14, 27395, 'sellers/27395/site-settings/logo/2025/12/17/logo_6942a478ae072.png', 'sellers/27395/site-settings/favicon/2025/12/17/favicon_6942a47bb6819.png', '', '', '', 'INR', '', '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(15, 85960, 'sellers/85960/site-settings/logo/2026/01/03/logo_6958cdda803ce.png', 'sellers/85960/site-settings/favicon/2026/01/03/favicon_6958cdde20219.png', '88888 88888', '88888 88888', 'deepakchitravel@gmail.com', 'GTQ', 'AS', '03', '1/60 Middle street ,Cholapandi', NULL, NULL, NULL, NULL, NULL, NULL, 'facebook', NULL, NULL, NULL, NULL, NULL, 1, 'sdfsdf', NULL, NULL, NULL, NULL, NULL, 'sdfsdf'),
-(16, 32128, 'sellers/32128/site-settings/logo/2026/01/05/logo_695ba749bc174.jpg', 'sellers/32128/site-settings/favicon/2026/01/05/favicon_695ba6573524e.jpg', '8015021359', '8015021359', 'harish@gmail.com', 'INR', 'IN', '', '1Milestone Technology Solution Private Limited\nNO 1, SIVAN KOVIL STREET,\nNeedamangalam,\nTamil Nadu - 614404', 'fd', 'fdhdf', 'sellers/32128/seo-settings/preview-image/2026/01/05/seo_695bb08e43c0b.png', '33AACCZ2135N1Z7', 'inclusive', 5.00, 'https://wwww', NULL, 'https://4r4r', NULL, NULL, NULL, 1, '8015021359', NULL, NULL, NULL, NULL, NULL, '123');
+(15, 85960, 'sellers/85960/site-settings/logo/2026/01/03/logo_6958cdda803ce.png', 'sellers/85960/site-settings/favicon/2026/01/03/favicon_6958cdde20219.png', '88888 88888', '88888 88888', 'deepakchitravel@gmail.com', 'GTQ', '', '', '1/60 Middle street ,Cholapandi', NULL, NULL, NULL, '23AAACH7409R1Z8', 'exclusive', 28.00, 'facebook', NULL, NULL, NULL, NULL, NULL, 1, 'sdfsdf', NULL, NULL, NULL, NULL, NULL, 'sdfsdf'),
+(16, 32128, 'sellers/32128/site-settings/logo/2026/01/05/logo_695ba749bc174.jpg', 'sellers/32128/site-settings/favicon/2026/01/05/favicon_695ba6573524e.jpg', '8015021359', '8015021359', 'harish@gmail.com', 'INR', 'IN', '', '1Milestone Technology Solution Private Limited\nNO 1, SIVAN KOVIL STREET,\nNeedamangalam,\nTamil Nadu - 614404', 'fd', 'fdhdf', 'sellers/32128/seo-settings/preview-image/2026/01/05/seo_695bb08e43c0b.png', '33AACCZ2135N1Z7', 'inclusive', 5.00, 'https://wwww', NULL, 'https://4r4r', NULL, NULL, NULL, 1, 'uiugy', NULL, NULL, NULL, NULL, NULL, '123');
 
 -- --------------------------------------------------------
 
@@ -1350,8 +1352,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, '2026-02-06 13:44:17.000', 0, 1, '5ab608d91d40dc8617365aafe03e1ade4695c5c90e7ac8ef89fbc5c0788158c8'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2027-01-14 06:26:07.000', 0, 4, 'ad33145119f62111d9c8c1defdd0fc8efb2d98b69c235bb81a3e5565a60f2c69'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, 'a09da8e0155af5ba03c082bc4291d65712c7b2420a322f85fbe5673d5afcc423'),
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2027-01-14 06:26:07.000', 0, 4, '99fc33c4df9c354175513111e90f44051669ffd1a6a880861ab17cc9fece1dda'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, '184708ed5bc889243c825f03f3d151010695bd7c2871e47d19cc79de4d844fa7'),
 (22, 22431, 'Test', NULL, '7777777777', '$2y$10$Ved5KWItauFSS6B2kyRy7u21zlqjCUS/Q44XEQTtGcIqnCkJgskMO', 'IN', NULL, 'test', 'test', 3, '2026-01-09 11:53:56.000', NULL, '2027-01-09 07:28:47.000', 1, 8, '5f2f4d3678980d788cc4bb44d06796b4ec113c8884d1511a9d42eb9cdffe4f97');
 
 -- --------------------------------------------------------
@@ -1391,7 +1393,8 @@ CREATE TABLE `website_settings` (
 --
 
 INSERT INTO `website_settings` (`id`, `user_id`, `hero_title`, `hero_description`, `hero_image`, `banners`, `nav_links`) VALUES
-(10, 32128, 'werwer', 'uihiui', 'sellers/32128/website-settings/homepage/2026/01/13/hero_1768295109.webp', '[{\"path\":\"seller/32128/website-settings/homepage/banners/2026/01/13/banner_696621c2104ad0.29068474.webp\",\"title\":\"\",\"link\":\"\",\"order\":0},{\"path\":\"seller/32128/website-settings/homepage/banners/2026/01/13/banner_69662c50e37e64.77469248.webp\",\"title\":\"\",\"link\":\"\",\"order\":1},{\"path\":\"seller/32128/website-settings/homepage/banners/2026/01/13/banner_69662c57a620a1.70846872.webp\",\"title\":\"\",\"link\":\"\",\"order\":2}]', NULL);
+(10, 32128, 'werwer', 'uihiui', 'sellers/32128/website-settings/homepage/2026/01/13/hero_1768295109.webp', '[{\"path\":\"seller/32128/website-settings/homepage/banners/2026/01/13/banner_696621c2104ad0.29068474.webp\",\"title\":\"\",\"link\":\"\",\"order\":0},{\"path\":\"seller/32128/website-settings/homepage/banners/2026/01/13/banner_69662c50e37e64.77469248.webp\",\"title\":\"\",\"link\":\"\",\"order\":1},{\"path\":\"seller/32128/website-settings/homepage/banners/2026/01/13/banner_69662c57a620a1.70846872.webp\",\"title\":\"\",\"link\":\"\",\"order\":2}]', NULL),
+(11, 85960, 'Deepak , Barani , Harish', 'india is my country all indians are my brother and sister i love my country and i am proud of rich and where it heritage.', 'sellers/85960/website-settings/homepage/2026/01/20/hero_1768907516.png', '[{\"path\":\"seller/85960/website-settings/homepage/banners/2026/01/20/banner_696f20c4336212.92388960.jpg\",\"title\":\"\",\"link\":\"\",\"order\":0},{\"path\":\"seller/85960/website-settings/homepage/banners/2026/01/20/banner_696f2177e51a08.86364157.jpg\",\"title\":\"\",\"link\":\"\",\"order\":1},{\"path\":\"seller/85960/website-settings/homepage/banners/2026/01/20/banner_696f2177e98351.22485469.jpg\",\"title\":\"\",\"link\":\"\",\"order\":2},{\"path\":\"seller/85960/website-settings/homepage/banners/2026/01/20/banner_696f217803edc4.09171980.jpg\",\"title\":\"\",\"link\":\"\",\"order\":3}]', NULL);
 
 -- --------------------------------------------------------
 
@@ -1797,7 +1800,7 @@ ALTER TABLE `coupons`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `dashboard_messages`
@@ -1893,7 +1896,7 @@ ALTER TABLE `manager_login_tokens`
 -- AUTO_INCREMENT for table `manual_payment_methods`
 --
 ALTER TABLE `manual_payment_methods`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `menus`
@@ -2001,7 +2004,7 @@ ALTER TABLE `website_pages`
 -- AUTO_INCREMENT for table `website_settings`
 --
 ALTER TABLE `website_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Constraints for dumped tables
