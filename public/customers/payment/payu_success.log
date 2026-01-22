@@ -1,17 +1,17 @@
-[2026-01-22 13:43:57] POST DATA:
+[2026-01-22 16:21:11] POST DATA:
 Array
 (
-    [mihpayid] => 403993715536206952
+    [mihpayid] => 403993715536238288
     [mode] => CC
     [status] => success
     [unmappedstatus] => captured
     [key] => gtKFFx
-    [txnid] => TXN8596017690858063174
+    [txnid] => TXN8596017690951921549
     [amount] => 57.00
     [cardCategory] => domestic
     [discount] => 0.00
     [net_amount_debit] => 57
-    [addedon] => 2026-01-22 18:13:26
+    [addedon] => 2026-01-22 20:49:53
     [productinfo] => Booking Payment for Barani
     [firstname] => Barani
     [lastname] => 
@@ -21,7 +21,7 @@ Array
     [state] => 
     [country] => 
     [zipcode] => 
-    [email] => barani@gmail.com
+    [email] => deepak@gmail.com
     [phone] => 918888888888
     [udf1] => 
     [udf2] => 
@@ -33,9 +33,9 @@ Array
     [udf8] => 
     [udf9] => 
     [udf10] => 
-    [hash] => a4fe27f2990cb8f063aa04ffb9b65c5fcca32ff0eb5dcf41c6046419255be6d39bee89721bc8079a74ea80959371509fcc1f358c2692f5c5f254de821453a00f
-    [field1] => 728243044652045300
-    [field2] => 728338
+    [hash] => 0927144a7c092cfa5ebbe150d7fbeceef6d94e49f575fc339df51365110f4bc715e9fb064a639a8ebde65cd04e0d653c461aafed192c9cf940913c5e8ee519d6
+    [field1] => 285295710046770270
+    [field2] => 635158
     [field3] => 57.00
     [field4] => 
     [field5] => 00
@@ -46,7 +46,7 @@ Array
     [payment_source] => payu
     [pa_name] => PayU
     [PG_TYPE] => CC-PG
-    [bank_ref_num] => 728243044652045300
+    [bank_ref_num] => 285295710046770270
     [bankcode] => CC
     [error] => E000
     [error_Message] => No Error
@@ -54,8 +54,273 @@ Array
 )
 
 
-Hash String: 4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW|success|||||||||||||85960||||barani@gmail.com|Barani|Booking Payment for Barani|57.00|TXN8596017690858063174|gtKFFx
-Calculated Hash: 3477b5d0840d0452562a14f065f8096cde4069da21fc590d25e6dee8be7b6ca49f80df13627f724e2610995bc5d54779d889b714d4a3ee96f4e9b8cfbc2d706a
-Posted Hash: a4fe27f2990cb8f063aa04ffb9b65c5fcca32ff0eb5dcf41c6046419255be6d39bee89721bc8079a74ea80959371509fcc1f358c2692f5c5f254de821453a00f
+Hash String: 4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW|success|||||||||||||85960||||deepak@gmail.com|Barani|Booking Payment for Barani|57.00|TXN8596017690951921549|gtKFFx
+Calculated Hash: c19c3ecf976a8acf8568e60da935805ae865f39256055d5f55635e603b12a1cb6c70b74ed119ccb4fe0a171c49d78d04f9ef4952bfa54055eaa2a096a0217041
+Posted Hash: 0927144a7c092cfa5ebbe150d7fbeceef6d94e49f575fc339df51365110f4bc715e9fb064a639a8ebde65cd04e0d653c461aafed192c9cf940913c5e8ee519d6
 Status: success
 
+Array
+(
+    [mihpayid] => 403993715536238348
+    [mode] => CC
+    [status] => success
+    [unmappedstatus] => captured
+    [key] => gtKFFx
+    [txnid] => TXN17690962367365
+    [amount] => 57.00
+    [cardCategory] => domestic
+    [discount] => 0.00
+    [net_amount_debit] => 57
+    [addedon] => 2026-01-22 21:07:17
+    [productinfo] => Booking Payment
+    [firstname] => Barani
+    [lastname] => 
+    [address1] => 
+    [address2] => 
+    [city] => 
+    [state] => 
+    [country] => 
+    [zipcode] => 
+    [email] => deepak@gmail.com
+    [phone] => 918888888888
+    [udf1] => APT-1769095184879
+    [udf2] => 774100
+    [udf3] => 85960
+    [udf4] => 
+    [udf5] => 
+    [udf6] => 
+    [udf7] => 
+    [udf8] => 
+    [udf9] => 
+    [udf10] => 
+    [hash] => 664040f5da7f9178fa954c6004338c93f2ae375c373d47f4e61fa6fe01cffd830903a4aad8f9518bcd2fde59d21dc2640c7ad0d614284b497ad83486f7888347
+    [field1] => 742709855190898800
+    [field2] => 721625
+    [field3] => 57.00
+    [field4] => 
+    [field5] => 00
+    [field6] => 02
+    [field7] => AUTHPOSITIVE
+    [field8] => AUTHORIZED
+    [field9] => Transaction is Successful
+    [payment_source] => payu
+    [pa_name] => PayU
+    [PG_TYPE] => CC-PG
+    [bank_ref_num] => 742709855190898800
+    [bankcode] => CC
+    [error] => E000
+    [error_Message] => No Error
+    [cardnum] => XXXXXXXXXXXX2346
+)
+Array
+(
+    [mihpayid] => 403993715536238348
+    [mode] => CC
+    [status] => success
+    [unmappedstatus] => captured
+    [key] => gtKFFx
+    [txnid] => TXN17690962367365
+    [amount] => 57.00
+    [cardCategory] => domestic
+    [discount] => 0.00
+    [net_amount_debit] => 57
+    [addedon] => 2026-01-22 21:07:17
+    [productinfo] => Booking Payment
+    [firstname] => Barani
+    [lastname] => 
+    [address1] => 
+    [address2] => 
+    [city] => 
+    [state] => 
+    [country] => 
+    [zipcode] => 
+    [email] => deepak@gmail.com
+    [phone] => 918888888888
+    [udf1] => APT-1769095184879
+    [udf2] => 774100
+    [udf3] => 85960
+    [udf4] => 
+    [udf5] => 
+    [udf6] => 
+    [udf7] => 
+    [udf8] => 
+    [udf9] => 
+    [udf10] => 
+    [hash] => 664040f5da7f9178fa954c6004338c93f2ae375c373d47f4e61fa6fe01cffd830903a4aad8f9518bcd2fde59d21dc2640c7ad0d614284b497ad83486f7888347
+    [field1] => 742709855190898800
+    [field2] => 721625
+    [field3] => 57.00
+    [field4] => 
+    [field5] => 00
+    [field6] => 02
+    [field7] => AUTHPOSITIVE
+    [field8] => AUTHORIZED
+    [field9] => Transaction is Successful
+    [payment_source] => payu
+    [pa_name] => PayU
+    [PG_TYPE] => CC-PG
+    [bank_ref_num] => 742709855190898800
+    [bankcode] => CC
+    [error] => E000
+    [error_Message] => No Error
+    [cardnum] => XXXXXXXXXXXX2346
+)
+Array
+(
+    [mihpayid] => 403993715536238348
+    [mode] => CC
+    [status] => success
+    [unmappedstatus] => captured
+    [key] => gtKFFx
+    [txnid] => TXN17690962367365
+    [amount] => 57.00
+    [cardCategory] => domestic
+    [discount] => 0.00
+    [net_amount_debit] => 57
+    [addedon] => 2026-01-22 21:07:17
+    [productinfo] => Booking Payment
+    [firstname] => Barani
+    [lastname] => 
+    [address1] => 
+    [address2] => 
+    [city] => 
+    [state] => 
+    [country] => 
+    [zipcode] => 
+    [email] => deepak@gmail.com
+    [phone] => 918888888888
+    [udf1] => APT-1769095184879
+    [udf2] => 774100
+    [udf3] => 85960
+    [udf4] => 
+    [udf5] => 
+    [udf6] => 
+    [udf7] => 
+    [udf8] => 
+    [udf9] => 
+    [udf10] => 
+    [hash] => 664040f5da7f9178fa954c6004338c93f2ae375c373d47f4e61fa6fe01cffd830903a4aad8f9518bcd2fde59d21dc2640c7ad0d614284b497ad83486f7888347
+    [field1] => 742709855190898800
+    [field2] => 721625
+    [field3] => 57.00
+    [field4] => 
+    [field5] => 00
+    [field6] => 02
+    [field7] => AUTHPOSITIVE
+    [field8] => AUTHORIZED
+    [field9] => Transaction is Successful
+    [payment_source] => payu
+    [pa_name] => PayU
+    [PG_TYPE] => CC-PG
+    [bank_ref_num] => 742709855190898800
+    [bankcode] => CC
+    [error] => E000
+    [error_Message] => No Error
+    [cardnum] => XXXXXXXXXXXX2346
+)
+Array
+(
+    [mihpayid] => 403993715536238379
+    [mode] => CC
+    [status] => success
+    [unmappedstatus] => captured
+    [key] => gtKFFx
+    [txnid] => TXN17690968977751
+    [amount] => 57.00
+    [cardCategory] => domestic
+    [discount] => 0.00
+    [net_amount_debit] => 57
+    [addedon] => 2026-01-22 21:18:18
+    [productinfo] => Booking Payment
+    [firstname] => Barani
+    [lastname] => 
+    [address1] => 
+    [address2] => 
+    [city] => 
+    [state] => 
+    [country] => 
+    [zipcode] => 
+    [email] => deepak@gmail.com
+    [phone] => 918888888888
+    [udf1] => 85960HOS1muflq
+    [udf2] => 774100
+    [udf3] => 85960
+    [udf4] => 
+    [udf5] => 
+    [udf6] => 
+    [udf7] => 
+    [udf8] => 
+    [udf9] => 
+    [udf10] => 
+    [hash] => a645997cdc817ec13467296c78d80f01fe53cfdfab7eb37b2d1ecf6fee8d6325d358cb8ba40fffce6988a2376759f61d01792d69ba4d27721b52ae9232736300
+    [field1] => 961272830983786500
+    [field2] => 757558
+    [field3] => 57.00
+    [field4] => 
+    [field5] => 00
+    [field6] => 02
+    [field7] => AUTHPOSITIVE
+    [field8] => AUTHORIZED
+    [field9] => Transaction is Successful
+    [payment_source] => payu
+    [pa_name] => PayU
+    [PG_TYPE] => CC-PG
+    [bank_ref_num] => 961272830983786500
+    [bankcode] => CC
+    [error] => E000
+    [error_Message] => No Error
+    [cardnum] => XXXXXXXXXXXX2346
+)
+Array
+(
+    [mihpayid] => 403993715536238379
+    [mode] => CC
+    [status] => success
+    [unmappedstatus] => captured
+    [key] => gtKFFx
+    [txnid] => TXN17690968977751
+    [amount] => 57.00
+    [cardCategory] => domestic
+    [discount] => 0.00
+    [net_amount_debit] => 57
+    [addedon] => 2026-01-22 21:18:18
+    [productinfo] => Booking Payment
+    [firstname] => Barani
+    [lastname] => 
+    [address1] => 
+    [address2] => 
+    [city] => 
+    [state] => 
+    [country] => 
+    [zipcode] => 
+    [email] => deepak@gmail.com
+    [phone] => 918888888888
+    [udf1] => 85960HOS1muflq
+    [udf2] => 774100
+    [udf3] => 85960
+    [udf4] => 
+    [udf5] => 
+    [udf6] => 
+    [udf7] => 
+    [udf8] => 
+    [udf9] => 
+    [udf10] => 
+    [hash] => a645997cdc817ec13467296c78d80f01fe53cfdfab7eb37b2d1ecf6fee8d6325d358cb8ba40fffce6988a2376759f61d01792d69ba4d27721b52ae9232736300
+    [field1] => 961272830983786500
+    [field2] => 757558
+    [field3] => 57.00
+    [field4] => 
+    [field5] => 00
+    [field6] => 02
+    [field7] => AUTHPOSITIVE
+    [field8] => AUTHORIZED
+    [field9] => Transaction is Successful
+    [payment_source] => payu
+    [pa_name] => PayU
+    [PG_TYPE] => CC-PG
+    [bank_ref_num] => 961272830983786500
+    [bankcode] => CC
+    [error] => E000
+    [error_Message] => No Error
+    [cardnum] => XXXXXXXXXXXX2346
+)

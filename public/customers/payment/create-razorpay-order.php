@@ -121,25 +121,28 @@ if ($httpCode === 200) {
     $razorpay_order_id = $order["id"];
 
     $ins = $db->prepare("
-        INSERT INTO customer_payment 
-        (user_id, customer_id, appointment_id, payment_id, receipt, amount, currency, 
-         gst_type, gst_percent, gst_amount, total_amount, status) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+     INSERT INTO customer_payment 
+(user_id, customer_id, appointment_id, payment_id, receipt, amount, currency, 
+ gst_type, gst_percent, gst_amount, total_amount, status, payment_method) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+
     ");
 
-    $ins->execute([
-        $user_id,
-        $customer_id,
-        $appointment_id,           // <-- Using generated appointment ID
-        $razorpay_order_id,       // <-- storing order_id into payment_id
-        $receipt,
-        $input["amount"],         // ₹ amount
-        $currency,
-        $input["gst_type"] ?? "",
-        $input["gst_percent"] ?? 0,
-        $input["gst_amount"] ?? 0,
-        $input["total_amount"] ?? 0
-    ]);
+$ins->execute([
+    $user_id,
+    $customer_id,
+    $appointment_id,
+    $razorpay_order_id,
+    $receipt,
+    $input["amount"],
+    $currency,
+    $input["gst_type"] ?? "",
+    $input["gst_percent"] ?? 0,
+    $input["gst_amount"] ?? 0,
+    $input["total_amount"] ?? 0,
+    'razorpay'
+]);
+
 
     echo json_encode([
         "success" => true,

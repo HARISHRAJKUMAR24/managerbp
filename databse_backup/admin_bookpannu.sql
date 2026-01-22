@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 21, 2026 at 02:20 PM
+-- Generation Time: Jan 22, 2026 at 04:56 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -229,8 +229,23 @@ CREATE TABLE `customer_payment` (
   `gst_type` varchar(20) DEFAULT NULL,
   `gst_percent` decimal(5,2) DEFAULT NULL,
   `gst_amount` decimal(10,2) DEFAULT NULL,
-  `total_amount` decimal(10,2) DEFAULT NULL
+  `total_amount` decimal(10,2) DEFAULT NULL,
+  `payment_method` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `customer_payment`
+--
+
+INSERT INTO `customer_payment` (`id`, `user_id`, `customer_id`, `appointment_id`, `receipt`, `amount`, `currency`, `status`, `created_at`, `payment_id`, `signature`, `gst_type`, `gst_percent`, `gst_amount`, `total_amount`, `payment_method`) VALUES
+(50, 85960, 774100, '85960HOS1lqmy', 'receipt_774100_1769085596', 57, 'INR', 'paid', '2026-01-22 12:39:56', 'order_S6vZEQqJZ2v0Hq', 'deb59bdc2bac933b3e68dea498e72de9a781046b93ac1c0f66f8fc219a91c291', 'inclusive', 28.00, 0.00, 57.00, NULL),
+(51, 85960, 774100, '85960HOS1fcbu', 'receipt_774100_1769085729', 57, 'INR', 'paid', '2026-01-22 12:42:10', 'order_S6vbaULcmkNhEv', '3f3040c0921cf8c9a4b7c916e5b2e2007588de383cb1280d80291c40afe43e4b', 'inclusive', 28.00, 0.00, 57.00, NULL),
+(52, 85960, 774100, 'APT-1769095184879', '', 57, 'INR', 'paid', '2026-01-22 15:38:12', 'TXN17690962367365', NULL, NULL, NULL, NULL, 57.00, 'payu'),
+(53, 85960, 774100, 'APT-1769095184879', '', 57, 'INR', 'paid', '2026-01-22 15:40:36', 'TXN17690962367365', NULL, NULL, NULL, NULL, 57.00, 'payu'),
+(54, 85960, 774100, 'APT-1769095184879', '', 57, 'INR', 'paid', '2026-01-22 15:46:59', 'TXN17690962367365', NULL, NULL, NULL, NULL, 57.00, 'payu'),
+(55, 85960, 774100, '85960HOS1muflq', '', 57, 'INR', 'paid', '2026-01-22 15:48:59', 'TXN17690968977751', NULL, NULL, NULL, NULL, 57.00, 'payu'),
+(56, 85960, 774100, '85960HOS1muflq', '', 57, 'INR', 'paid', '2026-01-22 15:54:17', 'TXN17690968977751', NULL, NULL, NULL, NULL, 57.00, 'payu'),
+(57, 85960, 774100, '85960HOS1uu8l', 'receipt_774100_1769097286', 57, 'INR', 'paid', '2026-01-22 15:54:48', 'order_S6yt4DJvgn8sET', '0d842677ad1d17fef56845591825d952291a352f964478975e93cd122dad13d7', 'inclusive', 28.00, 0.00, 57.00, 'razorpay');
 
 -- --------------------------------------------------------
 
@@ -829,6 +844,69 @@ INSERT INTO `menu_item_variations` (`id`, `item_id`, `user_id`, `name`, `mrp_pri
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `pending_payments`
+--
+
+CREATE TABLE `pending_payments` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `customer_id` int(11) NOT NULL,
+  `appointment_id` varchar(255) NOT NULL,
+  `txnid` varchar(100) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `status` enum('initiated','completed','failed') DEFAULT 'initiated',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `pending_payments`
+--
+
+INSERT INTO `pending_payments` (`id`, `user_id`, `customer_id`, `appointment_id`, `txnid`, `amount`, `status`, `created_at`, `updated_at`) VALUES
+(1, 85960, 695539, 'APP_85960_1769073851_3624', 'e63a1d14355951606028', 57.00, 'initiated', '2026-01-22 09:24:11', '2026-01-22 09:24:11'),
+(2, 85960, 695539, 'APP_85960_1769074253_5816', 'c802ad5c9bee11c94fde', 57.00, 'initiated', '2026-01-22 09:30:53', '2026-01-22 09:30:53'),
+(3, 85960, 695539, 'APP_85960_1769074433_7212', 'dd8ee74af742634e0eba', 57.00, 'initiated', '2026-01-22 09:33:53', '2026-01-22 09:33:53'),
+(4, 85960, 695539, 'APP_85960_1769074533_3071', '0fa4cf8238a3f42ed1fd', 57.00, 'initiated', '2026-01-22 09:35:33', '2026-01-22 09:35:33'),
+(5, 85960, 695539, 'APP_85960_1769075345_5421', '6c4ef4eb7158d4502be2', 57.00, 'initiated', '2026-01-22 09:49:05', '2026-01-22 09:49:05'),
+(6, 85960, 695539, 'APP_85960_1769075357_2830', '2e82c5f9584376c4255d', 57.00, 'initiated', '2026-01-22 09:49:17', '2026-01-22 09:49:17'),
+(7, 85960, 695539, 'APP_85960_1769075687_8839', '5f3f1ee189c2d50c7026', 57.00, 'initiated', '2026-01-22 09:54:47', '2026-01-22 09:54:47'),
+(8, 85960, 695539, 'APP_85960_1769075794_4509', 'd5c05a1091a3bcb91c2b', 57.00, 'initiated', '2026-01-22 09:56:34', '2026-01-22 09:56:34'),
+(9, 85960, 695539, 'APP_85960_1769075853_1450', '085ab43e672e66e33fbf', 57.00, 'initiated', '2026-01-22 09:57:33', '2026-01-22 09:57:33'),
+(10, 85960, 695539, 'APP_85960_1769075934_4559', '5a0652db856e24eb8585', 57.00, 'initiated', '2026-01-22 09:58:54', '2026-01-22 09:58:54'),
+(11, 85960, 695539, 'APP_85960_1769077118_6867', 'ea6359b76beda61c0422', 57.00, 'initiated', '2026-01-22 10:18:38', '2026-01-22 10:18:38'),
+(12, 85960, 695539, 'APP_85960_1769077448_1927', '184f576f5775ecf3932b', 57.00, 'initiated', '2026-01-22 10:24:08', '2026-01-22 10:24:08'),
+(13, 85960, 695539, 'APT-1769077113748', '73857e7d6d84a377f175', 57.00, 'initiated', '2026-01-22 11:08:33', '2026-01-22 11:08:33'),
+(14, 85960, 695539, 'APT-1769077113748', 'eb938a66514ac8ab5c2a', 57.00, 'initiated', '2026-01-22 11:08:53', '2026-01-22 11:08:53'),
+(15, 85960, 695539, 'APT-1769077113748', '8cc3fc26928599a626a1', 57.00, 'initiated', '2026-01-22 11:09:23', '2026-01-22 11:09:23'),
+(16, 85960, 695539, 'APT-1769077113748', '08bd63f25881d3561195', 57.00, 'initiated', '2026-01-22 11:09:33', '2026-01-22 11:09:33'),
+(17, 85960, 695539, 'APT-1769077113748', 'f132bcb280929fbc21a4', 57.00, 'initiated', '2026-01-22 11:10:28', '2026-01-22 11:10:28'),
+(18, 85960, 695539, 'APT-1769077113748', 'cd3e607f5a636d095867', 57.00, 'initiated', '2026-01-22 11:11:59', '2026-01-22 11:11:59'),
+(19, 85960, 695539, 'APT-1769077113748', 'f9ed48c0912bf36f36e7', 57.00, 'initiated', '2026-01-22 11:44:00', '2026-01-22 11:44:00'),
+(20, 85960, 695539, 'APT-1769077113748', 'e13750a66d3b121d8df1', 57.00, 'initiated', '2026-01-22 11:47:54', '2026-01-22 11:47:54'),
+(21, 85960, 695539, 'APT-1769077113748', '8d1c9a5df30dc77ac399', 57.00, 'initiated', '2026-01-22 11:50:51', '2026-01-22 11:50:51'),
+(22, 85960, 695539, 'APT-1769077113748', 'c4a9f031ecf9d76eb94f', 57.00, 'initiated', '2026-01-22 11:58:04', '2026-01-22 11:58:04'),
+(23, 85960, 774100, 'APT-1769083139502', '945a4216f53b5cb6a55f', 57.00, 'initiated', '2026-01-22 11:59:02', '2026-01-22 11:59:02'),
+(24, 85960, 774100, 'APT-1769083139502', '0b4e75e0dff10778638c', 57.00, 'initiated', '2026-01-22 11:59:13', '2026-01-22 11:59:13'),
+(25, 85960, 774100, 'APT-1769083139502', '38de9aa9000291cb97b4', 57.00, 'initiated', '2026-01-22 11:59:32', '2026-01-22 11:59:32'),
+(26, 85960, 774100, 'APT-1769083139502', '69ed0d2f5d9b2fea88b9', 57.00, 'initiated', '2026-01-22 12:03:49', '2026-01-22 12:03:49'),
+(27, 85960, 774100, 'APT-1769083139502', '6fa0b512ec466fed3b33', 57.00, 'initiated', '2026-01-22 12:07:42', '2026-01-22 12:07:42'),
+(28, 85960, 774100, 'APT-1769083139502', '65970c2b16c31c33c61c', 57.00, 'initiated', '2026-01-22 12:12:26', '2026-01-22 12:12:26'),
+(29, 85960, 774100, 'APT-1769083139502', '19dc8e7b0efdcf4ca2bf', 57.00, 'initiated', '2026-01-22 12:18:55', '2026-01-22 12:18:55'),
+(30, 85960, 774100, 'APT-1769083139502', 'd140b2ff9d0e2d6947c4', 57.00, 'failed', '2026-01-22 12:19:20', '2026-01-22 12:22:23'),
+(31, 85960, 774100, 'APT-1769083139502', '6abaa50449d2fd7bcff6', 57.00, 'initiated', '2026-01-22 12:22:32', '2026-01-22 12:22:32'),
+(32, 85960, 774100, 'APT-1769083139502', 'f3e58854599e226dbbbc', 57.00, 'failed', '2026-01-22 12:22:47', '2026-01-22 12:23:43'),
+(33, 85960, 774100, '85960HOS1zqs7y', 'TXN8596017690858063174', 57.00, 'failed', '2026-01-22 12:43:26', '2026-01-22 12:43:57'),
+(34, 85960, 774100, '85960HOS129blp', '256ec9dff36044e9db7c', 57.00, 'initiated', '2026-01-22 12:45:48', '2026-01-22 12:45:48'),
+(35, 85960, 774100, '85960HOS1r61ac', '6a3fe9e9762a3a44b9a0', 57.00, 'initiated', '2026-01-22 12:53:41', '2026-01-22 12:53:41'),
+(36, 85960, 774100, '85960HOS1aok3x', '5c5678398a6cae8d87fc', 57.00, 'initiated', '2026-01-22 12:54:26', '2026-01-22 12:54:26'),
+(37, 85960, 774100, '85960HOS19e6a4', '804e5a75c90c6e2897ca', 57.00, 'initiated', '2026-01-22 12:54:48', '2026-01-22 12:54:48'),
+(38, 85960, 774100, '85960HOS10b12s', 'TXN8596017690865103139', 57.00, 'initiated', '2026-01-22 12:55:10', '2026-01-22 12:55:10'),
+(39, 85960, 774100, '85960HOS1cwzt', 'TXN8596017690951921549', 57.00, 'failed', '2026-01-22 15:19:52', '2026-01-22 15:21:11');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `plugins`
 --
 
@@ -1208,7 +1286,7 @@ CREATE TABLE `site_settings` (
 
 INSERT INTO `site_settings` (`id`, `user_id`, `logo`, `favicon`, `phone`, `whatsapp`, `email`, `currency`, `country`, `state`, `address`, `meta_title`, `meta_description`, `sharing_image_preview`, `gst_number`, `gst_type`, `tax_percent`, `facebook`, `twitter`, `instagram`, `linkedin`, `youtube`, `pinterest`, `cash_in_hand`, `razorpay_key_id`, `phonepe_salt_key`, `phonepe_salt_index`, `phonepe_merchant_id`, `payu_api_key`, `payu_salt`, `razorpay_secret_key`) VALUES
 (14, 27395, 'sellers/27395/site-settings/logo/2025/12/17/logo_6942a478ae072.png', 'sellers/27395/site-settings/favicon/2025/12/17/favicon_6942a47bb6819.png', '', '', '', 'INR', '', '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(15, 85960, 'sellers/85960/site-settings/logo/2026/01/03/logo_6958cdda803ce.png', 'sellers/85960/site-settings/favicon/2026/01/03/favicon_6958cdde20219.png', '88888 88888', '88888 88888', 'deepakchitravel@gmail.com', 'GTQ', '', '', '1/60 Middle street ,Cholapandi', NULL, NULL, NULL, '33AACCZ2135N1Z8', 'inclusive', 28.00, 'facebook', NULL, NULL, NULL, NULL, NULL, 1, 'rzp_test_RGZZjGF5vUiIUz', NULL, NULL, NULL, NULL, NULL, 'V8ToWLDw00mE6BtGNWoCxgwR'),
+(15, 85960, 'sellers/85960/site-settings/logo/2026/01/03/logo_6958cdda803ce.png', 'sellers/85960/site-settings/favicon/2026/01/03/favicon_6958cdde20219.png', '88888 88888', '88888 88888', 'deepakchitravel@gmail.com', 'GTQ', '', '', '1/60 Middle street ,Cholapandi', NULL, NULL, NULL, '33AACCZ2135N1Z8', 'inclusive', 28.00, 'facebook', NULL, NULL, NULL, NULL, NULL, 1, 'rzp_test_RGZZjGF5vUiIUz', NULL, NULL, NULL, 'gtKFFx', '4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW', 'V8ToWLDw00mE6BtGNWoCxgwR'),
 (16, 32128, 'sellers/32128/site-settings/logo/2026/01/05/logo_695ba749bc174.jpg', 'sellers/32128/site-settings/favicon/2026/01/05/favicon_695ba6573524e.jpg', '8015021359', '8015021359', 'harish@gmail.com', 'INR', 'IN', '', '1Milestone Technology Solution Private Limited\nNO 1, SIVAN KOVIL STREET,\nNeedamangalam,\nTamil Nadu - 614404', 'fd', 'fdhdf', 'sellers/32128/seo-settings/preview-image/2026/01/05/seo_695bb08e43c0b.png', '33AACCZ2135N1Z7', 'inclusive', 5.00, 'https://wwww', NULL, 'https://4r4r', NULL, NULL, NULL, 1, 'uiugy', NULL, NULL, NULL, NULL, NULL, '123');
 
 -- --------------------------------------------------------
@@ -1379,7 +1457,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, '2027-01-21 09:10:13.000', 0, 5, '5ab608d91d40dc8617365aafe03e1ade4695c5c90e7ac8ef89fbc5c0788158c8'),
 (20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2027-01-14 06:26:07.000', 0, 4, '6c6f8532f17819a06d666e2a51b923bb9ad0cab53023d43222807a9ce55a234e'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, '4d23358169ed390201c63d27dcef5b637d3aceedfefa1349447ae782531fc831'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, 'a3d5ef535fe4b62637e6848472535e1623cd8f984ad1a14c3141dd8d0dc8f78c'),
 (22, 22431, 'Test', NULL, '7777777777', '$2y$10$Ved5KWItauFSS6B2kyRy7u21zlqjCUS/Q44XEQTtGcIqnCkJgskMO', 'IN', NULL, 'test', 'test', 3, '2026-01-09 11:53:56.000', NULL, '2027-01-09 07:28:47.000', 1, 8, '5f2f4d3678980d788cc4bb44d06796b4ec113c8884d1511a9d42eb9cdffe4f97');
 
 -- --------------------------------------------------------
@@ -1672,6 +1750,14 @@ ALTER TABLE `menu_item_variations`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `pending_payments`
+--
+ALTER TABLE `pending_payments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_txnid` (`txnid`),
+  ADD KEY `idx_user_customer` (`user_id`,`customer_id`);
+
+--
 -- Indexes for table `plugins`
 --
 ALTER TABLE `plugins`
@@ -1838,7 +1924,7 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT for table `customer_payment`
 --
 ALTER TABLE `customer_payment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `dashboard_messages`
@@ -1953,6 +2039,12 @@ ALTER TABLE `menu_items`
 --
 ALTER TABLE `menu_item_variations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+
+--
+-- AUTO_INCREMENT for table `pending_payments`
+--
+ALTER TABLE `pending_payments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `plugins`
