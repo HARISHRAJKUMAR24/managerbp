@@ -1,0 +1,61 @@
+[2026-01-22 13:43:57] POST DATA:
+Array
+(
+    [mihpayid] => 403993715536206952
+    [mode] => CC
+    [status] => success
+    [unmappedstatus] => captured
+    [key] => gtKFFx
+    [txnid] => TXN8596017690858063174
+    [amount] => 57.00
+    [cardCategory] => domestic
+    [discount] => 0.00
+    [net_amount_debit] => 57
+    [addedon] => 2026-01-22 18:13:26
+    [productinfo] => Booking Payment for Barani
+    [firstname] => Barani
+    [lastname] => 
+    [address1] => 
+    [address2] => 
+    [city] => 
+    [state] => 
+    [country] => 
+    [zipcode] => 
+    [email] => barani@gmail.com
+    [phone] => 918888888888
+    [udf1] => 
+    [udf2] => 
+    [udf3] => 
+    [udf4] => 
+    [udf5] => 
+    [udf6] => 
+    [udf7] => 
+    [udf8] => 
+    [udf9] => 
+    [udf10] => 
+    [hash] => a4fe27f2990cb8f063aa04ffb9b65c5fcca32ff0eb5dcf41c6046419255be6d39bee89721bc8079a74ea80959371509fcc1f358c2692f5c5f254de821453a00f
+    [field1] => 728243044652045300
+    [field2] => 728338
+    [field3] => 57.00
+    [field4] => 
+    [field5] => 00
+    [field6] => 02
+    [field7] => AUTHPOSITIVE
+    [field8] => AUTHORIZED
+    [field9] => Transaction is Successful
+    [payment_source] => payu
+    [pa_name] => PayU
+    [PG_TYPE] => CC-PG
+    [bank_ref_num] => 728243044652045300
+    [bankcode] => CC
+    [error] => E000
+    [error_Message] => No Error
+    [cardnum] => XXXXXXXXXXXX2346
+)
+
+
+Hash String: 4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW|success|||||||||||||85960||||barani@gmail.com|Barani|Booking Payment for Barani|57.00|TXN8596017690858063174|gtKFFx
+Calculated Hash: 3477b5d0840d0452562a14f065f8096cde4069da21fc590d25e6dee8be7b6ca49f80df13627f724e2610995bc5d54779d889b714d4a3ee96f4e9b8cfbc2d706a
+Posted Hash: a4fe27f2990cb8f063aa04ffb9b65c5fcca32ff0eb5dcf41c6046419255be6d39bee89721bc8079a74ea80959371509fcc1f358c2692f5c5f254de821453a00f
+Status: success
+

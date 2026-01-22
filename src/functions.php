@@ -812,48 +812,56 @@ function getCustomerLimitWithCount($user_id)
 /**
  * Generate Appointment ID - Universal version
  * Works with or without services table
+ */// managerbp/src/functions.php
+
+/**
+ * Generate Appointment ID in format: {user_id}{SERVICE_CODE}{random_string}
+ * Simple and working version
  */
 function generateAppointmentId($user_id, $db) {
+    
     // Section 1: User ID
     $section1 = (string)$user_id;
     
-    // Try to get service type code
-    $serviceCode = 'DEF'; // Default
-    
-    // First, try to get from users table (linked to service_types)
+    // Section 2: Get service type code
     $stmt = $db->prepare("
-        SELECT st.code 
+        SELECT st.code, st.id as service_type_id 
         FROM users u 
         LEFT JOIN service_types st ON u.service_type_id = st.id 
         WHERE u.user_id = ? 
         LIMIT 1
     ");
-    $stmt->execute([$user_id]);
-    $userResult = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if ($userResult && !empty($userResult['code'])) {
-        $serviceCode = strtoupper(substr($userResult['code'], 0, 3));
-        $serviceId = 1; // Default ID since no services table
+    if ($stmt->execute([$user_id])) {
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result && !empty($result['code'])) {
+            // Get first 3 letters of service type code
+            $code = strtoupper(substr($result['code'], 0, 3));
+            $service_type_id = $result['service_type_id'] ?? 1;
+            $section2 = $code . $service_type_id;
+        } else {
+            // Fallback if no service type found
+            $section2 = 'DEF1';
+        }
     } else {
-        $serviceCode = 'DEF';
-        $serviceId = 1;
+        // Error in query, use fallback
+        $section2 = 'DEF1';
     }
     
-    // Section 2: Service code + ID
-    $section2 = $serviceCode . $serviceId;
-    
-    // Section 3: Random string (4-5 chars)
+    // Section 3: Random string (4-5 chars, lowercase only)
     $characters = '0123456789abcdefghijklmnopqrstuvwxyz';
+    $length = rand(4, 5);
     $randomString = '';
     
-    // Generate 4-5 random characters
-    $length = rand(4, 5);
     for ($i = 0; $i < $length; $i++) {
         $randomString .= $characters[rand(0, strlen($characters) - 1)];
     }
     
     $section3 = $randomString;
     
-    // Final appointment ID
-    return $section1 . $section2 . $section3;
+    // Combine all sections
+    $appointmentId = $section1 . $section2 . $section3;
+    
+    return $appointmentId;
 }
