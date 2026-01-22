@@ -806,6 +806,364 @@ function getCustomerLimitWithCount($user_id)
 }
 
 
+//-------------=====---------------
+
+// Add this function to your functions.php file
+
+/**
+ * Determine and store the service reference ID based on user's service type
+ * This function will:
+ * 1. Check user's service_type from users table
+ * 2. Based on service_type, get the appropriate reference ID
+ *    - HOSPITAL (HOS): category_id from categories table
+ *    - OTHER (OTH): department_id from departments table
+ *    - HOTEL (HOT): category_id from categories table (hotel)
+ * 3. Store the reference ID in customer_payment table
+ * 
+ * @param int $user_id The user/seller ID
+ * @param int $customer_id The customer ID
+ * @param string $payment_id The payment ID (Razorpay Payment ID)
+ * @param string $service_type Optional: Override auto-detected service type
+ * @return array Result with success status and reference details
+ */
+function storeServiceReference($user_id, $customer_id, $payment_id, $service_type = null) {
+    $pdo = getDbConnection();
+    
+    try {
+        // 1. Get user's service type if not provided
+        if (!$service_type) {
+            $stmt = $pdo->prepare("
+                SELECT u.service_type_id, st.code 
+                FROM users u 
+                LEFT JOIN service_types st ON u.service_type_id = st.id 
+                WHERE u.user_id = ?
+            ");
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => 'User not found'
+                ];
+            }
+            
+            $service_type = $user['code'] ?? 'OTHER';
+        }
+        
+        // 2. Determine which table to query based on service type
+        $reference_id = null;
+        $reference_type = null;
+        $reference_name = null;
+        
+        switch (strtoupper($service_type)) {
+            case 'HOSPITAL':
+            case 'HOS':
+            case 'HOTEL':
+            case 'HOT':
+                // For Hospital and Hotel: Get from categories table
+                $stmt = $pdo->prepare("
+                    SELECT category_id as ref_id, name, doctor_name 
+                    FROM categories 
+                    WHERE user_id = ? 
+                    LIMIT 1
+                ");
+                $stmt->execute([$user_id]);
+                $service = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($service) {
+                    $reference_id = $service['ref_id'];
+                    $reference_type = 'category_id';
+                    $reference_name = $service['doctor_name'] ?? $service['name'];
+                }
+                break;
+                
+            case 'OTHER':
+            case 'OTH':
+                // For Others: Get from departments table
+                $stmt = $pdo->prepare("
+                    SELECT department_id as ref_id, name 
+                    FROM departments 
+                    WHERE user_id = ? 
+                    LIMIT 1
+                ");
+                $stmt->execute([$user_id]);
+                $service = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($service) {
+                    $reference_id = $service['ref_id'];
+                    $reference_type = 'department_id';
+                    $reference_name = $service['name'];
+                }
+                break;
+                
+            default:
+                return [
+                    'success' => false,
+                    'message' => 'Unknown service type: ' . $service_type
+                ];
+        }
+        
+        if (!$reference_id) {
+            return [
+                'success' => false,
+                'message' => 'No service found for this user'
+            ];
+        }
+        
+        // 3. Add columns to customer_payment if they don't exist
+        // (This can be removed after adding columns via SQL)
+        try {
+            $checkColumns = $pdo->prepare("
+                SELECT COLUMN_NAME 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'customer_payment' 
+                AND TABLE_SCHEMA = DATABASE()
+                AND COLUMN_NAME IN ('service_reference_id', 'service_reference_type', 'service_name')
+            ");
+            $checkColumns->execute();
+            $existingColumns = array_column($checkColumns->fetchAll(), 'COLUMN_NAME');
+            
+            // Add missing columns
+            if (!in_array('service_reference_id', $existingColumns)) {
+                $pdo->exec("ALTER TABLE customer_payment ADD COLUMN service_reference_id VARCHAR(255) DEFAULT NULL");
+            }
+            if (!in_array('service_reference_type', $existingColumns)) {
+                $pdo->exec("ALTER TABLE customer_payment ADD COLUMN service_reference_type VARCHAR(50) DEFAULT NULL");
+            }
+            if (!in_array('service_name', $existingColumns)) {
+                $pdo->exec("ALTER TABLE customer_payment ADD COLUMN service_name VARCHAR(255) DEFAULT NULL");
+            }
+        } catch (Exception $e) {
+            // Columns might already exist, ignore error
+        }
+        
+        // 4. Update the customer_payment record
+        $update = $pdo->prepare("
+            UPDATE customer_payment 
+            SET 
+                service_reference_id = ?,
+                service_reference_type = ?,
+                service_name = ?
+            WHERE user_id = ? 
+            AND customer_id = ? 
+            AND payment_id = ?
+            LIMIT 1
+        ");
+        
+        $update->execute([
+            $reference_id,
+            $reference_type,
+            $reference_name,
+            $user_id,
+            $customer_id,
+            $payment_id
+        ]);
+        
+        $affected = $update->rowCount();
+        
+        if ($affected > 0) {
+            return [
+                'success' => true,
+                'message' => 'Service reference stored successfully',
+                'data' => [
+                    'service_type' => $service_type,
+                    'reference_id' => $reference_id,
+                    'reference_type' => $reference_type,
+                    'service_name' => $reference_name
+                ]
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'No payment record found to update'
+            ];
+        }
+        
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Alternative: Simple function to get service reference ID for a user
+ * This can be called from payment verification
+ * 
+ * @param int $user_id
+ * @return array Reference ID and type
+ */
+function getServiceReference($user_id) {
+    $pdo = getDbConnection();
+    
+    // Get user's service type
+    $stmt = $pdo->prepare("
+        SELECT u.service_type_id, st.code 
+        FROM users u 
+        LEFT JOIN service_types st ON u.service_type_id = st.id 
+        WHERE u.user_id = ?
+    ");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$user) {
+        return [
+            'success' => false,
+            'message' => 'User not found'
+        ];
+    }
+    
+    $service_type = $user['code'] ?? 'OTHER';
+    $reference_id = null;
+    $reference_type = null;
+    $reference_name = null;
+    
+    switch (strtoupper($service_type)) {
+        case 'HOSPITAL':
+        case 'HOS':
+        case 'HOTEL':
+        case 'HOT':
+            // Get category
+            $stmt = $pdo->prepare("
+                SELECT category_id as ref_id, name, doctor_name 
+                FROM categories 
+                WHERE user_id = ? 
+                LIMIT 1
+            ");
+            $stmt->execute([$user_id]);
+            $service = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($service) {
+                $reference_id = $service['ref_id'];
+                $reference_type = 'category_id';
+                $reference_name = $service['doctor_name'] ?? $service['name'];
+            }
+            break;
+            
+        case 'OTHER':
+        case 'OTH':
+            // Get department
+            $stmt = $pdo->prepare("
+                SELECT department_id as ref_id, name 
+                FROM departments 
+                WHERE user_id = ? 
+                LIMIT 1
+            ");
+            $stmt->execute([$user_id]);
+            $service = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($service) {
+                $reference_id = $service['ref_id'];
+                $reference_type = 'department_id';
+                $reference_name = $service['name'];
+            }
+            break;
+    }
+    
+    if (!$reference_id) {
+        return [
+            'success' => false,
+            'message' => 'No service found for user'
+        ];
+    }
+    
+    return [
+        'success' => true,
+        'service_type' => $service_type,
+        'reference_id' => $reference_id,
+        'reference_type' => $reference_type,
+        'service_name' => $reference_name
+    ];
+}
+
+/**
+ * Update customer_payment with service reference in one function call
+ * This combines all logic
+ */
+function updatePaymentWithServiceReference($user_id, $customer_id, $payment_id) {
+    // Get service reference
+    $serviceInfo = getServiceReference($user_id);
+    
+    if (!$serviceInfo['success']) {
+        return $serviceInfo;
+    }
+    
+    // Update the payment record
+    $pdo = getDbConnection();
+    
+    try {
+        // Check if columns exist
+        $columnsExist = false;
+        try {
+            $check = $pdo->prepare("
+                SELECT COUNT(*) as cnt 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'customer_payment' 
+                AND TABLE_SCHEMA = DATABASE()
+                AND COLUMN_NAME = 'service_reference_id'
+            ");
+            $check->execute();
+            $result = $check->fetch(PDO::FETCH_ASSOC);
+            $columnsExist = ($result['cnt'] > 0);
+        } catch (Exception $e) {
+            // Do nothing
+        }
+        
+        if (!$columnsExist) {
+            // Add columns if they don't exist
+            $pdo->exec("
+                ALTER TABLE customer_payment 
+                ADD COLUMN service_reference_id VARCHAR(255) DEFAULT NULL,
+                ADD COLUMN service_reference_type VARCHAR(50) DEFAULT NULL,
+                ADD COLUMN service_name VARCHAR(255) DEFAULT NULL
+            ");
+        }
+        
+        // Update the record
+        $update = $pdo->prepare("
+            UPDATE customer_payment 
+            SET 
+                service_reference_id = ?,
+                service_reference_type = ?,
+                service_name = ?
+            WHERE user_id = ? 
+            AND customer_id = ? 
+            AND payment_id = ?
+            LIMIT 1
+        ");
+        
+        $update->execute([
+            $serviceInfo['reference_id'],
+            $serviceInfo['reference_type'],
+            $serviceInfo['service_name'],
+            $user_id,
+            $customer_id,
+            $payment_id
+        ]);
+        
+        if ($update->rowCount() > 0) {
+            return [
+                'success' => true,
+                'message' => 'Payment updated with service reference',
+                'data' => $serviceInfo
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Payment record not found'
+            ];
+        }
+        
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ];
+    }
+}
+
 
 // managerbp/src/function.php
 

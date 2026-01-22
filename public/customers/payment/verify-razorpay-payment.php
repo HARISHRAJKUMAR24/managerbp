@@ -27,7 +27,7 @@ header("Content-Type: application/json");
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
-require_once "../../../src/functions.php"; // Include function file
+require_once "../../../src/functions.php";
 
 /* -------------------------------
    READ INPUT
@@ -54,6 +54,12 @@ $razorpay_payment_id = $input["razorpay_payment_id"];
 $razorpay_order_id   = $input["razorpay_order_id"];
 $razorpay_signature  = $input["razorpay_signature"];
 
+// Appointment details
+$appointment_date = $input["appointment_date"] ?? null;
+$slot_from        = $input["slot_from"] ?? null;
+$slot_to          = $input["slot_to"] ?? null;
+$token_count      = intval($input["token_count"] ?? 1);
+
 $db = getDbConnection();
 
 /* -------------------------------
@@ -76,6 +82,7 @@ if (!$order) {
 }
 
 $user_id = $order["user_id"];
+$customer_id = $order["customer_id"];
 
 /* -------------------------------
    GET SELLER RAZORPAY KEYS
@@ -116,72 +123,35 @@ if ($generated_signature !== $razorpay_signature) {
 }
 
 /* -------------------------------
-   UPDATE PAYMENT STATUS
+   UPDATE PAYMENT WITH PAYMENT_ID & APPOINTMENT DETAILS
 -------------------------------- */
 $update = $db->prepare("
     UPDATE customer_payment 
     SET 
-        signature  = ?, 
-        status     = 'paid'
-    WHERE payment_id = ?
+        payment_id = ?,  -- Store Razorpay Payment ID
+        signature = ?, 
+        status = 'paid',
+        appointment_date = ?,
+        slot_from = ?,
+        slot_to = ?,
+        token_count = ?
+    WHERE id = ?
 ");
 
 $update->execute([
+    $razorpay_payment_id,
     $razorpay_signature,
-    $razorpay_order_id
+    $appointment_date,
+    $slot_from,
+    $slot_to,
+    $token_count,
+    $order["id"]
 ]);
 
-/* ---------------------------------------
-   REDUCE TOKEN (FRONTEND MUST SEND DATA)
------------------------------------------*/
-$doctorId     = $input["doctor_id"]      ?? null;
-$selectedDate = $input["selected_date"]  ?? null;
-$slotFrom     = $input["slot_from"]      ?? null;
-$slotTo       = $input["slot_to"]        ?? null;
-$bookedTokens = intval($input["token"]   ?? 0);
-
-if ($doctorId && $selectedDate && $slotFrom && $slotTo && $bookedTokens > 0) {
-
-    $docStmt = $db->prepare("
-        SELECT weekly_schedule 
-        FROM doctor_schedule 
-        WHERE id = ? LIMIT 1
-    ");
-    $docStmt->execute([$doctorId]);
-    $doctorData = $docStmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($doctorData) {
-
-        $schedule = json_decode($doctorData["weekly_schedule"], true);
-
-        $day = date("D", strtotime($selectedDate)); // "Mon", "Tue", etc.
-
-        if (isset($schedule[$day]["slots"])) {
-
-            foreach ($schedule[$day]["slots"] as $i => $slot) {
-
-                if ($slot["from"] === $slotFrom && $slot["to"] === $slotTo) {
-
-                    $current = intval($slot["token"]);
-                    $newToken = max(0, $current - $bookedTokens);
-
-                    $schedule[$day]["slots"][$i]["token"] = $newToken;
-                }
-            }
-
-            // Save updated schedule
-            $updateSchedule = $db->prepare("
-                UPDATE doctor_schedule 
-                SET weekly_schedule = ?
-                WHERE id = ?
-            ");
-            $updateSchedule->execute([
-                json_encode($schedule, JSON_UNESCAPED_SLASHES),
-                $doctorId
-            ]);
-        }
-    }
-}
+/* -------------------------------
+   ⭐ STORE SERVICE REFERENCE (NEW)
+-------------------------------- */
+$serviceResult = updatePaymentWithServiceReference($user_id, $customer_id, $razorpay_payment_id);
 
 /* -------------------------------
    SUCCESS RESPONSE
@@ -189,8 +159,16 @@ if ($doctorId && $selectedDate && $slotFrom && $slotTo && $bookedTokens > 0) {
 echo json_encode([
     "success" => true,
     "message" => "Payment verified successfully",
-    "appointment_id" => $order["appointment_id"], // This will be in format: 27395HOS12r54
-    "redirect_url" => "/payment-success"
+    "appointment_id" => $order["appointment_id"],
+    "razorpay_payment_id" => $razorpay_payment_id,
+    "service_reference" => $serviceResult, // Include service reference info
+    "redirect_url" => "/payment-success",
+    "stored_data" => [
+        "appointment_date" => $appointment_date,
+        "slot_from" => $slot_from,
+        "slot_to" => $slot_to,
+        "token_count" => $token_count
+    ]
 ]);
 exit;
 ?>

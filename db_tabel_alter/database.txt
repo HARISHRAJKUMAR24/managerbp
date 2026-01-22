@@ -428,3 +428,15 @@ this query for category HSN code this Paste in category Tabel
 -- Add HSN code column to categories table
 ALTER TABLE `categories`
 ADD COLUMN `hsn_code` VARCHAR(50) DEFAULT NULL AFTER `doctor_image`;
+
+22/1/2026
+
+-- This query for cutomer paymet tabel 
+ALTER TABLE customer_payment 
+ADD COLUMN appointment_date DATE DEFAULT NULL,
+ADD COLUMN slot_from VARCHAR(20) DEFAULT NULL,
+ADD COLUMN slot_to VARCHAR(20) DEFAULT NULL,
+ADD COLUMN token_count INT DEFAULT 1;
+ADD COLUMN service_reference_id VARCHAR(255) DEFAULT NULL,
+ADD COLUMN service_reference_type VARCHAR(50) DEFAULT NULL,
+ADD COLUMN service_name VARCHAR(255) DEFAULT NULL;
