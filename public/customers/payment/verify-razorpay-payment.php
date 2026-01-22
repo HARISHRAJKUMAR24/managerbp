@@ -27,6 +27,7 @@ header("Content-Type: application/json");
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
+require_once "../../../src/functions.php"; // Include function file
 
 /* -------------------------------
    READ INPUT
@@ -120,14 +121,12 @@ if ($generated_signature !== $razorpay_signature) {
 $update = $db->prepare("
     UPDATE customer_payment 
     SET 
-        payment_id = ?,            
         signature  = ?, 
         status     = 'paid'
     WHERE payment_id = ?
 ");
 
 $update->execute([
-    $razorpay_payment_id,
     $razorpay_signature,
     $razorpay_order_id
 ]);
@@ -190,9 +189,8 @@ if ($doctorId && $selectedDate && $slotFrom && $slotTo && $bookedTokens > 0) {
 echo json_encode([
     "success" => true,
     "message" => "Payment verified successfully",
-    "appointment_id" => $order["appointment_id"],
+    "appointment_id" => $order["appointment_id"], // This will be in format: 27395HOS12r54
     "redirect_url" => "/payment-success"
 ]);
 exit;
-
 ?>

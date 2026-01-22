@@ -30,6 +30,7 @@ header("Content-Type: application/json");
 -------------------------------- */
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
+require_once "../../../src/functions.php"; // Include function file
 
 /* -------------------------------
    READ JSON INPUT
@@ -53,18 +54,9 @@ $currency        = $input["currency"];
 $user_id         = intval($input["user_id"]);
 $customer_id     = intval($input["customer_id"]);
 
-// ⭐ FIX: Accept both appointment_id styles
-$appointment_id  = $input["appointment_id"] ?? $input["appointmentId"] ?? null;
-
-/* Validate appointment_id */
-if (empty($appointment_id)) {
-    echo json_encode([
-        "success" => false,
-        "message" => "appointment_id is missing!",
-        "received" => $input
-    ]);
-    exit;
-}
+// Use the new generateAppointmentId function
+$db = getDbConnection();
+$appointment_id = generateAppointmentId($user_id, $db);
 
 $customer_email  = $input["customer_email"] ?? "";
 $customer_phone  = $input["customer_phone"] ?? "";
@@ -74,8 +66,6 @@ $receipt = "receipt_" . $customer_id . "_" . time();
 /* -------------------------------
    GET RAZORPAY KEYS
 -------------------------------- */
-$db = getDbConnection();
-
 $stmt = $db->prepare("SELECT razorpay_key_id, razorpay_secret_key 
                       FROM site_settings WHERE user_id = ? LIMIT 1");
 $stmt->execute([$user_id]);
@@ -140,7 +130,7 @@ if ($httpCode === 200) {
     $ins->execute([
         $user_id,
         $customer_id,
-        $appointment_id,
+        $appointment_id,           // <-- Using generated appointment ID
         $razorpay_order_id,       // <-- storing order_id into payment_id
         $receipt,
         $input["amount"],         // ₹ amount
@@ -154,7 +144,8 @@ if ($httpCode === 200) {
     echo json_encode([
         "success" => true,
         "order"   => $order,
-        "receipt" => $receipt
+        "receipt" => $receipt,
+        "appointment_id" => $appointment_id // Send back the generated ID
     ]);
     exit;
 }
@@ -170,5 +161,4 @@ echo json_encode([
     "http_code" => $httpCode
 ]);
 exit;
-
 ?>

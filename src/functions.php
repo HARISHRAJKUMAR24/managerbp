@@ -804,3 +804,56 @@ function getCustomerLimitWithCount($user_id)
 
     return $planLimit;
 }
+
+
+
+// managerbp/src/function.php
+
+/**
+ * Generate Appointment ID - Universal version
+ * Works with or without services table
+ */
+function generateAppointmentId($user_id, $db) {
+    // Section 1: User ID
+    $section1 = (string)$user_id;
+    
+    // Try to get service type code
+    $serviceCode = 'DEF'; // Default
+    
+    // First, try to get from users table (linked to service_types)
+    $stmt = $db->prepare("
+        SELECT st.code 
+        FROM users u 
+        LEFT JOIN service_types st ON u.service_type_id = st.id 
+        WHERE u.user_id = ? 
+        LIMIT 1
+    ");
+    $stmt->execute([$user_id]);
+    $userResult = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($userResult && !empty($userResult['code'])) {
+        $serviceCode = strtoupper(substr($userResult['code'], 0, 3));
+        $serviceId = 1; // Default ID since no services table
+    } else {
+        $serviceCode = 'DEF';
+        $serviceId = 1;
+    }
+    
+    // Section 2: Service code + ID
+    $section2 = $serviceCode . $serviceId;
+    
+    // Section 3: Random string (4-5 chars)
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyz';
+    $randomString = '';
+    
+    // Generate 4-5 random characters
+    $length = rand(4, 5);
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, strlen($characters) - 1)];
+    }
+    
+    $section3 = $randomString;
+    
+    // Final appointment ID
+    return $section1 . $section2 . $section3;
+}
