@@ -60,10 +60,13 @@ $slot_from        = $input["slot_from"] ?? null;
 $slot_to          = $input["slot_to"] ?? null;
 $token_count      = intval($input["token_count"] ?? 1);
 
+// ⭐ NEW: Get the specific service/doctor ID that was booked
+$specific_service_id = $input["service_id"] ?? $input["doctor_id"] ?? $input["category_id"] ?? null;
+
 $db = getDbConnection();
 
 /* -------------------------------
-   FETCH ORDER FROM DB
+   FETCH ORDER FROM DB (using order_id)
 -------------------------------- */
 $stmt = $db->prepare("
     SELECT * FROM customer_payment 
@@ -128,14 +131,14 @@ if ($generated_signature !== $razorpay_signature) {
 $update = $db->prepare("
     UPDATE customer_payment 
     SET 
-        payment_id = ?,  -- Store Razorpay Payment ID
+        payment_id = ?,  -- Store Razorpay Payment ID (not order ID)
         signature = ?, 
         status = 'paid',
         appointment_date = ?,
         slot_from = ?,
         slot_to = ?,
         token_count = ?
-    WHERE id = ?
+    WHERE id = ?  -- Use primary key to be safe
 ");
 
 $update->execute([
@@ -149,9 +152,143 @@ $update->execute([
 ]);
 
 /* -------------------------------
-   ⭐ STORE SERVICE REFERENCE (NEW)
+   ⭐ STORE SPECIFIC SERVICE REFERENCE (NEW - NO LIMIT 1)
+   This stores the ACTUAL doctor/department the user selected
 -------------------------------- */
-$serviceResult = updatePaymentWithServiceReference($user_id, $customer_id, $razorpay_payment_id);
+$serviceResult = [
+    'success' => false,
+    'message' => 'No service ID provided'
+];
+
+if ($specific_service_id) {
+    // Determine if it's a category or department ID
+    $is_category = (strpos($specific_service_id, 'CAT_') === 0);
+    $is_department = (strpos($specific_service_id, 'DEPT_') === 0);
+    
+    $reference_id = null;
+    $reference_type = null;
+    $reference_name = null;
+    
+    if ($is_category) {
+        // It's a category/doctor ID
+        $stmt = $db->prepare("
+            SELECT category_id as ref_id, name, doctor_name 
+            FROM categories 
+            WHERE category_id = ? 
+            AND user_id = ?
+        ");
+        $stmt->execute([$specific_service_id, $user_id]);
+        $service = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($service) {
+            $reference_id = $service['ref_id'];
+            $reference_type = 'category_id';
+            $reference_name = $service['doctor_name'] ?? $service['name'];
+        }
+    } elseif ($is_department) {
+        // It's a department ID
+        $stmt = $db->prepare("
+            SELECT department_id as ref_id, name 
+            FROM departments 
+            WHERE department_id = ? 
+            AND user_id = ?
+        ");
+        $stmt->execute([$specific_service_id, $user_id]);
+        $service = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($service) {
+            $reference_id = $service['ref_id'];
+            $reference_type = 'department_id';
+            $reference_name = $service['name'];
+        }
+    }
+    
+    if ($reference_id) {
+        // Update the payment record with specific service
+        $updateService = $db->prepare("
+            UPDATE customer_payment 
+            SET 
+                service_reference_id = ?,
+                service_reference_type = ?,
+                service_name = ?
+            WHERE user_id = ? 
+            AND customer_id = ? 
+            AND payment_id = ?
+            LIMIT 1
+        ");
+        
+        $updateService->execute([
+            $reference_id,
+            $reference_type,
+            $reference_name,
+            $user_id,
+            $customer_id,
+            $razorpay_payment_id
+        ]);
+        
+        $serviceResult = [
+            'success' => true,
+            'message' => 'Specific service reference stored',
+            'data' => [
+                'reference_id' => $reference_id,
+                'reference_type' => $reference_type,
+                'service_name' => $reference_name
+            ]
+        ];
+    } else {
+        $serviceResult = [
+            'success' => false,
+            'message' => 'Service not found with ID: ' . $specific_service_id
+        ];
+    }
+}
+
+/* -------------------------------
+   REDUCE TOKEN COUNT IN DOCTOR SCHEDULE (Optional - if you have this feature)
+-------------------------------- */
+$doctorId = $input["doctor_db_id"] ?? null; // Doctor's database ID (not category_id)
+if ($doctorId && $appointment_date && $slot_from && $slot_to && $token_count > 0) {
+    try {
+        $docStmt = $db->prepare("
+            SELECT weekly_schedule 
+            FROM doctor_schedule 
+            WHERE id = ? LIMIT 1
+        ");
+        $docStmt->execute([$doctorId]);
+        $doctorData = $docStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($doctorData && $doctorData["weekly_schedule"]) {
+            $schedule = json_decode($doctorData["weekly_schedule"], true);
+            $day = date("D", strtotime($appointment_date)); // "Mon", "Tue", etc.
+            
+            if (isset($schedule[$day]["slots"])) {
+                foreach ($schedule[$day]["slots"] as $i => $slot) {
+                    if ($slot["from"] === $slot_from && $slot["to"] === $slot_to) {
+                        $current = intval($slot["token"] ?? 0);
+                        $newToken = max(0, $current - $token_count);
+                        
+                        $schedule[$day]["slots"][$i]["token"] = $newToken;
+                        
+                        // Save updated schedule
+                        $updateSchedule = $db->prepare("
+                            UPDATE doctor_schedule 
+                            SET weekly_schedule = ?
+                            WHERE id = ?
+                        ");
+                        $updateSchedule->execute([
+                            json_encode($schedule, JSON_UNESCAPED_SLASHES),
+                            $doctorId
+                        ]);
+                        break;
+                    }
+                }
+            }
+        }
+    } catch (Exception $e) {
+        // Log error but don't fail payment
+        error_log("Token reduction error: " . $e->getMessage());
+    }
+}
 
 /* -------------------------------
    SUCCESS RESPONSE
@@ -167,7 +304,8 @@ echo json_encode([
         "appointment_date" => $appointment_date,
         "slot_from" => $slot_from,
         "slot_to" => $slot_to,
-        "token_count" => $token_count
+        "token_count" => $token_count,
+        "service_id" => $specific_service_id
     ]
 ]);
 exit;
