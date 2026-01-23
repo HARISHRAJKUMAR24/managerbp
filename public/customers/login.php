@@ -91,7 +91,7 @@ $token = base64_encode(json_encode([
 
 
 setcookie(
-    "token",
+    "customer_token",
     $token,
     [
         "expires"  => time() + (60 * 60 * 24 * 7), // 7 days
