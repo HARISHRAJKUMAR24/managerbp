@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 22, 2026 at 04:56 PM
+-- Generation Time: Jan 22, 2026 at 07:19 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -238,14 +238,7 @@ CREATE TABLE `customer_payment` (
 --
 
 INSERT INTO `customer_payment` (`id`, `user_id`, `customer_id`, `appointment_id`, `receipt`, `amount`, `currency`, `status`, `created_at`, `payment_id`, `signature`, `gst_type`, `gst_percent`, `gst_amount`, `total_amount`, `payment_method`) VALUES
-(50, 85960, 774100, '85960HOS1lqmy', 'receipt_774100_1769085596', 57, 'INR', 'paid', '2026-01-22 12:39:56', 'order_S6vZEQqJZ2v0Hq', 'deb59bdc2bac933b3e68dea498e72de9a781046b93ac1c0f66f8fc219a91c291', 'inclusive', 28.00, 0.00, 57.00, NULL),
-(51, 85960, 774100, '85960HOS1fcbu', 'receipt_774100_1769085729', 57, 'INR', 'paid', '2026-01-22 12:42:10', 'order_S6vbaULcmkNhEv', '3f3040c0921cf8c9a4b7c916e5b2e2007588de383cb1280d80291c40afe43e4b', 'inclusive', 28.00, 0.00, 57.00, NULL),
-(52, 85960, 774100, 'APT-1769095184879', '', 57, 'INR', 'paid', '2026-01-22 15:38:12', 'TXN17690962367365', NULL, NULL, NULL, NULL, 57.00, 'payu'),
-(53, 85960, 774100, 'APT-1769095184879', '', 57, 'INR', 'paid', '2026-01-22 15:40:36', 'TXN17690962367365', NULL, NULL, NULL, NULL, 57.00, 'payu'),
-(54, 85960, 774100, 'APT-1769095184879', '', 57, 'INR', 'paid', '2026-01-22 15:46:59', 'TXN17690962367365', NULL, NULL, NULL, NULL, 57.00, 'payu'),
-(55, 85960, 774100, '85960HOS1muflq', '', 57, 'INR', 'paid', '2026-01-22 15:48:59', 'TXN17690968977751', NULL, NULL, NULL, NULL, 57.00, 'payu'),
-(56, 85960, 774100, '85960HOS1muflq', '', 57, 'INR', 'paid', '2026-01-22 15:54:17', 'TXN17690968977751', NULL, NULL, NULL, NULL, 57.00, 'payu'),
-(57, 85960, 774100, '85960HOS1uu8l', 'receipt_774100_1769097286', 57, 'INR', 'paid', '2026-01-22 15:54:48', 'order_S6yt4DJvgn8sET', '0d842677ad1d17fef56845591825d952291a352f964478975e93cd122dad13d7', 'inclusive', 28.00, 0.00, 57.00, 'razorpay');
+(60, 85960, 774100, '85960HOS1vxnny', '', 57, 'INR', 'paid', '2026-01-22 16:43:24', 'TXN17691001662963', NULL, NULL, NULL, NULL, 57.00, 'payu');
 
 -- --------------------------------------------------------
 
@@ -1277,17 +1270,18 @@ CREATE TABLE `site_settings` (
   `phonepe_merchant_id` varchar(255) DEFAULT NULL,
   `payu_api_key` varchar(255) DEFAULT NULL,
   `payu_salt` varchar(255) DEFAULT NULL,
-  `razorpay_secret_key` varchar(255) DEFAULT NULL
+  `razorpay_secret_key` varchar(255) DEFAULT NULL,
+  `selected_template` int(11) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `site_settings`
 --
 
-INSERT INTO `site_settings` (`id`, `user_id`, `logo`, `favicon`, `phone`, `whatsapp`, `email`, `currency`, `country`, `state`, `address`, `meta_title`, `meta_description`, `sharing_image_preview`, `gst_number`, `gst_type`, `tax_percent`, `facebook`, `twitter`, `instagram`, `linkedin`, `youtube`, `pinterest`, `cash_in_hand`, `razorpay_key_id`, `phonepe_salt_key`, `phonepe_salt_index`, `phonepe_merchant_id`, `payu_api_key`, `payu_salt`, `razorpay_secret_key`) VALUES
-(14, 27395, 'sellers/27395/site-settings/logo/2025/12/17/logo_6942a478ae072.png', 'sellers/27395/site-settings/favicon/2025/12/17/favicon_6942a47bb6819.png', '', '', '', 'INR', '', '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(15, 85960, 'sellers/85960/site-settings/logo/2026/01/03/logo_6958cdda803ce.png', 'sellers/85960/site-settings/favicon/2026/01/03/favicon_6958cdde20219.png', '88888 88888', '88888 88888', 'deepakchitravel@gmail.com', 'GTQ', '', '', '1/60 Middle street ,Cholapandi', NULL, NULL, NULL, '33AACCZ2135N1Z8', 'inclusive', 28.00, 'facebook', NULL, NULL, NULL, NULL, NULL, 1, 'rzp_test_RGZZjGF5vUiIUz', NULL, NULL, NULL, 'gtKFFx', '4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW', 'V8ToWLDw00mE6BtGNWoCxgwR'),
-(16, 32128, 'sellers/32128/site-settings/logo/2026/01/05/logo_695ba749bc174.jpg', 'sellers/32128/site-settings/favicon/2026/01/05/favicon_695ba6573524e.jpg', '8015021359', '8015021359', 'harish@gmail.com', 'INR', 'IN', '', '1Milestone Technology Solution Private Limited\nNO 1, SIVAN KOVIL STREET,\nNeedamangalam,\nTamil Nadu - 614404', 'fd', 'fdhdf', 'sellers/32128/seo-settings/preview-image/2026/01/05/seo_695bb08e43c0b.png', '33AACCZ2135N1Z7', 'inclusive', 5.00, 'https://wwww', NULL, 'https://4r4r', NULL, NULL, NULL, 1, 'uiugy', NULL, NULL, NULL, NULL, NULL, '123');
+INSERT INTO `site_settings` (`id`, `user_id`, `logo`, `favicon`, `phone`, `whatsapp`, `email`, `currency`, `country`, `state`, `address`, `meta_title`, `meta_description`, `sharing_image_preview`, `gst_number`, `gst_type`, `tax_percent`, `facebook`, `twitter`, `instagram`, `linkedin`, `youtube`, `pinterest`, `cash_in_hand`, `razorpay_key_id`, `phonepe_salt_key`, `phonepe_salt_index`, `phonepe_merchant_id`, `payu_api_key`, `payu_salt`, `razorpay_secret_key`, `selected_template`) VALUES
+(14, 27395, 'sellers/27395/site-settings/logo/2025/12/17/logo_6942a478ae072.png', 'sellers/27395/site-settings/favicon/2025/12/17/favicon_6942a47bb6819.png', '', '', '', 'INR', '', '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1),
+(15, 85960, 'sellers/85960/site-settings/logo/2026/01/03/logo_6958cdda803ce.png', 'sellers/85960/site-settings/favicon/2026/01/03/favicon_6958cdde20219.png', '88888 88888', '88888 88888', 'deepakchitravel@gmail.com', 'GTQ', '', '', '1/60 Middle street ,Cholapandi', NULL, NULL, NULL, '33AACCZ2135N1Z8', 'inclusive', 28.00, 'facebook', NULL, NULL, NULL, NULL, NULL, 1, 'rzp_test_RGZZjGF5vUiIUz', NULL, NULL, NULL, 'gtKFFx', '4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW', 'V8ToWLDw00mE6BtGNWoCxgwR', 1),
+(16, 32128, 'sellers/32128/site-settings/logo/2026/01/05/logo_695ba749bc174.jpg', 'sellers/32128/site-settings/favicon/2026/01/05/favicon_695ba6573524e.jpg', '8015021359', '8015021359', 'harish@gmail.com', 'INR', 'IN', '', '1Milestone Technology Solution Private Limited\nNO 1, SIVAN KOVIL STREET,\nNeedamangalam,\nTamil Nadu - 614404', 'fd', 'fdhdf', 'sellers/32128/seo-settings/preview-image/2026/01/05/seo_695bb08e43c0b.png', '33AACCZ2135N1Z7', 'inclusive', 5.00, 'https://wwww', NULL, 'https://4r4r', NULL, NULL, NULL, 1, 'uiugy', NULL, NULL, NULL, NULL, NULL, '123', 1);
 
 -- --------------------------------------------------------
 
@@ -1427,6 +1421,26 @@ CREATE TABLE `tables` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `template_settings`
+--
+
+CREATE TABLE `template_settings` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `template_id` int(11) NOT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `template_settings`
+--
+
+INSERT INTO `template_settings` (`id`, `user_id`, `template_id`, `updated_at`) VALUES
+(1, 85960, 1, '2026-01-22 18:18:00');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -1456,7 +1470,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, '2027-01-21 09:10:13.000', 0, 5, '5ab608d91d40dc8617365aafe03e1ade4695c5c90e7ac8ef89fbc5c0788158c8'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2027-01-14 06:26:07.000', 0, 4, '6c6f8532f17819a06d666e2a51b923bb9ad0cab53023d43222807a9ce55a234e'),
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2027-01-14 06:26:07.000', 0, 4, 'efce4dc6941c5bf60ad1a0ee5c2cb62c7c25329637d6a976f70f0caed126ed3c'),
 (21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, 'a3d5ef535fe4b62637e6848472535e1623cd8f984ad1a14c3141dd8d0dc8f78c'),
 (22, 22431, 'Test', NULL, '7777777777', '$2y$10$Ved5KWItauFSS6B2kyRy7u21zlqjCUS/Q44XEQTtGcIqnCkJgskMO', 'IN', NULL, 'test', 'test', 3, '2026-01-09 11:53:56.000', NULL, '2027-01-09 07:28:47.000', 1, 8, '5f2f4d3678980d788cc4bb44d06796b4ec113c8884d1511a9d42eb9cdffe4f97');
 
@@ -1841,6 +1855,12 @@ ALTER TABLE `tables`
   ADD KEY `settings_id` (`settings_id`);
 
 --
+-- Indexes for table `template_settings`
+--
+ALTER TABLE `template_settings`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -1924,7 +1944,7 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT for table `customer_payment`
 --
 ALTER TABLE `customer_payment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `dashboard_messages`
@@ -2117,6 +2137,12 @@ ALTER TABLE `suspend_users`
 --
 ALTER TABLE `tables`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=185;
+
+--
+-- AUTO_INCREMENT for table `template_settings`
+--
+ALTER TABLE `template_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `users`
