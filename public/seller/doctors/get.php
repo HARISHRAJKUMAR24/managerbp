@@ -20,8 +20,10 @@ if (!$category_id || !$user_id) {
 }
 
 try {
-    $sql = "SELECT * FROM doctors 
-            WHERE category_id = :category_id 
+    // ⭐ FIX: Use 'categories' table (your doctor table)
+    $sql = "SELECT *
+            FROM categories
+            WHERE category_id = :category_id
             AND user_id = :user_id
             LIMIT 1";
 

@@ -7,9 +7,6 @@ require_once __DIR__ . "/../../../src/database.php";
 
 $pdo = getDbConnection();
 
-/* =====================
-   PUBLIC ACCESS (NO AUTH)
-===================== */
 $userId = (int)($_GET['user_id'] ?? 0);
 
 if (!$userId) {
@@ -21,47 +18,61 @@ if (!$userId) {
     exit;
 }
 
-/* =====================
-   FETCH DOCTOR SCHEDULES
-===================== */
 $stmt = $pdo->prepare("
-    SELECT
-        id,
-        name,
-        slug,
-        amount,
-        token_limit,
-        doctor_image AS doctorImage,
-        weekly_schedule,
-        leave_dates
-    FROM doctor_schedule
-    WHERE user_id = ?
+    SELECT 
+        ds.id,
+        ds.name,
+        ds.slug,
+        ds.amount,
+        ds.token_limit,
+        ds.doctor_image AS doctorImage,
+        ds.weekly_schedule,
+        ds.leave_dates,
+        ds.category_id,
+
+        c.name AS category_name,
+        c.doctor_name,
+        c.specialization,
+        c.qualification,
+        c.experience,
+        c.reg_number,
+        c.doctor_image AS cat_doctor_image,
+        c.user_id
+
+    FROM doctor_schedule ds
+    LEFT JOIN categories c 
+        ON c.category_id = ds.category_id 
+        AND c.user_id = ds.user_id
+    WHERE ds.user_id = ?
 ");
 $stmt->execute([$userId]);
 
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-/* =====================
-   DECODE JSON FIELDS
-===================== */
 foreach ($records as &$row) {
-    // Weekly schedule
     $weeklySchedule = !empty($row['weekly_schedule'])
         ? json_decode($row['weekly_schedule'], true)
         : [];
     $row['weeklySchedule'] = $weeklySchedule;
-    
-    // Leave dates
+
     $leaveDates = !empty($row['leave_dates'])
         ? json_decode($row['leave_dates'], true)
         : [];
     $row['leaveDates'] = $leaveDates;
-    
-    // Add token_limit if exists
+
     $row['tokenLimit'] = $row['token_limit'] ?? null;
-    
-    // Remove raw fields
+
     unset($row['weekly_schedule'], $row['leave_dates'], $row['token_limit']);
+
+    // NEW FIELDS
+    $row['category_id'] = $row['category_id'] ?? null;
+    $row['doctor_name'] = $row['doctor_name'] ?? $row['name'];
+    $row['specialization'] = $row['specialization'] ?? null;
+
+    if (!empty($row['cat_doctor_image'])) {
+        $row['doctorImage'] = $row['cat_doctor_image'];
+    }
+    unset($row['cat_doctor_image']);
 }
 
 echo json_encode([

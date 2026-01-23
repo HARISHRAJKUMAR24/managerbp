@@ -38,8 +38,9 @@ $id = (int)$input["id"];
    NORMALIZE INPUT
 ========================= */
 $category_id = isset($input["categoryId"]) && $input["categoryId"] !== ""
-    ? (int)$input["categoryId"]
+    ? $input["categoryId"]
     : null;
+
 
 $name = $input["name"] ?? ($input["doctor_name"] ?? "");
 $slug = $input["slug"] ?? "";
