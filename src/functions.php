@@ -1032,3 +1032,61 @@ function getCategoryReference($user_id, $category_id = null) {
         'message' => 'Category not found'
     ];
 }
+/**
+ * Update PayU payment with category reference
+ * This function is used in payu-success.php
+ */
+function updatePayUWithCategoryReference($user_id, $customer_id, $payment_id, $category_id = null) {
+    
+    $pdo = getDbConnection();
+    
+    // Get category details
+    $serviceInfo = getCategoryReference($user_id, $category_id);
+    
+    if (!$serviceInfo['success']) {
+        return $serviceInfo;
+    }
+    
+    // Update the payment record
+    try {
+        $update = $pdo->prepare("
+            UPDATE customer_payment 
+            SET 
+                service_reference_id = ?,
+                service_reference_type = ?,
+                service_name = ?
+            WHERE user_id = ? 
+            AND customer_id = ? 
+            AND payment_id = ?
+            LIMIT 1
+        ");
+        
+        $update->execute([
+            $serviceInfo['reference_id'],
+            $serviceInfo['reference_type'],
+            $serviceInfo['service_name'],
+            $user_id,
+            $customer_id,
+            $payment_id
+        ]);
+        
+        if ($update->rowCount() > 0) {
+            return [
+                'success' => true,
+                'message' => 'PayU payment updated with category reference',
+                'data' => $serviceInfo
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'PayU payment record not found'
+            ];
+        }
+        
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ];
+    }
+}
