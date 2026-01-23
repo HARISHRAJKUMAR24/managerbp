@@ -90,14 +90,24 @@ if ($tokenLimit < 0) {
 /* ===============================
    FETCH DOCTOR DETAILS
 ================================ */
-$categoryId = !empty($input["categoryId"]) ? (int)$input["categoryId"] : null;
+$categoryId = $input["categoryId"] ?? null;
+
 $doctorDetails = null;
 
-if ($categoryId) {
-    $stmt = $pdo->prepare("SELECT * FROM categories WHERE id = ?");
+if (!empty($categoryId)) {
+    if (is_numeric($categoryId)) {
+        // numeric → lookup by id
+        $sql = "SELECT * FROM categories WHERE id = ?";
+    } else {
+        // CAT_xxxxx → lookup by category_id
+        $sql = "SELECT * FROM categories WHERE category_id = ?";
+    }
+
+    $stmt = $pdo->prepare($sql);
     $stmt->execute([$categoryId]);
     $doctorDetails = $stmt->fetch(PDO::FETCH_ASSOC);
 }
+
 
 /* ===============================
    SAFE VALUES
