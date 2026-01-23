@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 22, 2026 at 07:19 PM
+-- Generation Time: Jan 23, 2026 at 12:47 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -136,8 +136,9 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `category_id`, `user_id`, `name`, `slug`, `meta_title`, `meta_description`, `created_at`, `doctor_name`, `specialization`, `qualification`, `experience`, `reg_number`, `doctor_image`, `hsn_code`) VALUES
-(49, 'CAT_694e0cf7aa550', 85960, 'dddddd', 'dddddd', 'fdff', 'ddd', '2025-12-26 09:50:07.697', 'vf', 'fd', 'df', 1, 'dfs', 'sellers/85960/doctors/2025/12/26/1766722795_694e0cebdc8d2.png', NULL),
-(52, 'CAT_696e0402407d4', 85960, 'Dental', 'dental', 'sdd', 'dds', '2026-01-19 15:44:26.264', 'Deepak', 'Dental', 'MBBS', 4, 'DEE333', 'sellers/85960/doctors/2026/01/19/1768817662_696e03fe3db09.webp', NULL);
+(53, 'CAT_69732006cc321', 85960, 'Dental', 'dental', '', '', '2026-01-23 12:45:18.836', 'Deepak', 'Dental', 'MBBS', 2, 'DDDEEEPPAAJJ', 'sellers/85960/doctors/2026/01/23/1769152516_697320045bb0b.png', '444'),
+(54, 'CAT_697324b7b5405', 85960, 'Bone', 'bone', '', '', '2026-01-23 13:05:19.742', 'Harish', 'Bone', 'MD', 2, 'DDEEESSSFF', 'sellers/85960/doctors/2026/01/23/1769153718_697324b6a838d.webp', '444'),
+(55, 'CAT_6973496a18a37', 85960, 'nerve', 'nerve', '', '', '2026-01-23 15:41:54.100', 'barani pandi', 'nerambu vaithiyam', 'nerambandi', 80, 'DDWEREW ', '', NULL);
 
 -- --------------------------------------------------------
 
@@ -230,15 +231,24 @@ CREATE TABLE `customer_payment` (
   `gst_percent` decimal(5,2) DEFAULT NULL,
   `gst_amount` decimal(10,2) DEFAULT NULL,
   `total_amount` decimal(10,2) DEFAULT NULL,
-  `payment_method` varchar(50) DEFAULT NULL
+  `payment_method` varchar(50) DEFAULT NULL,
+  `appointment_date` date DEFAULT NULL,
+  `slot_from` varchar(20) DEFAULT NULL,
+  `slot_to` varchar(20) DEFAULT NULL,
+  `token_count` int(11) DEFAULT 1,
+  `service_reference_id` varchar(255) DEFAULT NULL,
+  `service_reference_type` varchar(50) DEFAULT NULL,
+  `service_name` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `customer_payment`
 --
 
-INSERT INTO `customer_payment` (`id`, `user_id`, `customer_id`, `appointment_id`, `receipt`, `amount`, `currency`, `status`, `created_at`, `payment_id`, `signature`, `gst_type`, `gst_percent`, `gst_amount`, `total_amount`, `payment_method`) VALUES
-(60, 85960, 774100, '85960HOS1vxnny', '', 57, 'INR', 'paid', '2026-01-22 16:43:24', 'TXN17691001662963', NULL, NULL, NULL, NULL, 57.00, 'payu');
+INSERT INTO `customer_payment` (`id`, `user_id`, `customer_id`, `appointment_id`, `receipt`, `amount`, `currency`, `status`, `created_at`, `payment_id`, `signature`, `gst_type`, `gst_percent`, `gst_amount`, `total_amount`, `payment_method`, `appointment_date`, `slot_from`, `slot_to`, `token_count`, `service_reference_id`, `service_reference_type`, `service_name`) VALUES
+(73, 85960, 695539, '85960HOS120z1', 'receipt_695539_1769162864', 44, 'INR', 'paid', '2026-01-23 10:07:45', 'pay_S7HVlh3vZQ4Duu', 'ae084434f92d9f43f392e473bbc7cc085c1daf1e4908accd245b4b1487a5f307', 'inclusive', 28.00, 0.00, 44.00, 'razorpay', '2026-01-24', '02:22', '18:06', 1, 'CAT_69732006cc321', 'category_id', 'Deepak'),
+(74, 85960, 695539, '85960HOS1a9n7', 'receipt_695539_1769162924', 32, 'INR', 'paid', '2026-01-23 10:08:44', 'pay_S7HWndzb4PosPM', '42ce97aedc20c91c263e8d3917556079100589f0bbb9ac00371931699c8dd943', 'inclusive', 28.00, 0.00, 32.00, 'razorpay', '2026-01-31', '03:33', '17:55', 1, 'CAT_697324b7b5405', 'category_id', 'Harish'),
+(75, 85960, 695539, '85960HOS1c9j46', 'receipt_695539_1769163225', 555, 'INR', 'sdlfksdf', '2026-01-23 10:13:46', 'pay_S7Hc8axASvKPkG', '3d86679934f9569272b689f0405b8435c01c26107de7ea5b097962558f0d16ee', 'inclusive', 28.00, 0.00, 555.00, 'razorpay', '2026-01-24', '04:44', '08:08', 1, 'CAT_6973496a18a37', 'category_id', 'barani pandi');
 
 -- --------------------------------------------------------
 
@@ -500,7 +510,7 @@ INSERT INTO `doctor_appointment_files` (`id`, `doctor_appointment_id`, `file_nam
 CREATE TABLE `doctor_schedule` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `category_id` int(11) DEFAULT NULL,
+  `category_id` varchar(255) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
   `slug` varchar(255) DEFAULT NULL,
   `amount` decimal(10,2) NOT NULL DEFAULT 0.00,
@@ -529,7 +539,9 @@ CREATE TABLE `doctor_schedule` (
 --
 
 INSERT INTO `doctor_schedule` (`id`, `user_id`, `category_id`, `name`, `slug`, `amount`, `token_limit`, `description`, `specialization`, `qualification`, `experience`, `doctor_image`, `weekly_schedule`, `meta_title`, `meta_description`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `created_at`, `updated_at`, `leave_dates`) VALUES
-(29, 85960, 52, 'Deepak', 'deepak-dental', 57.00, 3, 'dsf', 'Dental', 'MBBS', 4, 'sellers/85960/doctors/2026/01/19/1768817662_696e03fe3db09.webp', '{\"Sun\":{\"enabled\":false,\"slots\":[]},\"Mon\":{\"enabled\":true,\"slots\":[{\"from\":\"02:22\",\"to\":\"07:07\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"4\"}]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-19 15:46:46', '2026-01-21 18:09:55', '[\"2026-01-19\",\"2026-01-21\"]');
+(44, 85960, 'CAT_69732006cc321', 'Deepak', 'deepak-dental', 44.00, 1, '', 'Dental', 'MBBS', 2, 'sellers/85960/doctors/2026/01/23/1769152516_697320045bb0b.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"02:22\",\"to\":\"18:06\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"44\"}]},\"Mon\":{\"enabled\":false,\"slots\":[]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-23 14:24:35', '2026-01-23 14:24:35', '[]'),
+(45, 85960, 'CAT_697324b7b5405', 'Harish', 'harish-bone', 32.00, 0, '', 'Bone', 'MD', 2, 'sellers/85960/doctors/2026/01/23/1769153718_697324b6a838d.webp', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"03:33\",\"to\":\"17:55\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"33\"}]},\"Mon\":{\"enabled\":false,\"slots\":[]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-23 14:27:22', '2026-01-23 14:27:22', '[]'),
+(46, 85960, 'CAT_6973496a18a37', 'barani pandi', 'barani-pandi-nerambu-vaithiyam', 555.00, 8, '', 'nerambu vaithiyam', 'nerambandi', 80, '', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"04:44\",\"to\":\"08:08\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"55\"}]},\"Mon\":{\"enabled\":false,\"slots\":[]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-23 15:43:20', '2026-01-23 15:43:20', '[]');
 
 -- --------------------------------------------------------
 
@@ -1436,7 +1448,7 @@ CREATE TABLE `template_settings` (
 --
 
 INSERT INTO `template_settings` (`id`, `user_id`, `template_id`, `updated_at`) VALUES
-(1, 85960, 1, '2026-01-22 18:18:00');
+(1, 85960, 1, '2026-01-23 05:19:45');
 
 -- --------------------------------------------------------
 
@@ -1470,8 +1482,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
 (19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, '2027-01-21 09:10:13.000', 0, 5, '5ab608d91d40dc8617365aafe03e1ade4695c5c90e7ac8ef89fbc5c0788158c8'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2027-01-14 06:26:07.000', 0, 4, 'efce4dc6941c5bf60ad1a0ee5c2cb62c7c25329637d6a976f70f0caed126ed3c'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, 'a3d5ef535fe4b62637e6848472535e1623cd8f984ad1a14c3141dd8d0dc8f78c'),
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2027-01-14 06:26:07.000', 0, 4, '2810853c73b589b3a20be84fb137976d3ba50db71d0d4aced9f20070a93056e9'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, '86d813b2023c81ca075ca81d995617b2f2c833214258724815e326e6290547a1'),
 (22, 22431, 'Test', NULL, '7777777777', '$2y$10$Ved5KWItauFSS6B2kyRy7u21zlqjCUS/Q44XEQTtGcIqnCkJgskMO', 'IN', NULL, 'test', 'test', 3, '2026-01-09 11:53:56.000', NULL, '2027-01-09 07:28:47.000', 1, 8, '5f2f4d3678980d788cc4bb44d06796b4ec113c8884d1511a9d42eb9cdffe4f97');
 
 -- --------------------------------------------------------
@@ -1920,7 +1932,7 @@ ALTER TABLE `available_areas`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `configured_plugins`
@@ -1944,7 +1956,7 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT for table `customer_payment`
 --
 ALTER TABLE `customer_payment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT for table `dashboard_messages`
@@ -1992,7 +2004,7 @@ ALTER TABLE `doctor_appointment_files`
 -- AUTO_INCREMENT for table `doctor_schedule`
 --
 ALTER TABLE `doctor_schedule`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT for table `employees`
