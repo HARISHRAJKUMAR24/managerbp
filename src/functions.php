@@ -1303,3 +1303,170 @@ function generateAppointmentId($user_id, $db) {
     
     return $appointmentId;
 }
+
+?>
+<?php
+// Add to functions.php - Store CATEGORY_ID in service_reference_id
+
+/**
+ * Update payment with category reference
+ * Stores category_id (CAT_xxx) in service_reference_id
+ */
+function updatePaymentWithCategoryReference($user_id, $customer_id, $payment_id, $category_id = null) {
+    
+    $pdo = getDbConnection();
+    
+    // If category_id is provided, use it
+    if ($category_id) {
+        // Get category details
+        $stmt = $pdo->prepare("
+            SELECT category_id, name, doctor_name 
+            FROM categories 
+            WHERE category_id = ? 
+            AND user_id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$category_id, $user_id]);
+        $category = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($category) {
+            $serviceInfo = [
+                'success' => true,
+                'reference_id' => $category['category_id'], // CAT_xxx
+                'reference_type' => 'category_id',
+                'service_name' => $category['doctor_name'] ?? $category['name'],
+                'doctor_name' => $category['doctor_name'] ?? $category['name']
+            ];
+        } else {
+            // Category not found, check doctor_schedule
+            $stmt = $pdo->prepare("
+                SELECT ds.id, ds.category_id, ds.name, 
+                       c.category_id as cat_ref_id, c.doctor_name, c.name as cat_name
+                FROM doctor_schedule ds
+                LEFT JOIN categories c ON ds.category_id = c.category_id
+                WHERE ds.category_id = ? 
+                AND ds.user_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$category_id, $user_id]);
+            $doctor = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($doctor && $doctor['cat_ref_id']) {
+                $serviceInfo = [
+                    'success' => true,
+                    'reference_id' => $doctor['cat_ref_id'], // CAT_xxx from categories
+                    'reference_type' => 'category_id',
+                    'service_name' => $doctor['doctor_name'] ?? $doctor['cat_name'] ?? $doctor['name'],
+                    'doctor_name' => $doctor['doctor_name'] ?? $doctor['name']
+                ];
+            }
+        }
+    }
+    
+    // If no category found, fallback to old method
+    if (!isset($serviceInfo) || !$serviceInfo['success']) {
+        $serviceInfo = getServiceReference($user_id);
+    }
+    
+    if (!$serviceInfo['success']) {
+        return $serviceInfo;
+    }
+    
+    // Update the payment record
+    try {
+        // Update the record
+        $update = $pdo->prepare("
+            UPDATE customer_payment 
+            SET 
+                service_reference_id = ?,
+                service_reference_type = ?,
+                service_name = ?
+            WHERE user_id = ? 
+            AND customer_id = ? 
+            AND payment_id = ?
+            LIMIT 1
+        ");
+        
+        $update->execute([
+            $serviceInfo['reference_id'],
+            $serviceInfo['reference_type'],
+            $serviceInfo['service_name'],
+            $user_id,
+            $customer_id,
+            $payment_id
+        ]);
+        
+        if ($update->rowCount() > 0) {
+            return [
+                'success' => true,
+                'message' => 'Payment updated with category reference',
+                'data' => $serviceInfo
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Payment record not found'
+            ];
+        }
+        
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Simple function to get category reference
+ */
+function getCategoryReference($user_id, $category_id = null) {
+    $pdo = getDbConnection();
+    
+    // If category_id provided, get specific category
+    if ($category_id) {
+        $stmt = $pdo->prepare("
+            SELECT category_id, name, doctor_name 
+            FROM categories 
+            WHERE category_id = ? 
+            AND user_id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$category_id, $user_id]);
+        $category = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($category) {
+            return [
+                'success' => true,
+                'reference_id' => $category['category_id'], // CAT_xxx
+                'reference_type' => 'category_id',
+                'service_name' => $category['doctor_name'] ?? $category['name']
+            ];
+        }
+    }
+    
+    // Get first category for this user
+    $stmt = $pdo->prepare("
+        SELECT category_id, name, doctor_name 
+        FROM categories 
+        WHERE user_id = ? 
+        LIMIT 1
+    ");
+    $stmt->execute([$user_id]);
+    $category = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($category) {
+        return [
+            'success' => true,
+            'reference_id' => $category['category_id'], // CAT_xxx
+            'reference_type' => 'category_id',
+            'service_name' => $category['doctor_name'] ?? $category['name']
+        ];
+    }
+    
+    return [
+        'success' => false,
+        'message' => 'Category not found'
+    ];
+}
+?>

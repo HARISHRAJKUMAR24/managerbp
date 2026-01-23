@@ -152,20 +152,23 @@ $update->execute([
 ]);
 
 /* -------------------------------
-   ⭐ STORE SPECIFIC SERVICE REFERENCE (UPDATED)
+   ⭐ STORE CATEGORY REFERENCE (CAT_xxx)
 -------------------------------- */
 if ($category_id) {
     // Use the specific category_id from frontend
-    $serviceResult = updatePaymentWithServiceReference(
+    $serviceResult = updatePaymentWithCategoryReference(
         $user_id, 
         $customer_id, 
         $razorpay_payment_id,
-        $category_id,  // Specific category ID
-        'category_id'  // Reference type
+        $category_id  // CAT_xxx
     );
 } else {
-    // Fallback to old method (get first service)
-    $serviceResult = updatePaymentWithServiceReference($user_id, $customer_id, $razorpay_payment_id);
+    // Fallback to old method (get first category)
+    $serviceResult = updatePaymentWithCategoryReference(
+        $user_id, 
+        $customer_id, 
+        $razorpay_payment_id
+    );
 }
 
 /* -------------------------------
