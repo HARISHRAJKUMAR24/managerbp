@@ -23,12 +23,12 @@ require_once "../../src/database.php";
 /* ===============================
    TOKEN FROM COOKIE
 ================================ */
-if (!isset($_COOKIE['token'])) {
+if (!isset($_COOKIE['customer_token'])) {
     echo json_encode(null);
     exit;
 }
 
-$payload = json_decode(base64_decode($_COOKIE['token']), true);
+$payload = json_decode(base64_decode($_COOKIE['customer_token']), true);
 
 if (!$payload || !isset($payload['customer_id'])) {
     echo json_encode(null);

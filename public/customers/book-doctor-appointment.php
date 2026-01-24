@@ -26,12 +26,12 @@ require_once "../../src/database.php";
 /* ===============================
    AUTH
 ================================ */
-if (!isset($_COOKIE['token'])) {
+if (!isset($_COOKIE['customer_token'])) {
   echo json_encode(["success" => false, "message" => "Unauthorized"]);
   exit;
 }
 
-$payload = json_decode(base64_decode($_COOKIE['token']), true);
+$payload = json_decode(base64_decode($_COOKIE['customer_token']), true);
 $customerId = $payload['customer_id'] ?? null;
 
 if (!$customerId) {
