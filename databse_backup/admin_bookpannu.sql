@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 23, 2026 at 12:47 PM
+-- Generation Time: Jan 24, 2026 at 09:32 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -246,9 +246,11 @@ CREATE TABLE `customer_payment` (
 --
 
 INSERT INTO `customer_payment` (`id`, `user_id`, `customer_id`, `appointment_id`, `receipt`, `amount`, `currency`, `status`, `created_at`, `payment_id`, `signature`, `gst_type`, `gst_percent`, `gst_amount`, `total_amount`, `payment_method`, `appointment_date`, `slot_from`, `slot_to`, `token_count`, `service_reference_id`, `service_reference_type`, `service_name`) VALUES
-(73, 85960, 695539, '85960HOS120z1', 'receipt_695539_1769162864', 44, 'INR', 'paid', '2026-01-23 10:07:45', 'pay_S7HVlh3vZQ4Duu', 'ae084434f92d9f43f392e473bbc7cc085c1daf1e4908accd245b4b1487a5f307', 'inclusive', 28.00, 0.00, 44.00, 'razorpay', '2026-01-24', '02:22', '18:06', 1, 'CAT_69732006cc321', 'category_id', 'Deepak'),
-(74, 85960, 695539, '85960HOS1a9n7', 'receipt_695539_1769162924', 32, 'INR', 'paid', '2026-01-23 10:08:44', 'pay_S7HWndzb4PosPM', '42ce97aedc20c91c263e8d3917556079100589f0bbb9ac00371931699c8dd943', 'inclusive', 28.00, 0.00, 32.00, 'razorpay', '2026-01-31', '03:33', '17:55', 1, 'CAT_697324b7b5405', 'category_id', 'Harish'),
-(75, 85960, 695539, '85960HOS1c9j46', 'receipt_695539_1769163225', 555, 'INR', 'sdlfksdf', '2026-01-23 10:13:46', 'pay_S7Hc8axASvKPkG', '3d86679934f9569272b689f0405b8435c01c26107de7ea5b097962558f0d16ee', 'inclusive', 28.00, 0.00, 555.00, 'razorpay', '2026-01-24', '04:44', '08:08', 1, 'CAT_6973496a18a37', 'category_id', 'barani pandi');
+(103, 85960, 695539, '85960HOS1egojz', 'receipt_695539_1769192005', 44, 'INR', 'paid', '2026-01-23 18:13:26', 'pay_S7Pmm8HDioKq3s', '3becc91ee879a51c9e5971f1614f8a5dc4b0daf7f2accfb6c741337df3a12829', 'inclusive', 28.00, 0.00, 44.00, 'razorpay', '2026-01-31', '02:22', '18:06', 1, 'CAT_69732006cc321', 'category_id', 'Deepak'),
+(104, 85960, 695539, '85960HOS1aoxur', 'receipt_695539_1769192155', 32, 'INR', 'paid', '2026-01-23 18:15:56', 'pay_S7PpTZeEYuNmhX', 'c910426629b1a370db912ef08ec3ce8e1a6b4b69a4c61ceae0c04047ffbc150c', 'inclusive', 28.00, 0.00, 32.00, 'razorpay', '2026-01-31', '03:33', '17:55', 1, 'CAT_697324b7b5405', 'category_id', 'Harish'),
+(105, 85960, 695539, '85960HOS198kl', 'receipt_695539_1769192494', 44, 'INR', 'paid', '2026-01-23 18:21:35', 'pay_S7PvO44p5Xn5RF', '04d21679834d403aafd63c0996f72c0d607d7a122cd2bf97ab1a3d8310855076', 'inclusive', 28.00, 0.00, 44.00, 'razorpay', '2026-01-31', '02:22', '18:06', 1, 'CAT_69732006cc321', 'category_id', 'Deepak'),
+(106, 85960, 695539, '85960HOS1d5mk', 'receipt_695539_1769192773', 44, 'INR', 'paid', '2026-01-23 18:26:14', 'pay_S7Q0H4fT3TnUab', '5abdcfeb21af368a1cfc96475e65ccd2e5acf52a3156ca8a757df8a1e5cc9047', 'inclusive', 28.00, 0.00, 44.00, 'razorpay', '2026-01-31', '02:22', '18:06', 1, 'CAT_69732006cc321', 'category_id', 'Deepak'),
+(107, 85960, 695539, '85960HOS12e5ix', '', 44, 'INR', 'paid', '2026-01-23 18:27:18', 'TXN17691928382508', '6c83cb65f89da615a69decf113b08e21ce3a15bb32cd96563002bee523b204336776a1fb57c10fbbd7ca4e96ea1c0c1b8fcba9ab4244b8c8a200133563f4501f', 'inclusive', 28.00, 0.00, 44.00, 'payu', '2026-01-31', '02:22', '18:06', 1, 'CAT_69732006cc321', 'category_id', 'Deepak');
 
 -- --------------------------------------------------------
 
@@ -539,9 +541,7 @@ CREATE TABLE `doctor_schedule` (
 --
 
 INSERT INTO `doctor_schedule` (`id`, `user_id`, `category_id`, `name`, `slug`, `amount`, `token_limit`, `description`, `specialization`, `qualification`, `experience`, `doctor_image`, `weekly_schedule`, `meta_title`, `meta_description`, `country`, `state`, `city`, `pincode`, `address`, `map_link`, `created_at`, `updated_at`, `leave_dates`) VALUES
-(44, 85960, 'CAT_69732006cc321', 'Deepak', 'deepak-dental', 44.00, 1, '', 'Dental', 'MBBS', 2, 'sellers/85960/doctors/2026/01/23/1769152516_697320045bb0b.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"02:22\",\"to\":\"18:06\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"44\"}]},\"Mon\":{\"enabled\":false,\"slots\":[]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-23 14:24:35', '2026-01-23 14:24:35', '[]'),
-(45, 85960, 'CAT_697324b7b5405', 'Harish', 'harish-bone', 32.00, 0, '', 'Bone', 'MD', 2, 'sellers/85960/doctors/2026/01/23/1769153718_697324b6a838d.webp', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"03:33\",\"to\":\"17:55\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"33\"}]},\"Mon\":{\"enabled\":false,\"slots\":[]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-23 14:27:22', '2026-01-23 14:27:22', '[]'),
-(46, 85960, 'CAT_6973496a18a37', 'barani pandi', 'barani-pandi-nerambu-vaithiyam', 555.00, 8, '', 'nerambu vaithiyam', 'nerambandi', 80, '', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"04:44\",\"to\":\"08:08\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"55\"}]},\"Mon\":{\"enabled\":false,\"slots\":[]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-23 15:43:20', '2026-01-23 15:43:20', '[]');
+(44, 85960, 'CAT_69732006cc321', 'Deepak', 'deepak-dental', 44.00, 1, '', 'Dental', 'MBBS', 2, 'sellers/85960/doctors/2026/01/23/1769152516_697320045bb0b.png', '{\"Sun\":{\"enabled\":true,\"slots\":[{\"from\":\"02:22\",\"to\":\"18:06\",\"breakFrom\":\"\",\"breakTo\":\"\",\"token\":\"44\"}]},\"Mon\":{\"enabled\":false,\"slots\":[]},\"Tue\":{\"enabled\":false,\"slots\":[]},\"Wed\":{\"enabled\":false,\"slots\":[]},\"Thu\":{\"enabled\":false,\"slots\":[]},\"Fri\":{\"enabled\":false,\"slots\":[]},\"Sat\":{\"enabled\":false,\"slots\":[]}}', '', '', '', '', '', '', '', '', '2026-01-23 14:24:35', '2026-01-24 12:40:49', '[]');
 
 -- --------------------------------------------------------
 
@@ -751,8 +751,8 @@ CREATE TABLE `manual_payment_methods` (
 INSERT INTO `manual_payment_methods` (`id`, `user_id`, `name`, `upi_id`, `icon`, `instructions`, `image`, `created_at`) VALUES
 (12, 32128, 'upi', NULL, 'uploads/sellers/32128/manual_payment/logo/2026/01/13/1768283552_logo_airpots.webp', '\r\n\r\n', 'uploads/sellers/32128/manual_payment/image/2026/01/13/1768283552_image_keyboard.webp', '2026-01-13 11:22:32.652'),
 (13, 32128, 'phonepay', NULL, 'uploads/sellers/32128/manual_payment/logo/2026/01/13/1768304192_logo_smartwatch.webp', 'none', 'uploads/sellers/32128/manual_payment/image/2026/01/13/1768304192_image_keyboard.webp', '2026-01-13 17:06:32.344'),
-(14, 85960, 'UPI Payment', 'admin@gmail.com', 'uploads/sellers/85960/manual_payment/logo/2026/01/19/1768825967_logo_airpots.webp', '📱 **How to Pay via UPI:**\r\n\r\nsdf', 'uploads/sellers/85960/manual_payment/image/2026/01/19/1768825967_image_apple.webp', '2026-01-19 18:02:47.814'),
-(15, 32128, 'dsf', 'deepak@gmail.com', 'uploads/sellers/32128/manual_payment/logo/2026/01/20/1768885566_logo_moto.webp', 'sdf', 'uploads/sellers/32128/manual_payment/image/2026/01/20/1768885566_image_oppo.jpg', '2026-01-20 10:36:06.874');
+(15, 32128, 'dsf', 'deepak@gmail.com', 'uploads/sellers/32128/manual_payment/logo/2026/01/20/1768885566_logo_moto.webp', 'sdf', 'uploads/sellers/32128/manual_payment/image/2026/01/20/1768885566_image_oppo.jpg', '2026-01-20 10:36:06.874'),
+(18, 85960, 'UPI Payment', '', NULL, '📱 How to Pay via UPI:\r\n1. Open your UPI app (Google Pay, PhonePe, Paytm, etc.)\r\n2. Enter the UPI ID shown above\r\n3. Enter the exact payment amount\r\n4. Add a reference/note if required\r\n5. Complete the transaction', NULL, '2026-01-24 13:38:50.202');
 
 -- --------------------------------------------------------
 
@@ -813,7 +813,7 @@ CREATE TABLE `menu_items` (
 INSERT INTO `menu_items` (`id`, `user_id`, `menu_id`, `category_id`, `name`, `description`, `price`, `type`, `active`, `created_at`, `food_type`, `halal`, `stock_type`, `stock_qty`, `stock_unit`, `customer_limit`, `customer_limit_period`, `image`, `updated_at`) VALUES
 (30, 27395, 24, 13, 'Chicken', 'Taste is best.', 22.00, 'veg', 0, '2026-01-02 10:52:39', 'nonveg', 1, 'unlimited', NULL, NULL, 33, 'per_order', '/uploads/sellers/27395/menu-settings/2026/01/02/iphone_1767351159.png', '2026-01-07 11:03:20'),
 (31, 27395, 24, 13, 'sd', 'sd', 22.00, 'veg', 0, '2026-01-03 04:39:56', 'veg', 1, 'limited', 33, 'pcs', NULL, NULL, '/uploads/sellers/27395/menu-settings/2026/01/03/mouse_1767415195.webp', '2026-01-07 11:03:19'),
-(33, 27395, 23, 15, 'sdf', 'sdf', 33.00, 'veg', 1, '2026-01-07 12:50:43', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2026-01-07 12:50:43');
+(33, 27395, 23, 15, 'sdf', 'sdf', 33.00, 'veg', 0, '2026-01-07 12:50:43', 'veg', 0, 'unlimited', NULL, NULL, NULL, NULL, '', '2026-01-24 07:41:39');
 
 -- --------------------------------------------------------
 
@@ -1481,9 +1481,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `phone`, `password`, `country`, `image`, `site_name`, `site_slug`, `service_type_id`, `created_at`, `customersId`, `expires_on`, `is_suspended`, `plan_id`, `api_token`) VALUES
-(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, '2027-01-21 09:10:13.000', 0, 5, '5ab608d91d40dc8617365aafe03e1ade4695c5c90e7ac8ef89fbc5c0788158c8'),
-(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2027-01-14 06:26:07.000', 0, 4, '2810853c73b589b3a20be84fb137976d3ba50db71d0d4aced9f20070a93056e9'),
-(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, '86d813b2023c81ca075ca81d995617b2f2c833214258724815e326e6290547a1'),
+(19, 27395, 'Deepak', 'deepakchitravel@gmail.com', '9999999999', '$2y$10$Vf7t3oIdH96mti70dVzHd.3a.oHPGKQ8osGKXoJcKaMHvTmBQqNM2', 'IN', '/uploads/sellers/27395/profile/2025/12/26/profile_694e78e003a25_iphone.png', 'dee', 'dee', 2, '2025-12-17 14:56:55.000', NULL, '2027-01-21 09:10:13.000', 0, 5, '19923bc63b38ed1d72a92f007aa56f57b1759f3ab7944f22aab062147107e231'),
+(20, 32128, 'Harish', 'harish@gmail.com', '8015021359', '$2y$10$URaYlOqpg7kNxJD6iPRvqOYmdQubbWO2nMCXwpm/5.1MNUVRWbxRK', 'IN', '/uploads/sellers/32128/profile/2026/01/05/profile_695b94bf6ddd3_WIN_20251007_16_32_05_Pro.jpg', 'harish', 'harish', 3, '2025-12-17 16:33:20.000', NULL, '2027-01-14 06:26:07.000', 0, 4, 'a2eb6c9e0cdc4e897d394151f32df7422699b871a36020719f193d48584ab75e'),
+(21, 85960, 'Barani', 'barani@gmail.com', '8888888888', '$2y$10$O2IXDlnxui79fRrLa1urfekm36QJyExJCoYFfiTZfemObqxdfZjDq', 'IN', NULL, 'sorry_sir', 'sorry_sir', 1, '2025-12-17 17:46:24.000', NULL, '2029-01-05 06:42:14.000', 0, 5, 'b55fd0f30c813cb0a527afe1b2888a0d5f8582e86c7b68995057fe3fd70c713f'),
 (22, 22431, 'Test', NULL, '7777777777', '$2y$10$Ved5KWItauFSS6B2kyRy7u21zlqjCUS/Q44XEQTtGcIqnCkJgskMO', 'IN', NULL, 'test', 'test', 3, '2026-01-09 11:53:56.000', NULL, '2027-01-09 07:28:47.000', 1, 8, '5f2f4d3678980d788cc4bb44d06796b4ec113c8884d1511a9d42eb9cdffe4f97');
 
 -- --------------------------------------------------------
@@ -1956,7 +1956,7 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT for table `customer_payment`
 --
 ALTER TABLE `customer_payment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
 
 --
 -- AUTO_INCREMENT for table `dashboard_messages`
@@ -2052,7 +2052,7 @@ ALTER TABLE `manager_login_tokens`
 -- AUTO_INCREMENT for table `manual_payment_methods`
 --
 ALTER TABLE `manual_payment_methods`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `menus`

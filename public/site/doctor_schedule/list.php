@@ -60,9 +60,12 @@ foreach ($records as &$row) {
         : [];
     $row['leaveDates'] = $leaveDates;
 
-    $row['tokenLimit'] = $row['token_limit'] ?? null;
+    // ⭐ FIX: return snake_case token_limit
+    $row['token_limit'] = isset($row['token_limit'])
+        ? (int)$row['token_limit']
+        : 1;
 
-    unset($row['weekly_schedule'], $row['leave_dates'], $row['token_limit']);
+    unset($row['weekly_schedule'], $row['leave_dates']); // remove only these
 
     // NEW FIELDS
     $row['category_id'] = $row['category_id'] ?? null;
@@ -74,6 +77,7 @@ foreach ($records as &$row) {
     }
     unset($row['cat_doctor_image']);
 }
+
 
 echo json_encode([
     "success" => true,
