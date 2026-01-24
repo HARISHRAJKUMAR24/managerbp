@@ -39,10 +39,13 @@ try {
     $slot_to          = $data['slot_to'] ?? null;
     $token_count      = intval($data['token_count'] ?? 1);
     
-    // ⭐ NEW: Extract category_id
+    // ⭐ Extract category_id
     $category_id      = $data['category_id'] ?? null;
     
-    // ⭐ NEW: Extract GST Details (same as Razorpay)
+    // ⭐ NEW: Extract batch_id
+    $batch_id         = $data['batch_id'] ?? null;
+    
+    // ⭐ Extract GST Details
     $gst_type        = $data['gst_type'] ?? '';
     $gst_percent     = floatval($data['gst_percent'] ?? 0);
     $gst_amount      = floatval($data['gst_amount'] ?? 0);
@@ -50,14 +53,17 @@ try {
 
     $appointment_id = generateAppointmentId($user_id, $pdo);
     
-    // Store appointment details in database BEFORE PayU order
+    // ⭐ GENERATE RECEIPT (same format as Razorpay)
+    $receipt = "receipt_" . $customer_id . "_" . time();
+    
+    // ⭐ UPDATE: Store batch_id AND receipt in database
     $stmt = $pdo->prepare("
         INSERT INTO customer_payment 
-        (user_id, customer_id, appointment_id, amount, total_amount, currency, 
+        (user_id, customer_id, appointment_id, receipt, amount, total_amount, currency, 
          status, payment_method, appointment_date, slot_from, slot_to, token_count,
          service_reference_id, service_reference_type, service_name,
-         gst_type, gst_percent, gst_amount, created_at)
-        VALUES (?, ?, ?, ?, ?, 'INR', 'pending', 'payu', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+         gst_type, gst_percent, gst_amount, batch_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, 'INR', 'pending', 'payu', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     ");
     
     // Get category details if category_id provided
@@ -87,6 +93,7 @@ try {
         $user_id,
         $customer_id,
         $appointment_id,
+        $receipt,            // ⭐ Add receipt
         $sub_total,          // Amount without GST
         $amount,             // Total amount with GST
         $appointment_date,
@@ -98,8 +105,11 @@ try {
         $service_name,
         $gst_type,
         $gst_percent,
-        $gst_amount
+        $gst_amount,
+        $batch_id,           // ⭐ Add batch_id here
     ]);
+
+    $payment_id = $pdo->lastInsertId();
 
     // Fetch PayU credentials
     $stmt = $pdo->prepare("
@@ -122,7 +132,7 @@ try {
     $amountFormatted = number_format($amount, 2, '.', '');
     $productinfo = "Booking Payment";
 
-    // UDF fields - include all appointment details AND category_id AND GST
+    // ⭐ UDF fields - include receipt and batch_id in the JSON
     $udf1 = $appointment_id;      // appointment ID
     $udf2 = $customer_id;         // customer ID
     $udf3 = $user_id;             // user ID
@@ -132,10 +142,13 @@ try {
         'slot_to' => $slot_to,
         'token_count' => $token_count,
         'category_id' => $category_id,
+        'batch_id' => $batch_id,  // ⭐ Add batch_id to JSON
+        'receipt' => $receipt,    // ⭐ Add receipt to JSON
         'gst_type' => $gst_type,
         'gst_percent' => $gst_percent,
         'gst_amount' => $gst_amount,
-        'sub_total' => $sub_total
+        'sub_total' => $sub_total,
+        'payment_id' => $payment_id
     ]);
 
     // ✔ Correct PayU Hash Format
@@ -188,7 +201,7 @@ try {
         "udf2" => $udf2,  // customer_id
         "udf3" => $udf3,  // user_id
         "udf4" => $udf4,  // appointment_date
-        "udf5" => $udf5   // slot details + category_id + GST JSON
+        "udf5" => $udf5   // slot details + category_id + batch_id + GST JSON
     ]);
 
 } catch (Exception $e) {

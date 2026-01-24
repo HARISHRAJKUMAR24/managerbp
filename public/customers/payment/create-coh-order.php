@@ -88,6 +88,9 @@ try {
     $token_count = (int) ($input['token_count'] ?? 1);
     $category_id = $input['category_id'] ?? null;
     
+    // ⭐ NEW: Extract batch_id
+    $batch_id = $input['batch_id'] ?? null;
+    
     // GST Details
     $gst_type = $input['gst_type'] ?? '';
     $gst_percent = (float) ($input['gst_percent'] ?? 0);
@@ -138,13 +141,13 @@ try {
     // Generate receipt for COH
     $receipt = "COH_" . time() . "_" . rand(1000, 9999);
     
-    // Insert COH order into database
+    // ⭐ UPDATE: Insert COH order into database WITH batch_id
     $sql = "INSERT INTO customer_payment 
             (user_id, customer_id, appointment_id, receipt, amount, total_amount, currency, 
              status, payment_method, appointment_date, slot_from, slot_to, token_count,
              service_reference_id, service_reference_type, service_name,
-             gst_type, gst_percent, gst_amount, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, 'INR', 'pending', 'cash', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+             gst_type, gst_percent, gst_amount, batch_id, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'INR', 'pending', 'cash', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
     
     $stmt = $db->prepare($sql);
     
@@ -164,11 +167,69 @@ try {
         $service_name,
         $gst_type,
         $gst_percent,
-        $gst_amount
+        $gst_amount,
+        $batch_id // ⭐ Add batch_id here
     ]);
     
     if ($success) {
         $payment_id = $db->lastInsertId();
+        
+        // ⭐ UPDATE TOKEN AVAILABILITY FOR THIS BATCH
+        $tokenUpdateMessage = null;
+        if ($batch_id && $appointment_date) {
+            try {
+                // Extract day index and slot index from batch_id (format: "dayIndex:slotIndex")
+                $batchParts = explode(':', $batch_id);
+                if (count($batchParts) === 2) {
+                    $dayIndex = intval($batchParts[0]); // 0=Sun, 1=Mon, etc.
+                    $slotIndex = intval($batchParts[1]); // Slot index within that day
+                    
+                    // Convert appointment date to day name
+                    $dayName = date('D', strtotime($appointment_date));
+                    
+                    // Get doctor schedule for this category
+                    $stmtDoctor = $db->prepare("
+                        SELECT weekly_schedule 
+                        FROM doctor_schedule 
+                        WHERE category_id = ? 
+                        AND user_id = ?
+                        LIMIT 1
+                    ");
+                    $stmtDoctor->execute([$category_id, $user_id]);
+                    $doctor = $stmtDoctor->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($doctor && $doctor['weekly_schedule']) {
+                        $weeklySchedule = json_decode($doctor['weekly_schedule'], true);
+                        
+                        // Reduce token availability for this specific batch
+                        if (isset($weeklySchedule[$dayName]['slots'][$slotIndex])) {
+                            $currentTokens = intval($weeklySchedule[$dayName]['slots'][$slotIndex]['token'] ?? 0);
+                            $newTokens = max(0, $currentTokens - $token_count);
+                            $weeklySchedule[$dayName]['slots'][$slotIndex]['token'] = strval($newTokens);
+                            
+                            // Update the schedule
+                            $updateSchedule = $db->prepare("
+                                UPDATE doctor_schedule 
+                                SET weekly_schedule = ? 
+                                WHERE category_id = ? 
+                                AND user_id = ?
+                            ");
+                            $updateSchedule->execute([
+                                json_encode($weeklySchedule),
+                                $category_id,
+                                $user_id
+                            ]);
+                            
+                            $tokenUpdateMessage = "Token availability updated for batch $batch_id: $currentTokens -> $newTokens";
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // Log error but don't fail the COH creation
+                error_log("COH Batch token update error: " . $e->getMessage());
+                $tokenUpdateMessage = "Token update failed: " . $e->getMessage();
+            }
+        }
         
         echo json_encode([
             "success" => true,
@@ -178,6 +239,7 @@ try {
             "receipt" => $receipt,
             "status" => "pending",
             "payment_method" => "cash",
+            "token_update" => $tokenUpdateMessage ?? "No token update performed",
             "data" => [
                 "customer_name" => $customer_name,
                 "customer_phone" => $customer_phone,
@@ -185,7 +247,9 @@ try {
                 "appointment_date" => $appointment_date,
                 "slot_from" => $slot_from,
                 "slot_to" => $slot_to,
-                "token_count" => $token_count
+                "token_count" => $token_count,
+                "category_id" => $category_id,
+                "batch_id" => $batch_id // ⭐ Include batch_id in response
             ]
         ]);
     } else {

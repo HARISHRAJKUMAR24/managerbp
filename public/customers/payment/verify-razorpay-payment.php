@@ -63,6 +63,9 @@ $token_count      = intval($input["token_count"] ?? 1);
 // ⭐ Get category_id from frontend
 $category_id = $input["category_id"] ?? null;
 
+// ⭐ NEW: Get batch_id from frontend
+$batch_id = $input["batch_id"] ?? null;
+
 $db = getDbConnection();
 
 /* -------------------------------
@@ -126,18 +129,19 @@ if ($generated_signature !== $razorpay_signature) {
 }
 
 /* -------------------------------
-   UPDATE PAYMENT WITH PAYMENT_ID & APPOINTMENT DETAILS
+   ⭐ UPDATE PAYMENT WITH PAYMENT_ID, BATCH_ID & APPOINTMENT DETAILS
 -------------------------------- */
 $update = $db->prepare("
     UPDATE customer_payment 
     SET 
-        payment_id = ?,  -- Store Razorpay Payment ID
+        payment_id = ?,      -- Store Razorpay Payment ID
         signature = ?, 
         status = 'paid',
         appointment_date = ?,
         slot_from = ?,
         slot_to = ?,
-        token_count = ?
+        token_count = ?,
+        batch_id = ?         -- ⭐ Store batch_id
     WHERE id = ?
 ");
 
@@ -148,6 +152,7 @@ $update->execute([
     $slot_from,
     $slot_to,
     $token_count,
+    $batch_id,              // ⭐ Add batch_id here
     $order["id"]
 ]);
 
@@ -172,6 +177,63 @@ if ($category_id) {
 }
 
 /* -------------------------------
+   ⭐ UPDATE TOKEN AVAILABILITY FOR THIS BATCH
+-------------------------------- */
+if ($batch_id && $appointment_date) {
+    try {
+        // Extract day index and slot index from batch_id (format: "dayIndex:slotIndex")
+        $batchParts = explode(':', $batch_id);
+        if (count($batchParts) === 2) {
+            $dayIndex = intval($batchParts[0]); // 0=Sun, 1=Mon, etc.
+            $slotIndex = intval($batchParts[1]); // Slot index within that day
+            
+            // Convert appointment date to day name
+            $dayName = date('D', strtotime($appointment_date));
+            
+            // Get doctor schedule for this category
+            $stmtDoctor = $db->prepare("
+                SELECT weekly_schedule 
+                FROM doctor_schedule 
+                WHERE category_id = ? 
+                AND user_id = ?
+                LIMIT 1
+            ");
+            $stmtDoctor->execute([$category_id, $user_id]);
+            $doctor = $stmtDoctor->fetch(PDO::FETCH_ASSOC);
+            
+            if ($doctor && $doctor['weekly_schedule']) {
+                $weeklySchedule = json_decode($doctor['weekly_schedule'], true);
+                
+                // Reduce token availability for this specific batch
+                if (isset($weeklySchedule[$dayName]['slots'][$slotIndex])) {
+                    $currentTokens = intval($weeklySchedule[$dayName]['slots'][$slotIndex]['token'] ?? 0);
+                    $newTokens = max(0, $currentTokens - $token_count);
+                    $weeklySchedule[$dayName]['slots'][$slotIndex]['token'] = strval($newTokens);
+                    
+                    // Update the schedule
+                    $updateSchedule = $db->prepare("
+                        UPDATE doctor_schedule 
+                        SET weekly_schedule = ? 
+                        WHERE category_id = ? 
+                        AND user_id = ?
+                    ");
+                    $updateSchedule->execute([
+                        json_encode($weeklySchedule),
+                        $category_id,
+                        $user_id
+                    ]);
+                    
+                    $tokenUpdateMessage = "Token availability updated for batch $batch_id: $currentTokens -> $newTokens";
+                }
+            }
+        }
+    } catch (Exception $e) {
+        // Log error but don't fail the payment
+        error_log("Batch token update error: " . $e->getMessage());
+    }
+}
+
+/* -------------------------------
    SUCCESS RESPONSE
 -------------------------------- */
 echo json_encode([
@@ -186,8 +248,10 @@ echo json_encode([
         "slot_from" => $slot_from,
         "slot_to" => $slot_to,
         "token_count" => $token_count,
-        "category_id" => $category_id  // Confirm which category was stored
-    ]
+        "category_id" => $category_id,
+        "batch_id" => $batch_id  // ⭐ Confirm batch_id was stored
+    ],
+    "token_update" => $tokenUpdateMessage ?? "No token update performed"
 ]);
 exit;
 ?>
