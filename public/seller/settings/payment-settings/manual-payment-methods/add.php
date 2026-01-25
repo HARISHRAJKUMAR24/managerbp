@@ -63,13 +63,13 @@ if (!$user) {
 $user_id = (int)$user['user_id'];
 
 /* ===============================
-   INPUT
+   INPUT VALIDATION
 ================================ */
-$name = $_POST['name'] ?? '';
-$instructions = $_POST['instructions'] ?? '';
-$upi_id = $_POST['upi_id'] ?? null;   // ✅ NEW FIELD
+$name = trim($_POST['name'] ?? '');
+$instructions = trim($_POST['instructions'] ?? '');
+$upi_id = trim($_POST['upi_id'] ?? ''); // ✅ UPI ID field
 
-if ($name === '' || $instructions === '') {
+if (empty($name) || empty($instructions)) {
     echo json_encode([
         "success" => false,
         "message" => "Name and instructions are required"
@@ -78,64 +78,63 @@ if ($name === '' || $instructions === '') {
 }
 
 /* ===============================
-   FILE UPLOAD HANDLING
+   FILE UPLOAD HANDLING (ICON ONLY)
 ================================ */
-
 $year  = date('Y');
 $month = date('m');
 $day   = date('d');
 
 $basePublicPath = dirname(__DIR__, 5) . "/public/uploads/sellers/{$user_id}/manual_payment";
 
-/* ---------- LOGO ---------- */
 $iconPath = null;
-if (!empty($_FILES['icon']['name'])) {
-
-    $logoDir = "{$basePublicPath}/logo/{$year}/{$month}/{$day}/";
-    if (!is_dir($logoDir)) {
-        mkdir($logoDir, 0777, true);
+if (!empty($_FILES['icon']['name']) && $_FILES['icon']['error'] === UPLOAD_ERR_OK) {
+    $iconDir = "{$basePublicPath}/{$year}/{$month}/{$day}/";
+    
+    if (!is_dir($iconDir)) {
+        mkdir($iconDir, 0777, true);
     }
 
-    $logoName = time() . "_logo_" . basename($_FILES['icon']['name']);
-    move_uploaded_file($_FILES['icon']['tmp_name'], $logoDir . $logoName);
-
-    $iconPath = "uploads/sellers/{$user_id}/manual_payment/logo/{$year}/{$month}/{$day}/{$logoName}";
-}
-
-/* ---------- QR IMAGE ---------- */
-$imagePath = null;
-if (!empty($_FILES['image']['name'])) {
-
-    $imageDir = "{$basePublicPath}/image/{$year}/{$month}/{$day}/";
-    if (!is_dir($imageDir)) {
-        mkdir($imageDir, 0777, true);
+    // Generate unique filename
+    $fileExt = pathinfo($_FILES['icon']['name'], PATHINFO_EXTENSION);
+    $uniqueName = time() . "_" . uniqid() . "." . $fileExt;
+    
+    $targetPath = $iconDir . $uniqueName;
+    
+    if (move_uploaded_file($_FILES['icon']['tmp_name'], $targetPath)) {
+        $iconPath = "uploads/sellers/{$user_id}/manual_payment/{$year}/{$month}/{$day}/{$uniqueName}";
     }
-
-    $imageName = time() . "_image_" . basename($_FILES['image']['name']);
-    move_uploaded_file($_FILES['image']['tmp_name'], $imageDir . $imageName);
-
-    $imagePath = "uploads/sellers/{$user_id}/manual_payment/image/{$year}/{$month}/{$day}/{$imageName}";
 }
 
 /* ===============================
-   INSERT QUERY (UPDATED)
+   INSERT QUERY (UPDATED - NO IMAGE FIELD)
 ================================ */
 $stmt = $pdo->prepare("
     INSERT INTO manual_payment_methods
-    (user_id, name, upi_id, instructions, icon, image, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, NOW(3))
+    (user_id, name, upi_id, instructions, icon, created_at)
+    VALUES (?, ?, ?, ?, ?, NOW(3))
 ");
 
-$stmt->execute([
+$success = $stmt->execute([
     $user_id,
     $name,
-    $upi_id,   // ✅ NEW FIELD
+    $upi_id ?: null, // Store null if empty
     $instructions,
-    $iconPath,
-    $imagePath
+    $iconPath ?: null
 ]);
 
+if (!$success) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Failed to save payment method"
+    ]);
+    exit;
+}
+
+/* ===============================
+   SUCCESS RESPONSE
+================================ */
 echo json_encode([
     "success" => true,
-    "message" => "Manual payment method added successfully"
+    "message" => "Manual payment method added successfully",
+    "id" => $pdo->lastInsertId()
 ]);

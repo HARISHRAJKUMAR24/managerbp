@@ -18,10 +18,9 @@ $stmt = $pdo->prepare("
     SELECT 
         id,
         name,
+        upi_id,      -- ✅ UPI ID field
         instructions,
-        upi_id,      -- 🔥 ADDED
-        icon,
-        image
+        icon
     FROM manual_payment_methods
     WHERE id = ? AND user_id = ?
     LIMIT 1
@@ -36,6 +35,14 @@ if (!$data) {
         "message" => "Not found"
     ]);
     exit;
+}
+
+/* ===============================
+   CONVERT ICON TO FULL URL
+================================ */
+if (!empty($data['icon'])) {
+    $baseUrl = "http://localhost/managerbp/public/";
+    $data['icon'] = $baseUrl . $data['icon'];
 }
 
 /* ===============================

@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 ================================ */
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
-require_once "../../../src/functions.php"; // ✅ ADDED for limit checking
+require_once "../../../src/functions.php";
 
 $pdo = getDbConnection();
 
@@ -68,14 +68,13 @@ if (!$user) {
 
 $user_id = (int)$user->user_id;
 
-// ✅ ADDED: Check menu limit before creating
+// Check menu limit before creating
 $limitResult = getUserPlanLimit($user_id, 'menu');
 
 if (!$limitResult['can_add']) {
-    // Convert to toast format
     echo json_encode([
         "success" => false,
-        "message" => $limitResult['message'] // This will show as toast
+        "message" => $limitResult['message']
     ]);
     exit;
 }
@@ -110,6 +109,7 @@ $halal      = !empty($input["halal"]) ? 1 : 0;
 $stockQty   = $input["stock_qty"] ?? null;
 $stockUnit  = $input["stock_unit"] ?? null;
 $categoryId = $input["category_id"] ?? null;
+$hsnCode    = !empty($input["hsn_code"]) ? trim($input["hsn_code"]) : null; // NEW
 
 /* ===============================
    TRANSACTION
@@ -119,7 +119,7 @@ $pdo->beginTransaction();
 try {
 
     /* ===============================
-       INSERT MENU ITEM
+       INSERT MENU ITEM (WITH HSN)
     ================================ */
     $stmt = $pdo->prepare("
         INSERT INTO menu_items (
@@ -128,6 +128,7 @@ try {
             category_id,
             name,
             description,
+            hsn_code, -- NEW
             food_type,
             halal,
             stock_type,
@@ -144,6 +145,7 @@ try {
             :category_id,
             :name,
             :description,
+            :hsn_code, -- NEW
             :food_type,
             :halal,
             :stock_type,
@@ -163,6 +165,7 @@ try {
         ":category_id"           => $categoryId,
         ":name"                  => trim($input["name"]),
         ":description"           => $input["description"] ?? "",
+        ":hsn_code"              => $hsnCode, // NEW
         ":food_type"             => $input["food_type"],
         ":halal"                 => $halal,
         ":stock_type"            => $input["stock_type"],
@@ -176,7 +179,7 @@ try {
     $itemId = $pdo->lastInsertId();
 
     /* ===============================
-       INSERT VARIATIONS (🔥 FIXED)
+       INSERT VARIATIONS
     ================================ */
     $varStmt = $pdo->prepare("
         INSERT INTO menu_item_variations (
@@ -206,38 +209,37 @@ try {
 
     $minSelling = PHP_FLOAT_MAX;
 
-foreach ($input["variations"] as $v) {
+    foreach ($input["variations"] as $v) {
 
-    $mrp     = isset($v["mrp_price"]) ? (float)$v["mrp_price"] : 0;
-    $selling = isset($v["selling_price"]) ? (float)$v["selling_price"] : 0;
+        $mrp     = isset($v["mrp_price"]) ? (float)$v["mrp_price"] : 0;
+        $selling = isset($v["selling_price"]) ? (float)$v["selling_price"] : 0;
 
-    $dineIn    = ($v["dine_in_price"] !== "" && $v["dine_in_price"] !== null)
-        ? (float)$v["dine_in_price"]
-        : null;
+        $dineIn    = ($v["dine_in_price"] !== "" && $v["dine_in_price"] !== null)
+            ? (float)$v["dine_in_price"]
+            : null;
 
-    $takeaway = ($v["takeaway_price"] !== "" && $v["takeaway_price"] !== null)
-        ? (float)$v["takeaway_price"]
-        : null;
+        $takeaway = ($v["takeaway_price"] !== "" && $v["takeaway_price"] !== null)
+            ? (float)$v["takeaway_price"]
+            : null;
 
-    $delivery = ($v["delivery_price"] !== "" && $v["delivery_price"] !== null)
-        ? (float)$v["delivery_price"]
-        : null;
+        $delivery = ($v["delivery_price"] !== "" && $v["delivery_price"] !== null)
+            ? (float)$v["delivery_price"]
+            : null;
 
-    $varStmt->execute([
-        ":user_id"          => $user_id,
-        ":item_id"          => $itemId,
-        ":name"             => trim($v["name"]),
-        ":mrp_price"        => $mrp,
-        ":selling_price"    => $selling,
-        ":discount_percent" => (float)($v["discount_percent"] ?? 0),
-        ":dine_in_price"    => $dineIn,
-        ":takeaway_price"   => $takeaway,
-        ":delivery_price"   => $delivery,
-    ]);
+        $varStmt->execute([
+            ":user_id"          => $user_id,
+            ":item_id"          => $itemId,
+            ":name"             => trim($v["name"]),
+            ":mrp_price"        => $mrp,
+            ":selling_price"    => $selling,
+            ":discount_percent" => (float)($v["discount_percent"] ?? 0),
+            ":dine_in_price"    => $dineIn,
+            ":takeaway_price"   => $takeaway,
+            ":delivery_price"   => $delivery,
+        ]);
 
-    $minSelling = min($minSelling, $selling);
-}
-
+        $minSelling = min($minSelling, $selling);
+    }
 
     /* ===============================
        UPDATE BASE PRICE

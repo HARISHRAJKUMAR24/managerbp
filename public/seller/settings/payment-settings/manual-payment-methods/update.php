@@ -47,72 +47,82 @@ if (!$user) {
 $user_id = (int)$user['user_id'];
 
 /* ===============================
-   INPUT
+   INPUT VALIDATION
 ================================ */
 $id = (int)($_GET['id'] ?? 0);
-$name = $_POST['name'] ?? '';
-$instructions = $_POST['instructions'] ?? '';
-$upi_id = $_POST['upi_id'] ?? ''; // 🔥 NEW FIELD
+$name = trim($_POST['name'] ?? '');
+$instructions = trim($_POST['instructions'] ?? '');
+$upi_id = trim($_POST['upi_id'] ?? ''); // ✅ UPI ID field
 
-if (!$id || $name === '' || $instructions === '') {
-    echo json_encode(["success" => false, "message" => "Invalid data"]);
+if (!$id || empty($name) || empty($instructions)) {
+    echo json_encode([
+        "success" => false, 
+        "message" => "ID, name and instructions are required"
+    ]);
     exit;
 }
 
 /* ===============================
-   FILE UPLOADS
+   CHECK IF RECORD EXISTS AND BELONGS TO USER
 ================================ */
-$year = date('Y');
-$month = date('m');
-$day = date('d');
+$checkStmt = $pdo->prepare("
+    SELECT id FROM manual_payment_methods 
+    WHERE id = ? AND user_id = ?
+    LIMIT 1
+");
+$checkStmt->execute([$id, $user_id]);
+$exists = $checkStmt->fetch(PDO::FETCH_ASSOC);
 
-$basePublicPath = dirname(__DIR__, 5) . "/public/uploads/sellers/{$user_id}/manual_payment";
-
-$iconPath = null;
-$imagePath = null;
-
-/* ---------- LOGO ---------- */
-if (!empty($_FILES['icon']['name'])) {
-    $logoDir = "{$basePublicPath}/logo/{$year}/{$month}/{$day}/";
-
-    if (!is_dir($logoDir)) mkdir($logoDir, 0777, true);
-
-    $logoName = time() . "_logo_" . basename($_FILES['icon']['name']);
-    move_uploaded_file($_FILES['icon']['tmp_name'], $logoDir . $logoName);
-
-    $iconPath = "uploads/sellers/{$user_id}/manual_payment/logo/{$year}/{$month}/{$day}/{$logoName}";
-}
-
-/* ---------- IMAGE / QR ---------- */
-if (!empty($_FILES['image']['name'])) {
-    $imageDir = "{$basePublicPath}/image/{$year}/{$month}/{$day}/";
-
-    if (!is_dir($imageDir)) mkdir($imageDir, 0777, true);
-
-    $imageName = time() . "_image_" . basename($_FILES['image']['name']);
-    move_uploaded_file($_FILES['image']['tmp_name'], $imageDir . $imageName);
-
-    $imagePath = "uploads/sellers/{$user_id}/manual_payment/image/{$year}/{$month}/{$day}/{$imageName}";
+if (!$exists) {
+    echo json_encode([
+        "success" => false, 
+        "message" => "Payment method not found or unauthorized"
+    ]);
+    exit;
 }
 
 /* ===============================
-   UPDATE QUERY
+   FILE UPLOAD (ICON ONLY)
 ================================ */
-$sql = "
-    UPDATE manual_payment_methods 
-    SET name = ?, instructions = ?, upi_id = ?";
+$iconPath = null;
+if (!empty($_FILES['icon']['name']) && $_FILES['icon']['error'] === UPLOAD_ERR_OK) {
+    $year = date('Y');
+    $month = date('m');
+    $day = date('d');
+    
+    $basePublicPath = dirname(__DIR__, 5) . "/public/uploads/sellers/{$user_id}/manual_payment";
+    $iconDir = "{$basePublicPath}/{$year}/{$month}/{$day}/";
+    
+    if (!is_dir($iconDir)) {
+        mkdir($iconDir, 0777, true);
+    }
 
-$params = [$name, $instructions, $upi_id];
+    // Generate unique filename
+    $fileExt = pathinfo($_FILES['icon']['name'], PATHINFO_EXTENSION);
+    $uniqueName = time() . "_" . uniqid() . "." . $fileExt;
+    
+    $targetPath = $iconDir . $uniqueName;
+    
+    if (move_uploaded_file($_FILES['icon']['tmp_name'], $targetPath)) {
+        $iconPath = "uploads/sellers/{$user_id}/manual_payment/{$year}/{$month}/{$day}/{$uniqueName}";
+    }
+}
 
-/* Append uploaded file paths */
+/* ===============================
+   UPDATE QUERY (NO IMAGE FIELD)
+================================ */
+// Build dynamic query based on whether icon is being updated
+$sql = "UPDATE manual_payment_methods SET 
+        name = ?, 
+        upi_id = ?, 
+        instructions = ?";
+    
+$params = [$name, $upi_id ?: null, $instructions];
+
+// Add icon if uploaded
 if ($iconPath) {
     $sql .= ", icon = ?";
     $params[] = $iconPath;
-}
-
-if ($imagePath) {
-    $sql .= ", image = ?";
-    $params[] = $imagePath;
 }
 
 $sql .= " WHERE id = ? AND user_id = ?";
@@ -121,10 +131,18 @@ $params[] = $user_id;
 
 /* Execute Update */
 $stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$success = $stmt->execute($params);
+
+if (!$success) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Failed to update payment method"
+    ]);
+    exit;
+}
 
 /* ===============================
-   RESPONSE
+   SUCCESS RESPONSE
 ================================ */
 echo json_encode([
     "success" => true,

@@ -85,7 +85,6 @@ if (isset($input['food_type'])) {
         : 'veg';
 }
 
-
 if (isset($input['stock_type']) && $input['stock_type'] === 'out_of_stock') {
     $input['stock_type'] = 'out';
 }
@@ -96,6 +95,7 @@ if (isset($input['stock_type']) && $input['stock_type'] === 'out_of_stock') {
 $allowed = [
     'name',
     'description',
+    'hsn_code', // NEW
     'menu_id',
     'category_id',
     'food_type',
@@ -139,7 +139,7 @@ try {
     }
 
     /* ===============================
-       VARIATIONS (🔥 FIXED)
+       VARIATIONS
     ================================ */
     if (!empty($input['variations'])) {
 
@@ -169,7 +169,7 @@ try {
             $selling = (float)$v['selling_price'];
 
             $varStmt->execute([
-                $user_id,                // ✅ ADDED
+                $user_id,
                 $itemId,
                 $v['name'],
                 $v['mrp_price'],

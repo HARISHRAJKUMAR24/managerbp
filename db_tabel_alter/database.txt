@@ -450,3 +450,11 @@ ADD COLUMN batch_id VARCHAR(50) DEFAULT NULL;
 
 ALTER TABLE departments 
 ADD COLUMN leave_dates LONGTEXT DEFAULT NULL CHECK (json_valid(`leave_dates`));
+
+26/1/2026
+-- Remove the image column from manual_payment_methods table
+ALTER TABLE manual_payment_methods DROP COLUMN image;
+
+ALTER TABLE `menu_items` 
+ADD COLUMN `hsn_code` VARCHAR(20) DEFAULT NULL 
+AFTER `description`;

@@ -53,13 +53,19 @@ if (!$user) {
     exit;
 }
 
-$user_id = (int)$user['user_id']; // ✅ matches FK
+$user_id = (int)$user['user_id'];
 
 /* ===============================
-   FETCH
+   FETCH RECORDS WITH UPI_ID
 ================================ */
 $stmt = $pdo->prepare("
-    SELECT id, name, instructions, icon, image, created_at
+    SELECT 
+        id, 
+        name, 
+        upi_id,  -- ✅ Include UPI ID
+        instructions, 
+        icon, 
+        created_at
     FROM manual_payment_methods
     WHERE user_id = ?
     ORDER BY id DESC
@@ -67,6 +73,17 @@ $stmt = $pdo->prepare("
 $stmt->execute([$user_id]);
 
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+/* ===============================
+   CONVERT PATHS TO FULL URLs
+================================ */
+$baseUrl = "http://localhost/managerbp/public/";
+
+foreach ($records as &$record) {
+    if (!empty($record['icon'])) {
+        $record['icon'] = $baseUrl . $record['icon'];
+    }
+}
 
 echo json_encode([
     "success" => true,
