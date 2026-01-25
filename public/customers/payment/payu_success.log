@@ -1311,3 +1311,57 @@ Array
     [cardnum] => XXXXXXXXXXXX2346
 )
 
+Array
+(
+    [mihpayid] => 403993715536327918
+    [mode] => CC
+    [status] => success
+    [unmappedstatus] => captured
+    [key] => gtKFFx
+    [txnid] => TXN17692767018751
+    [amount] => 10.00
+    [cardCategory] => domestic
+    [discount] => 0.00
+    [net_amount_debit] => 10
+    [addedon] => 2026-01-24 23:15:02
+    [productinfo] => Booking Payment
+    [firstname] => Barani
+    [lastname] => 
+    [address1] => 
+    [address2] => 
+    [city] => 
+    [state] => 
+    [country] => 
+    [zipcode] => 
+    [email] => barani@gmail.com
+    [phone] => 918888888888
+    [udf1] => 85960HOS13otuw
+    [udf2] => 774100
+    [udf3] => 85960
+    [udf4] => 2026-01-25T18:30:00.000Z
+    [udf5] => {"slot_from":"17:00","slot_to":"07:30","token_count":1,"category_id":"CAT_697324b7b5405","batch_id":"1:1","receipt":"receipt_774100_1769276701","gst_type":"inclusive","gst_percent":18,"gst_amount":0,"sub_total":10,"payment_id":"145"}
+    [udf6] => 
+    [udf7] => 
+    [udf8] => 
+    [udf9] => 
+    [udf10] => 
+    [hash] => 524f7f009d4360715c5559106c6105ab815c0f7ade94be542995162bc01d542dbd124eafeb0368f8058b889f725763bcb26c14c93589122db23332b0ab69318c
+    [field1] => 124228293050709150
+    [field2] => 993434
+    [field3] => 10.00
+    [field4] => 
+    [field5] => 00
+    [field6] => 02
+    [field7] => AUTHPOSITIVE
+    [field8] => AUTHORIZED
+    [field9] => Transaction is Successful
+    [payment_source] => payu
+    [pa_name] => PayU
+    [PG_TYPE] => CC-PG
+    [bank_ref_num] => 124228293050709150
+    [bankcode] => CC
+    [error] => E000
+    [error_Message] => No Error
+    [cardnum] => XXXXXXXXXXXX2346
+)
+
