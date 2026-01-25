@@ -18,6 +18,9 @@ if (!$userId) {
     exit;
 }
 
+/***************************
+ *  MAIN DOCTOR QUERY
+ ***************************/
 $stmt = $pdo->prepare("
     SELECT 
         ds.id,
@@ -49,37 +52,73 @@ $stmt->execute([$userId]);
 
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+/***************************
+ *  GET BOOKED TOKEN DATA
+ ***************************/
+$bookingStmt = $pdo->prepare("
+    SELECT appointment_date, batch_id, SUM(token_count) AS booked
+    FROM customer_payment
+    WHERE user_id = ?
+      AND status = 'paid'
+    GROUP BY appointment_date, batch_id
+");
+$bookingStmt->execute([$userId]);
+
+$bookings = []; // date_batch → count
+
+foreach ($bookingStmt->fetchAll(PDO::FETCH_ASSOC) as $b) {
+    $key = $b["appointment_date"] . "_" . $b["batch_id"];
+    $bookings[$key] = (int)$b["booked"];
+}
+
+/***************************
+ *  PROCESS RECORDS
+ ***************************/
 foreach ($records as &$row) {
+
+    /***** Weekly Schedule *****/
     $weeklySchedule = !empty($row['weekly_schedule'])
         ? json_decode($row['weekly_schedule'], true)
         : [];
     $row['weeklySchedule'] = $weeklySchedule;
 
-    $leaveDates = !empty($row['leave_dates'])
+    /***** Leave Dates *****/
+    $row['leaveDates'] = !empty($row['leave_dates'])
         ? json_decode($row['leave_dates'], true)
         : [];
-    $row['leaveDates'] = $leaveDates;
 
-    // ⭐ FIX: return snake_case token_limit
-    $row['token_limit'] = isset($row['token_limit'])
-        ? (int)$row['token_limit']
-        : 1;
+    /***** Token Limit *****/
+    $tokenLimit = isset($row['token_limit']) ? (int)$row['token_limit'] : 1;
+    $row['token_limit'] = $tokenLimit;
 
-    unset($row['weekly_schedule'], $row['leave_dates']); // remove only these
+    /***** Build capacity list: batch_id → total tokens *****/
+    $slotCapacity = [];
 
-    // NEW FIELDS
-    $row['category_id'] = $row['category_id'] ?? null;
-    $row['doctor_name'] = $row['doctor_name'] ?? $row['name'];
-    $row['specialization'] = $row['specialization'] ?? null;
+    foreach ($weeklySchedule as $day => $data) {
+        if (!empty($data['slots'])) {
+            foreach ($data['slots'] as $slot) {
+                $batchId = $slot["batch_id"];
+                $slotCapacity[$batchId] = $tokenLimit;
+            }
+        }
+    }
 
+    $row['slot_capacity'] = $slotCapacity;
+
+    unset($row['weekly_schedule'], $row['leave_dates']);
+
+    /***** Merge doctor/category images *****/
     if (!empty($row['cat_doctor_image'])) {
         $row['doctorImage'] = $row['cat_doctor_image'];
     }
     unset($row['cat_doctor_image']);
 }
 
-
+/***************************
+ *  RETURN API RESULT
+ ***************************/
 echo json_encode([
     "success" => true,
-    "records" => $records
+    "records" => $records,
+    "bookings" => $bookings // ⭐ FRONTEND WILL USE THIS
 ]);
