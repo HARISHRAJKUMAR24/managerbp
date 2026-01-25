@@ -9,6 +9,9 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
+/* ---------------------------
+   AUTH USING TOKEN COOKIE
+---------------------------- */
 $token = $_COOKIE["token"] ?? null;
 
 if (!$token) {
@@ -26,65 +29,44 @@ if (!$user) {
 }
 
 $userId = $user["user_id"];
-$customer_id = $_GET["customer_id"] ?? null;
+
+/* ---------------------------
+   FETCH ALL APPOINTMENTS + DOCTOR DETAILS
+---------------------------- */
 
 $sql = "
 SELECT 
     cp.id,
-    cp.user_id,
     cp.customer_id,
     cp.appointment_id,
-    cp.amount,
-    cp.currency,
-    cp.status,
-    cp.created_at,
-    cp.payment_id,
-    cp.gst_type,
-    cp.gst_percent,
-    cp.gst_amount,
-    cp.total_amount,
-    cp.payment_method,
     cp.appointment_date,
     cp.slot_from,
     cp.slot_to,
-    cp.token_count,
-    cp.service_reference_id,
-    cp.service_reference_type,
+    cp.status,
+    cp.total_amount,
     cp.service_name,
 
     c.doctor_name,
+    c.doctor_image,
     c.specialization,
     c.qualification,
-    c.experience,
-    c.reg_number,
-    c.doctor_image
+
+    cp.service_reference_id
 
 FROM customer_payment cp
 LEFT JOIN categories c 
     ON cp.service_reference_id = c.category_id
 WHERE cp.user_id = :user_id
+ORDER BY cp.appointment_date DESC
 ";
-
-if (!empty($customer_id)) {
-    $sql .= " AND cp.customer_id = :customer_id";
-}
-
-$sql .= " ORDER BY cp.created_at DESC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(":user_id", $userId, PDO::PARAM_INT);
-
-if (!empty($customer_id)) {
-    $stmt->bindValue(":customer_id", $customer_id, PDO::PARAM_INT);
-}
-
 $stmt->execute();
 
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 echo json_encode([
     "success" => true,
-    "records" => $records,
-    "totalRecords" => count($records),
-    "totalPages" => 1
+    "records" => $records
 ]);
