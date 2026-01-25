@@ -127,6 +127,7 @@ $columns = "
     meta_description,
     created_at,
     appointment_settings,
+    leave_dates,  -- ✅ ADD THIS LINE: Include leave_dates field
     updated_at
 ";
 
@@ -176,7 +177,22 @@ $final = [];
 
 foreach ($department as $key => $value) {
     $camel = toCamel($key);
-    $final[$camel] = $value;
+    
+    // Special handling for JSON fields (appointment_settings and leave_dates)
+    if ($key === 'appointment_settings' || $key === 'leave_dates') {
+        if ($value === null || $value === '') {
+            $final[$camel] = ($key === 'leave_dates') ? [] : null;
+        } else {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $final[$camel] = $decoded;
+            } else {
+                $final[$camel] = ($key === 'leave_dates') ? [] : null;
+            }
+        }
+    } else {
+        $final[$camel] = $value;
+    }
 }
 
 $final["additionalImages"] = $additionalImages;
@@ -185,7 +201,13 @@ $final["additionalImages"] = $additionalImages;
    DEBUG OUTPUT
 ----------------------------------------- */
 error_log("Department data fetched for ID: " . $department_id);
-error_log("Columns found: " . implode(', ', array_keys($department)));
+error_log("Has appointment_settings: " . (!empty($department['appointment_settings']) ? 'YES' : 'NO'));
+error_log("Has leave_dates: " . (!empty($department['leave_dates']) ? 'YES' : 'NO'));
+
+if (!empty($department['leave_dates'])) {
+    $leaveDates = json_decode($department['leave_dates'], true);
+    error_log("Leave dates count: " . (is_array($leaveDates) ? count($leaveDates) : 'NOT ARRAY'));
+}
 
 /* -----------------------------------------
    SEND RESPONSE

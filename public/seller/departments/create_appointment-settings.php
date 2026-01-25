@@ -1,7 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
 
@@ -18,7 +18,8 @@ $pdo = getDbConnection();
 /* ----------------------------------------------------
    READ JSON BODY
 -----------------------------------------------------*/
-$data = json_decode(file_get_contents("php://input"), true) ?? [];
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true) ?? [];
 
 /* ----------------------------------------------------
    AUTH
@@ -42,24 +43,41 @@ if (!$user) {
 $user_id = $user["user_id"];
 
 /* ----------------------------------------------------
-   INPUT
+   INPUT VALIDATION
 -----------------------------------------------------*/
 $department_id = trim($data["department_id"] ?? "");
 $appointment_settings = $data["appointment_settings"] ?? null;
+$leave_dates = $data["leave_dates"] ?? [];
 
-if (!$department_id || !is_array($appointment_settings)) {
-    echo json_encode(["success" => false, "message" => "Invalid payload"]);
+if (!$department_id) {
+    echo json_encode(["success" => false, "message" => "Department ID required"]);
     exit();
 }
 
 /* ----------------------------------------------------
-   NORMALIZE (DO NOT DESTROY DATA)
+   VALIDATE APPOINTMENT SETTINGS
+-----------------------------------------------------*/
+if (!$appointment_settings) {
+    echo json_encode(["success" => false, "message" => "Appointment settings required"]);
+    exit();
+}
+
+/* ----------------------------------------------------
+   NORMALIZE APPOINTMENT SETTINGS (WITH BATCH_ID)
 -----------------------------------------------------*/
 $days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 $final_settings = [];
 
 foreach ($days as $day) {
     $dayData = $appointment_settings[$day] ?? null;
+    
+    if (!$dayData) {
+        $final_settings[$day] = [
+            "enabled" => false,
+            "slots" => []
+        ];
+        continue;
+    }
 
     $final_settings[$day] = [
         "enabled" => (bool)($dayData["enabled"] ?? false),
@@ -67,37 +85,111 @@ foreach ($days as $day) {
     ];
 
     if (!empty($dayData["slots"]) && is_array($dayData["slots"])) {
-        foreach ($dayData["slots"] as $slot) {
+        foreach ($dayData["slots"] as $index => $slot) {
+            // Generate batch_id: dayIndex:slotIndex (e.g., "0:0" for Sun Slot 0)
+            $dayIndex = array_search($day, $days);
+            $batch_id = $slot["batch_id"] ?? $dayIndex . ":" . $index;
+            
             $final_settings[$day]["slots"][] = [
-                "from"      => trim($slot["from"] ?? ""),
-                "to"        => trim($slot["to"] ?? ""),
+                "batch_id" => $batch_id,
+                "from" => trim($slot["from"] ?? ""),
+                "to" => trim($slot["to"] ?? ""),
                 "breakFrom" => trim($slot["breakFrom"] ?? ""),
-                "breakTo"   => trim($slot["breakTo"] ?? ""),
-                "token"     => intval($slot["token"] ?? 0),
+                "breakTo" => trim($slot["breakTo"] ?? ""),
+                "token" => intval($slot["token"] ?? 0)
             ];
         }
     }
 }
 
 /* ----------------------------------------------------
-   SAVE
+   VALIDATE AND FORMAT LEAVE DATES
+-----------------------------------------------------*/
+$valid_leave_dates = [];
+
+// Check if leave_dates is JSON string or array
+if (is_string($leave_dates) && $leave_dates !== '') {
+    $leave_dates = json_decode($leave_dates, true);
+}
+
+if (is_array($leave_dates)) {
+    foreach ($leave_dates as $date) {
+        if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            // Validate it's a real date
+            $dateObj = DateTime::createFromFormat('Y-m-d', $date);
+            if ($dateObj && $dateObj->format('Y-m-d') === $date) {
+                $valid_leave_dates[] = $date;
+            }
+        }
+    }
+}
+
+// Remove duplicates and sort chronologically
+$valid_leave_dates = array_unique($valid_leave_dates);
+sort($valid_leave_dates);
+
+/* ----------------------------------------------------
+   CHECK IF DEPARTMENT EXISTS AND BELONGS TO USER
 -----------------------------------------------------*/
 $stmt = $pdo->prepare("
-    UPDATE departments
-    SET appointment_settings = ?, updated_at = NOW(3)
+    SELECT id FROM departments 
     WHERE department_id = ? AND user_id = ?
 ");
+$stmt->execute([$department_id, $user_id]);
+$department = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$stmt->execute([
-    json_encode($final_settings, JSON_UNESCAPED_SLASHES),
-    $department_id,
-    $user_id
-]);
+if (!$department) {
+    echo json_encode([
+        "success" => false, 
+        "message" => "Department not found or unauthorized"
+    ]);
+    exit();
+}
 
-echo json_encode([
-    "success" => true,
-    "message" => "Appointment settings saved successfully",
-    "appointment_settings" => $final_settings
-]);
+/* ----------------------------------------------------
+   UPDATE DATABASE
+-----------------------------------------------------*/
+try {
+    $appointment_json = json_encode($final_settings, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $leave_dates_json = json_encode($valid_leave_dates, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    
+    $stmt = $pdo->prepare("
+        UPDATE departments
+        SET appointment_settings = ?, 
+            leave_dates = ?, 
+            updated_at = NOW(3)
+        WHERE department_id = ? AND user_id = ?
+    ");
+
+    $success = $stmt->execute([
+        $appointment_json,
+        $leave_dates_json,
+        $department_id,
+        $user_id
+    ]);
+
+    if (!$success) {
+        throw new Exception("Database update failed");
+    }
+
+    /* ----------------------------------------------------
+       SUCCESS RESPONSE
+    -----------------------------------------------------*/
+    echo json_encode([
+        "success" => true,
+        "message" => "Department appointment settings saved successfully",
+        "appointment_settings" => $final_settings,
+        "leave_dates" => $valid_leave_dates,
+        "rows_affected" => $stmt->rowCount()
+    ]);
+
+} catch (Exception $e) {
+    error_log("Error updating department appointment settings: " . $e->getMessage());
+    echo json_encode([
+        "success" => false,
+        "message" => "Failed to save appointment settings: " . $e->getMessage()
+    ]);
+}
 
 exit();
+?>

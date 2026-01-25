@@ -444,3 +444,9 @@ ADD COLUMN service_name VARCHAR(255) DEFAULT NULL;
 24/1/2026
 ALTER TABLE customer_payment 
 ADD COLUMN batch_id VARCHAR(50) DEFAULT NULL;
+
+
+25/1/2026
+
+ALTER TABLE departments 
+ADD COLUMN leave_dates LONGTEXT DEFAULT NULL CHECK (json_valid(`leave_dates`));
