@@ -13,6 +13,7 @@ SELECT
   mi.id,
   mi.name,
   mi.description,
+  mi.hsn_code, -- ✅ ADD THIS LINE
   mi.menu_id,
   mi.category_id,
   mi.food_type,
@@ -21,22 +22,17 @@ SELECT
   mi.stock_qty,
   mi.stock_unit,
   mi.halal,
+  mi.customer_limit,
+  mi.customer_limit_period,
   mi.created_at AS last_updated,
-
-  -- pricing
   mi.price AS price,
   mi.price AS original_price,
-
-  -- UI defaults
   0 AS order_count,
   0 AS rating,
   'Medium' AS spice_level,
-  mi.customer_limit,
-
-  -- visibility
   mi.active AS is_available,
-  mi.active AS show_on_site
-
+  mi.active AS show_on_site,
+  0 AS is_best_seller -- Added this for consistency
 FROM menu_items mi
 ORDER BY mi.created_at DESC
 ";
@@ -47,7 +43,11 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 /* Ensure frontend never crashes */
 foreach ($items as &$item) {
   $item['tags'] = [];
-  $item['is_best_seller'] = false;
+  // Ensure boolean values
+  $item['is_available'] = (bool)$item['is_available'];
+  $item['show_on_site'] = (bool)$item['show_on_site'];
+  $item['is_best_seller'] = (bool)$item['is_best_seller'];
+  $item['halal'] = (bool)$item['halal'];
 }
 
 echo json_encode($items);

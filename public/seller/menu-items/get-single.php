@@ -25,6 +25,7 @@ $stmt = $pdo->prepare("
     id,
     name,
     description,
+    hsn_code, -- ✅ ADD THIS LINE
     menu_id,
     category_id,
     food_type,
