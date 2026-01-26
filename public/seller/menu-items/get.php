@@ -10,6 +10,7 @@ try {
             mi.id,
             mi.name,
             mi.description,
+            mi.hsn_code, -- ✅ ADD THIS LINE
             mi.image,
             mi.menu_id,
             mi.category_id,
@@ -23,6 +24,8 @@ try {
             mi.is_best_seller,
             mi.is_available,
             mi.show_on_site,
+            mi.customer_limit,
+            mi.customer_limit_period,
             mi.created_at,
             mi.updated_at,
             c.name AS category_name,
@@ -45,10 +48,11 @@ try {
             'id' => (int)$item['id'],
             'name' => $item['name'],
             'description' => $item['description'],
-            'image' => $item['image'], // ✅ IMPORTANT
+            'hsn_code' => $item['hsn_code'], // ✅ ADD THIS
+            'image' => $item['image'],
             'menu_id' => (int)$item['menu_id'],
             'category_id' => (int)$item['category_id'],
-'food_type' => $item['food_type'] === 'nonveg' ? 'non-veg' : 'veg',
+            'food_type' => $item['food_type'] === 'nonveg' ? 'non-veg' : 'veg',
             'halal' => (bool)$item['halal'],
             'stock_type' => $item['stock_type'],
             'stock_qty' => (int)$item['stock_qty'],
@@ -59,6 +63,8 @@ try {
             'is_best_seller' => (bool)$item['is_best_seller'],
             'is_available' => (bool)$item['is_available'],
             'show_on_site' => (bool)$item['show_on_site'],
+            'customer_limit' => $item['customer_limit'] ? (int)$item['customer_limit'] : null,
+            'customer_limit_period' => $item['customer_limit_period'],
             'created_at' => $item['created_at'],
             'last_updated' => $item['updated_at'],
         ];
