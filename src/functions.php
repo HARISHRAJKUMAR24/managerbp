@@ -1090,3 +1090,268 @@ function updatePayUWithCategoryReference($user_id, $customer_id, $payment_id, $c
         ];
     }
 }
+
+//-----------------------------------------------------------------------------------------------------------
+
+/**
+ * Check token availability for a specific doctor's batch
+ * 
+ * @param int $userId Doctor's user ID
+ * @param string $batchId Batch ID (e.g., "0:0", "5:0")
+ * @param string $appointmentDate Appointment date (YYYY-MM-DD)
+ * @param PDO $pdo Database connection
+ * 
+ * @return array Returns availability status with details
+ */
+function checkTokenAvailability($userId, $batchId, $appointmentDate, $pdo = null) {
+    try {
+        // If no PDO connection provided, create one
+        if ($pdo === null) {
+            require_once __DIR__ . "/config.php";
+            require_once __DIR__ . "/database.php";
+            $pdo = getDbConnection();
+        }
+        
+        // Step 1: Get doctor's schedule to find token limit for this batch
+        $scheduleStmt = $pdo->prepare("
+            SELECT token_limit, weekly_schedule 
+            FROM doctor_schedule 
+            WHERE user_id = ?
+        ");
+        $scheduleStmt->execute([$userId]);
+        $doctor = $scheduleStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$doctor) {
+            return [
+                'available' => false,
+                'message' => 'Doctor schedule not found',
+                'booked' => 0,
+                'total' => 0,
+                'remaining' => 0
+            ];
+        }
+        
+        $tokenLimit = (int)$doctor['token_limit'];
+        
+        // Step 2: Parse weekly schedule to get token for this specific batch
+        $weeklySchedule = !empty($doctor['weekly_schedule']) 
+            ? json_decode($doctor['weekly_schedule'], true) 
+            : [];
+        
+        $batchToken = 0;
+        
+        // Find the token count for this batch from weekly schedule
+        foreach ($weeklySchedule as $day => $daySchedule) {
+            if (!empty($daySchedule['slots'])) {
+                foreach ($daySchedule['slots'] as $slot) {
+                    if (isset($slot['batch_id']) && $slot['batch_id'] == $batchId) {
+                        $batchToken = isset($slot['token']) ? (int)$slot['token'] : $tokenLimit;
+                        break 2;
+                    }
+                }
+            }
+        }
+        
+        // If batch not found in schedule
+        if ($batchToken === 0) {
+            return [
+                'available' => false,
+                'message' => 'Batch not found in schedule',
+                'booked' => 0,
+                'total' => 0,
+                'remaining' => 0
+            ];
+        }
+        
+        // Step 3: Count how many appointments are already booked for this batch and date
+        $bookingStmt = $pdo->prepare("
+            SELECT SUM(token_count) as total_booked 
+            FROM customer_payment 
+            WHERE user_id = ? 
+            AND batch_id = ? 
+            AND appointment_date = ? 
+            AND status IN ('paid', 'pending', 'confirmed')
+        ");
+        
+        $bookingStmt->execute([$userId, $batchId, $appointmentDate]);
+        $result = $bookingStmt->fetch(PDO::FETCH_ASSOC);
+        
+        $bookedCount = (int)($result['total_booked'] ?? 0);
+        
+        // Step 4: Calculate remaining tokens
+        $remainingTokens = max(0, $batchToken - $bookedCount);
+        
+        // Step 5: Determine availability
+        $isAvailable = $remainingTokens > 0;
+        
+        return [
+            'available' => $isAvailable,
+            'message' => $isAvailable 
+                ? "Available ($remainingTokens tokens left)" 
+                : "Appointment full ($bookedCount/$batchToken)",
+            'booked' => $bookedCount,
+            'total' => $batchToken,
+            'remaining' => $remainingTokens,
+            'token_limit' => $tokenLimit,
+            'batch_token' => $batchToken
+        ];
+        
+    } catch (Exception $e) {
+        return [
+            'available' => false,
+            'message' => 'Error checking availability: ' . $e->getMessage(),
+            'booked' => 0,
+            'total' => 0,
+            'remaining' => 0
+        ];
+    }
+}
+
+/**
+ * Get available slots for a specific date with token availability
+ * 
+ * @param int $userId Doctor's user ID
+ * @param string $date Appointment date (YYYY-MM-DD)
+ * @param PDO $pdo Database connection
+ * 
+ * @return array List of available slots with token status
+ */
+function getAvailableSlotsForDate($userId, $date, $pdo = null) {
+    try {
+        if ($pdo === null) {
+            require_once __DIR__ . "/config.php";
+            require_once __DIR__ . "/database.php";
+            $pdo = getDbConnection();
+        }
+        
+        // Step 1: Get doctor's schedule
+        $scheduleStmt = $pdo->prepare("
+            SELECT weekly_schedule, leave_dates, token_limit
+            FROM doctor_schedule 
+            WHERE user_id = ?
+        ");
+        $scheduleStmt->execute([$userId]);
+        $doctor = $scheduleStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$doctor) {
+            return ['available' => false, 'slots' => [], 'message' => 'Doctor not found'];
+        }
+        
+        // Check if date is a leave day
+        $leaveDates = !empty($doctor['leave_dates']) 
+            ? json_decode($doctor['leave_dates'], true) 
+            : [];
+        
+        if (in_array($date, $leaveDates)) {
+            return ['available' => false, 'slots' => [], 'message' => 'Doctor is on leave'];
+        }
+        
+        // Get day of week for this date
+        $dateTime = new DateTime($date);
+        $dayOfWeek = $dateTime->format('D'); // Returns "Sun", "Mon", etc.
+        
+        $weeklySchedule = !empty($doctor['weekly_schedule']) 
+            ? json_decode($doctor['weekly_schedule'], true) 
+            : [];
+        
+        // Check if doctor has schedule for this day
+        if (!isset($weeklySchedule[$dayOfWeek]) || !$weeklySchedule[$dayOfWeek]['enabled']) {
+            return ['available' => false, 'slots' => [], 'message' => 'No schedule for this day'];
+        }
+        
+        $daySchedule = $weeklySchedule[$dayOfWeek];
+        $availableSlots = [];
+        
+        // Step 2: Check each slot's availability
+        if (!empty($daySchedule['slots'])) {
+            foreach ($daySchedule['slots'] as $slot) {
+                $batchId = $slot['batch_id'] ?? '';
+                
+                if (!$batchId) {
+                    continue;
+                }
+                
+                // Check token availability for this batch
+                $availability = checkTokenAvailability($userId, $batchId, $date, $pdo);
+                
+                if ($availability['available']) {
+                    $slot['availability'] = $availability;
+                    $slot['available_tokens'] = $availability['remaining'];
+                    $slot['booked_tokens'] = $availability['booked'];
+                    $slot['total_tokens'] = $availability['total'];
+                    $availableSlots[] = $slot;
+                }
+            }
+        }
+        
+        return [
+            'available' => count($availableSlots) > 0,
+            'slots' => $availableSlots,
+            'message' => count($availableSlots) > 0 
+                ? count($availableSlots) . ' slot(s) available' 
+                : 'No available slots',
+            'date' => $date,
+            'day' => $dayOfWeek
+        ];
+        
+    } catch (Exception $e) {
+        return [
+            'available' => false,
+            'slots' => [],
+            'message' => 'Error: ' . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * API endpoint to check slot availability
+ */
+function apiCheckSlotAvailability() {
+    header("Content-Type: application/json; charset=utf-8");
+    header("Access-Control-Allow-Origin: *");
+    
+    try {
+        require_once __DIR__ . "/../../../config/config.php";
+        require_once __DIR__ . "/../../../src/database.php";
+        $pdo = getDbConnection();
+        
+        $userId = (int)($_GET['user_id'] ?? 0);
+        $batchId = $_GET['batch_id'] ?? '';
+        $date = $_GET['date'] ?? '';
+        
+        if (!$userId || !$batchId || !$date) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Missing parameters: user_id, batch_id, and date are required'
+            ]);
+            exit;
+        }
+        
+        // Validate date format
+        if (!DateTime::createFromFormat('Y-m-d', $date)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid date format. Use YYYY-MM-DD'
+            ]);
+            exit;
+        }
+        
+        $availability = checkTokenAvailability($userId, $batchId, $date, $pdo);
+        
+        echo json_encode([
+            'success' => true,
+            'data' => $availability
+        ]);
+        
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+// Uncomment to test the API endpoint directly
+// if (basename($_SERVER['PHP_SELF']) === 'check_availability.php') {
+//     apiCheckSlotAvailability();
+// }

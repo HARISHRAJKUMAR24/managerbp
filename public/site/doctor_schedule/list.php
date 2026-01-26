@@ -53,29 +53,30 @@ $stmt->execute([$userId]);
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 /***************************
- *  GET BOOKED TOKEN DATA
+ *  GET BOOKED TOKEN DATA - FOR TOKEN AVAILABILITY CHECK
  ***************************/
 $bookingStmt = $pdo->prepare("
-    SELECT appointment_date, batch_id, SUM(token_count) AS booked
+    SELECT 
+        appointment_date, 
+        batch_id, 
+        SUM(token_count) AS booked
     FROM customer_payment
     WHERE user_id = ?
-      AND status = 'paid'
+      AND status IN ('paid', 'pending', 'confirmed')
     GROUP BY appointment_date, batch_id
 ");
 $bookingStmt->execute([$userId]);
 
-$bookings = []; // date_batch → count
-
+$bookings = []; // Format: date_batch => count
 foreach ($bookingStmt->fetchAll(PDO::FETCH_ASSOC) as $b) {
     $key = $b["appointment_date"] . "_" . $b["batch_id"];
     $bookings[$key] = (int)$b["booked"];
 }
 
 /***************************
- *  PROCESS RECORDS
+ *  PROCESS RECORDS WITH TOKEN AVAILABILITY
  ***************************/
 foreach ($records as &$row) {
-
     /***** Weekly Schedule *****/
     $weeklySchedule = !empty($row['weekly_schedule'])
         ? json_decode($row['weekly_schedule'], true)
@@ -91,19 +92,93 @@ foreach ($records as &$row) {
     $tokenLimit = isset($row['token_limit']) ? (int)$row['token_limit'] : 1;
     $row['token_limit'] = $tokenLimit;
 
-    /***** Build capacity list: batch_id → total tokens *****/
+    /***** Build slot capacity *****/
     $slotCapacity = [];
+    $slotTokens = []; // Store per-slot token limits
 
     foreach ($weeklySchedule as $day => $data) {
         if (!empty($data['slots'])) {
             foreach ($data['slots'] as $slot) {
-                $batchId = $slot["batch_id"];
-                $slotCapacity[$batchId] = $tokenLimit;
+                $batchId = $slot["batch_id"] ?? '';
+                if ($batchId) {
+                    // Get token limit for this specific batch
+                    $slotToken = isset($slot['token']) ? (int)$slot['token'] : $tokenLimit;
+                    $slotTokens[$batchId] = $slotToken;
+                    $slotCapacity[$batchId] = $slotToken;
+                }
             }
         }
     }
 
     $row['slot_capacity'] = $slotCapacity;
+    $row['slot_tokens'] = $slotTokens;
+
+    /***** Calculate availability for next 30 days *****/
+    $futureAvailability = [];
+    $today = new DateTime();
+    
+    for ($i = 0; $i < 30; $i++) {
+        $date = clone $today;
+        $date->modify("+{$i} days");
+        $dateStr = $date->format('Y-m-d');
+        $dayOfWeek = $date->format('D');
+        
+        // Check if date is a leave day
+        $isLeaveDay = in_array($dateStr, $row['leaveDates']);
+        
+        // Check if doctor has schedule for this day
+        $hasSchedule = isset($weeklySchedule[$dayOfWeek]) && 
+                      $weeklySchedule[$dayOfWeek]['enabled'] &&
+                      !empty($weeklySchedule[$dayOfWeek]['slots']);
+        
+        if (!$isLeaveDay && $hasSchedule) {
+            $daySlots = $weeklySchedule[$dayOfWeek]['slots'];
+            $availableSlots = [];
+            
+            foreach ($daySlots as $slot) {
+                $batchId = $slot["batch_id"] ?? '';
+                if ($batchId) {
+                    // Check token availability
+                    $key = $dateStr . "_" . $batchId;
+                    $bookedCount = $bookings[$key] ?? 0;
+                    $slotTokenLimit = $slotTokens[$batchId] ?? $tokenLimit;
+                    
+                    if ($slotTokenLimit > $bookedCount) {
+                        $slotData = [
+                            'batch_id' => $batchId,
+                            'from' => $slot['from'],
+                            'to' => $slot['to'],
+                            'token' => $slotTokenLimit,
+                            'booked' => $bookedCount,
+                            'total' => $slotTokenLimit,
+                            'available' => $slotTokenLimit - $bookedCount
+                        ];
+                        
+                        // Add token count to slot
+                        if (isset($slot['token'])) {
+                            $slotData['original_token'] = $slot['token'];
+                        }
+                        
+                        $availableSlots[] = $slotData;
+                    }
+                }
+            }
+            
+            if (count($availableSlots) > 0) {
+                $futureAvailability[$dateStr] = [
+                    'date' => $dateStr,
+                    'day' => $dayOfWeek,
+                    'enabled' => true,
+                    'slots' => $availableSlots,
+                    'available_slots' => count($availableSlots),
+                    'isLeaveDay' => false
+                ];
+            }
+        }
+    }
+    
+    $row['futureSchedule'] = $futureAvailability;
+    $row['hasWeeklySchedule'] = !empty($weeklySchedule);
 
     unset($row['weekly_schedule'], $row['leave_dates']);
 
@@ -115,10 +190,12 @@ foreach ($records as &$row) {
 }
 
 /***************************
- *  RETURN API RESULT
+ *  RETURN API RESULT WITH BOOKINGS DATA
  ***************************/
 echo json_encode([
     "success" => true,
     "records" => $records,
-    "bookings" => $bookings // ⭐ FRONTEND WILL USE THIS
+    "bookings" => $bookings, // Send bookings data to frontend
+    "message" => "Data retrieved with token availability"
 ]);
+?>
