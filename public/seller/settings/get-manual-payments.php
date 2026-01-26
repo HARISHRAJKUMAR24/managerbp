@@ -40,9 +40,9 @@ if (!$user_id) {
 try {
     $pdo = getDbConnection();
 
-    // ✅ NOW includes upi_id
+    // ✅ CORRECTED: Removed 'image' field, added full URL for icon
     $stmt = $pdo->prepare(
-        "SELECT id, name, icon, instructions, image, upi_id
+        "SELECT id, name, icon, instructions, upi_id, created_at
          FROM manual_payment_methods 
          WHERE user_id = ?
          ORDER BY id DESC"
@@ -51,11 +51,31 @@ try {
     $stmt->execute([$user_id]);
     $methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    foreach ($methods as &$m) {
-        foreach ($m as $k => $v) {
-            if ($v === null) $m[$k] = "";
+    // Base URL for converting relative paths to full URLs
+    $baseUrl = "http://localhost/managerbp/public/";
+    
+    foreach ($methods as &$method) {
+        // Convert empty values to empty strings
+        foreach ($method as $key => $value) {
+            if ($value === null) {
+                $method[$key] = "";
+            }
         }
+        
+        // Convert icon path to full URL if exists
+        if (!empty($method['icon']) && strpos($method['icon'], 'http') !== 0) {
+            // Remove any duplicate "uploads/" prefix
+            $cleanIcon = preg_replace('/^uploads\//', '', $method['icon']);
+            $method['icon'] = $baseUrl . 'uploads/' . $cleanIcon;
+        }
+        
+        // Debug log (optional)
+        error_log("Method: " . $method['name'] . ", UPI: " . $method['upi_id'] . ", Icon: " . $method['icon']);
     }
+
+    // Debug output
+    error_log("Total methods found: " . count($methods));
+    error_log("Methods data: " . print_r($methods, true));
 
     echo json_encode([
         "success" => true,
@@ -63,8 +83,9 @@ try {
     ]);
 
 } catch (Exception $e) {
+    error_log("Database error in get-manual-payments.php: " . $e->getMessage());
     echo json_encode([
         "success" => false,
-        "message" => "Database error"
+        "message" => "Database error: " . $e->getMessage()
     ]);
 }
