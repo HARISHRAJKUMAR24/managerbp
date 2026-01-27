@@ -16,7 +16,7 @@ header("Content-Type: application/json");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
-    exit;
+    exit();
 }
 
 require_once "../../config/config.php";
@@ -30,43 +30,69 @@ $pdo = getDbConnection();
 $raw  = file_get_contents("php://input");
 $data = json_decode($raw, true);
 
-error_log("LOGIN RAW INPUT: " . $raw);
-error_log("LOGIN PARSED DATA: " . print_r($data, true));
-
-$phone = trim(
-    $data["phone"]
-        ?? $data["user"]
-        ?? ""
-);
-
+$phone = trim($data["phone"] ?? $data["user"] ?? "");
 $password = $data["password"] ?? "";
+$site = $_GET["site"] ?? ""; // seller slug
 
+/* ===============================
+   VALIDATION
+================================ */
 if ($phone === "" || $password === "") {
     echo json_encode([
         "success" => false,
         "message" => "Mobile number and password are required"
     ]);
-    exit;
+    exit();
+}
+
+if (!$site) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Site slug missing"
+    ]);
+    exit();
 }
 
 /* ===============================
-   FIND CUSTOMER (NO SLUG)
+   FIND SELLER BY SLUG
 ================================ */
 $stmt = $pdo->prepare("
-    SELECT customer_id, name, phone,photo, password, user_id
-    FROM customers
-    WHERE phone = ?
+    SELECT user_id 
+    FROM users 
+    WHERE site_slug = ? 
     LIMIT 1
 ");
-$stmt->execute([$phone]);
+$stmt->execute([$site]);
+$seller = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$seller) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid seller site"
+    ]);
+    exit();
+}
+
+$sellerUserId = (int)$seller["user_id"];
+
+/* ===============================
+   FIND CUSTOMER (BY PHONE + SELLER)
+================================ */
+$stmt = $pdo->prepare("
+    SELECT customer_id, name, phone, photo, password, user_id
+    FROM customers
+    WHERE phone = ? AND user_id = ?
+    LIMIT 1
+");
+$stmt->execute([$phone, $sellerUserId]);
 $customer = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$customer) {
     echo json_encode([
         "success" => false,
-        "message" => "Invalid mobile number or password"
+        "message" => "Customer not found for this business"
     ]);
-    exit;
+    exit();
 }
 
 /* ===============================
@@ -77,33 +103,36 @@ if (!password_verify($password, $customer["password"])) {
         "success" => false,
         "message" => "Invalid mobile number or password"
     ]);
-    exit;
+    exit();
 }
 
 /* ===============================
    TOKEN
 ================================ */
-$token = base64_encode(json_encode([
+$tokenPayload = [
     "customer_id" => $customer["customer_id"],
-    "user_id"     => $customer["user_id"],
+    "user_id"     => $sellerUserId, // lock token to this seller
     "iat"         => time()
-]));
+];
 
+$token = base64_encode(json_encode($tokenPayload));
 
+/* ===============================
+   SET COOKIE
+================================ */
 setcookie(
     "customer_token",
     $token,
     [
         "expires"  => time() + (60 * 60 * 24 * 7), // 7 days
         "path"     => "/",
-        "httponly" => true,   // 🔒 secure
-        "samesite" => "Lax"   // ✅ WORKS on HTTP
-        // DO NOT set "secure" on localhost HTTP
+        "httponly" => true,
+        "samesite" => "Lax"
     ]
 );
 
 /* ===============================
-   SUCCESS
+   SUCCESS RESPONSE
 ================================ */
 echo json_encode([
     "success"  => true,
@@ -111,10 +140,12 @@ echo json_encode([
     "token"    => $token,
     "customer" => [
         "customer_id" => $customer["customer_id"],
-        "user_id"     => (int)$customer["user_id"], // ✅ ADD THIS
-
+        "user_id"     => $sellerUserId,
         "name"        => $customer["name"],
         "phone"       => $customer["phone"]
     ]
 ]);
-exit;
+
+exit();
+
+?>
