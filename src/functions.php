@@ -1355,3 +1355,87 @@ function apiCheckSlotAvailability() {
 // if (basename($_SERVER['PHP_SELF']) === 'check_availability.php') {
 //     apiCheckSlotAvailability();
 // }
+
+
+
+function compareAndLogTokenUpdates($oldSchedule, $newSchedule, $scheduleId, $pdo, $categoryId) {
+    $oldSlots = [];
+    $newSlots = [];
+    
+    // Parse old slots
+    $oldScheduleArray = json_decode($oldSchedule, true);
+    foreach ($oldScheduleArray as $day => $dayData) {
+        if ($dayData['enabled'] && !empty($dayData['slots'])) {
+            foreach ($dayData['slots'] as $slot) {
+                if (isset($slot['batch_id'])) {
+                    $oldSlots[$slot['batch_id']] = [
+                        'token' => (int)($slot['token'] ?? 0),
+                        'batch_id' => $slot['batch_id']
+                    ];
+                }
+            }
+        }
+    }
+    
+    // Parse new slots
+    $newScheduleArray = json_decode($newSchedule, true);
+    foreach ($newScheduleArray as $day => $dayData) {
+        if ($dayData['enabled'] && !empty($dayData['slots'])) {
+            foreach ($dayData['slots'] as $slot) {
+                if (isset($slot['batch_id'])) {
+                    $newSlots[$slot['batch_id']] = [
+                        'token' => (int)($slot['token'] ?? 0),
+                        'batch_id' => $slot['batch_id']
+                    ];
+                }
+            }
+        }
+    }
+    
+    // Find differences
+    $updates = [];
+    foreach ($newSlots as $batchId => $newData) {
+        $oldData = $oldSlots[$batchId] ?? null;
+        $oldToken = $oldData['token'] ?? 0;
+        $newToken = $newData['token'];
+        
+        if ($oldToken !== $newToken) {
+            // Parse slot_index from batch_id
+            $slotIndex = null;
+            $parts = explode(':', $batchId);
+            if (isset($parts[1])) {
+                $slotIndex = (int)$parts[1];
+            }
+            
+            $updates[] = [
+                'batch_id' => $batchId,
+                'slot_index' => $slotIndex,
+                'old_token' => $oldToken,
+                'new_token' => $newToken,
+                'total_token' => $newToken
+            ];
+        }
+    }
+    
+    // Log to history table
+    if (!empty($updates)) {
+        $historyStmt = $pdo->prepare("
+            INSERT INTO doctor_token_history 
+            (category_id, slot_batch_id, slot_index, old_token, new_token, total_token, doctor_schedule_id_temp, updated_by, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        ");
+        
+        foreach ($updates as $update) {
+            $historyStmt->execute([
+                $categoryId,
+                $update['batch_id'],
+                $update['slot_index'],
+                $update['old_token'],
+                $update['new_token'],
+                $update['total_token'],
+                $scheduleId,
+                $_SESSION['user_id'] ?? null
+            ]);
+        }
+    }
+}

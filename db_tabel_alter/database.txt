@@ -458,3 +458,157 @@ ALTER TABLE manual_payment_methods DROP COLUMN image;
 ALTER TABLE `menu_items` 
 ADD COLUMN `hsn_code` VARCHAR(20) DEFAULT NULL 
 AFTER `description`;
+
+
+
+27/1/2026
+
+-- Add token update history column to doctor_schedule table
+ALTER TABLE `doctor_schedule` 
+ADD COLUMN `token_update_history` LONGTEXT DEFAULT NULL CHECK (json_valid(`token_update_history`));
+
+-- OR if you want a separate table for better management:
+CREATE TABLE `doctor_token_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `doctor_schedule_id` int(11) NOT NULL,
+  `slot_batch_id` varchar(50) NOT NULL,
+  `day_index` int(11) DEFAULT NULL,
+  `slot_index` int(11) DEFAULT NULL,
+  `old_token` int(11) DEFAULT 0,
+  `new_token` int(11) DEFAULT 0,
+  `total_token` int(11) DEFAULT 0,
+  `updated_by` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `doctor_schedule_id` (`doctor_schedule_id`),
+  KEY `slot_batch_id` (`slot_batch_id`),
+  CONSTRAINT `doctor_token_history_ibfk_1` FOREIGN KEY (`doctor_schedule_id`) REFERENCES `doctor_schedule` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+-- Update the doctor_token_history table schema
+ALTER TABLE `doctor_token_history`
+DROP FOREIGN KEY `doctor_token_history_ibfk_1`;
+
+-- First drop the old column
+ALTER TABLE `doctor_token_history`
+DROP COLUMN `doctor_schedule_id`;
+
+-- Add category_id column (matching doctor_schedule's category_id)
+ALTER TABLE `doctor_token_history`
+ADD COLUMN `category_id` varchar(255) DEFAULT NULL,
+ADD COLUMN `doctor_schedule_id_temp` int(11) DEFAULT NULL;
+
+-- Add index on category_id
+CREATE INDEX `category_id` ON `doctor_token_history` (`category_id`);
+
+-- Remove the unused token_update_history column from doctor_schedule table
+ALTER TABLE `doctor_schedule` 
+DROP COLUMN `token_update_history`;
+
+-- Drop day_index column since you don't want it
+ALTER TABLE `doctor_token_history` 
+DROP COLUMN `day_index`;
+
+-- Drop slot_index column (we'll parse it from batch_id instead)
+ALTER TABLE `doctor_token_history` 
+DROP COLUMN `slot_index`;
+
+-- OR if you want to keep a slot_index column that's derived from batch_id
+ALTER TABLE `doctor_token_history` 
+ADD COLUMN `slot_index` int(11) DEFAULT NULL AFTER `slot_batch_id`;
+
+-- Update existing records to parse slot_index from batch_id
+UPDATE `doctor_token_history` 
+SET `slot_index` = CAST(SUBSTRING_INDEX(`slot_batch_id`, ':', -1) AS UNSIGNED);
+
+ALTER TABLE `doctor_token_history` 
+DROP COLUMN `slot_index`;
+
+
+-- First, drop the slot_index column if it exists
+ALTER TABLE `doctor_token_history` 
+DROP COLUMN IF EXISTS `slot_index`;
+
+-- Reorder columns as requested
+ALTER TABLE `doctor_token_history` 
+MODIFY COLUMN `category_id` varchar(255) DEFAULT NULL AFTER `id`,
+MODIFY COLUMN `doctor_schedule_id_temp` int(11) DEFAULT NULL AFTER `category_id`,
+MODIFY COLUMN `slot_batch_id` varchar(50) NOT NULL AFTER `doctor_schedule_id_temp`,
+MODIFY COLUMN `old_token` int(11) DEFAULT 0 AFTER `slot_batch_id`,
+MODIFY COLUMN `new_token` int(11) DEFAULT 0 AFTER `old_token`,
+MODIFY COLUMN `total_token` int(11) DEFAULT 0 AFTER `new_token`,
+MODIFY COLUMN `updated_by` int(11) DEFAULT NULL AFTER `total_token`,
+MODIFY COLUMN `created_at` datetime DEFAULT current_timestamp() AFTER `updated_by`;
+
+-- OR if you want to create a fresh table with correct order:
+CREATE TABLE IF NOT EXISTS `doctor_token_history_new` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `category_id` varchar(255) DEFAULT NULL,
+  `doctor_schedule_id_temp` int(11) DEFAULT NULL,
+  `slot_batch_id` varchar(50) NOT NULL,
+  `old_token` int(11) DEFAULT 0,
+  `new_token` int(11) DEFAULT 0,
+  `total_token` int(11) DEFAULT 0,
+  `updated_by` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `slot_batch_id` (`slot_batch_id`),
+  KEY `category_id` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Copy data from old table to new table
+INSERT INTO `doctor_token_history_new` 
+(id, category_id, doctor_schedule_id_temp, slot_batch_id, old_token, new_token, total_token, updated_by, created_at)
+SELECT 
+id, category_id, doctor_schedule_id_temp, slot_batch_id, old_token, new_token, total_token, updated_by, created_at
+FROM `doctor_token_history`;
+
+-- Drop old table and rename new table
+DROP TABLE `doctor_token_history`;
+RENAME TABLE `doctor_token_history_new` TO `doctor_token_history`;
+
+
+-- First, drop the slot_index column if it exists
+ALTER TABLE `doctor_token_history` 
+DROP COLUMN IF EXISTS `slot_index`;
+
+-- Reorder columns to match your exact order
+ALTER TABLE `doctor_token_history` 
+MODIFY COLUMN `id` int(11) NOT NULL AUTO_INCREMENT FIRST,
+MODIFY COLUMN `doctor_schedule_id_temp` int(11) DEFAULT NULL AFTER `id`,
+MODIFY COLUMN `category_id` varchar(255) DEFAULT NULL AFTER `doctor_schedule_id_temp`,
+MODIFY COLUMN `slot_batch_id` varchar(50) NOT NULL AFTER `category_id`,
+MODIFY COLUMN `old_token` int(11) DEFAULT 0 AFTER `slot_batch_id`,
+MODIFY COLUMN `new_token` int(11) DEFAULT 0 AFTER `old_token`,
+MODIFY COLUMN `total_token` int(11) DEFAULT 0 AFTER `new_token`,
+MODIFY COLUMN `updated_by` int(11) DEFAULT NULL AFTER `total_token`,
+MODIFY COLUMN `created_at` datetime DEFAULT current_timestamp() AFTER `updated_by`;
+
+-- OR create a new table with exact order
+CREATE TABLE IF NOT EXISTS `doctor_token_history_new` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `doctor_schedule_id_temp` int(11) DEFAULT NULL,
+  `category_id` varchar(255) DEFAULT NULL,
+  `slot_batch_id` varchar(50) NOT NULL,
+  `old_token` int(11) DEFAULT 0,
+  `new_token` int(11) DEFAULT 0,
+  `total_token` int(11) DEFAULT 0,
+  `updated_by` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `slot_batch_id` (`slot_batch_id`),
+  KEY `category_id` (`category_id`),
+  KEY `doctor_schedule_id_temp` (`doctor_schedule_id_temp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Copy data from old table to new table (in correct order)
+INSERT INTO `doctor_token_history_new` 
+(id, doctor_schedule_id_temp, category_id, slot_batch_id, old_token, new_token, total_token, updated_by, created_at)
+SELECT 
+id, doctor_schedule_id_temp, category_id, slot_batch_id, old_token, new_token, total_token, updated_by, created_at
+FROM `doctor_token_history`;
+
+-- Drop old table and rename new table
+DROP TABLE `doctor_token_history`;
+RENAME TABLE `doctor_token_history_new` TO `doctor_token_history`;

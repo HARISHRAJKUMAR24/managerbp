@@ -7,8 +7,14 @@ header("Access-Control-Allow-Headers: Content-Type");
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
+require_once "../../../src/functions.php";
 
 $pdo = getDbConnection();
+
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 /* =========================
    OPTIONS PREFLIGHT
@@ -41,7 +47,6 @@ $category_id = isset($input["categoryId"]) && $input["categoryId"] !== ""
     ? $input["categoryId"]
     : null;
 
-
 $name = $input["name"] ?? ($input["doctor_name"] ?? "");
 $slug = $input["slug"] ?? "";
 
@@ -50,7 +55,7 @@ $amount = isset($input["amount"]) && is_numeric($input["amount"])
     : 0;
 
 /* =========================
-   TOKEN LIMIT (✅ FIX)
+   TOKEN LIMIT
 ========================= */
 $tokenRaw = $input["tokenLimit"] ?? null;
 
@@ -106,7 +111,7 @@ $leave_dates = json_encode(
 );
 
 /* =========================
-   UPDATE QUERY (✅ FIX)
+   UPDATE QUERY
 ========================= */
 $sql = "
 UPDATE doctor_schedule SET
@@ -136,13 +141,19 @@ WHERE id = :id
 
 $stmt = $pdo->prepare($sql);
 
-$stmt->execute([
+// Get current schedule BEFORE updating
+$stmtFetch = $pdo->prepare("SELECT weekly_schedule FROM doctor_schedule WHERE id = ?");
+$stmtFetch->execute([$id]);
+$currentRecord = $stmtFetch->fetch(PDO::FETCH_ASSOC);
+
+// Execute the update
+$result = $stmt->execute([
     ":id" => $id,
     ":category_id" => $category_id,
     ":name" => $name,
     ":slug" => $slug,
     ":amount" => $amount,
-    ":token_limit" => $token_limit, // ✅ FIX
+    ":token_limit" => $token_limit,
     ":description" => $description,
     ":specialization" => $specialization,
     ":qualification" => $qualification,
@@ -161,11 +172,35 @@ $stmt->execute([
 ]);
 
 /* =========================
+   TOKEN UPDATE HISTORY LOGGING
+========================= */
+
+
+/* =========================
    RESPONSE
 ========================= */
-echo json_encode([
-    "success" => true,
-    "message" => "Doctor schedule updated successfully",
-    "updated_id" => $id,
-    "token_limit_saved" => $token_limit
-]);
+if ($result) {
+    // Log token changes if any
+    if ($currentRecord) {
+        compareAndLogTokenUpdates(
+            $currentRecord['weekly_schedule'] ?? '{}',
+            $weekly_schedule,
+            $id,
+            $pdo,
+            $category_id
+        );
+    }
+    
+    echo json_encode([
+        "success" => true,
+        "message" => "Doctor schedule updated successfully",
+        "updated_id" => $id,
+        "token_limit_saved" => $token_limit,
+        "token_updates_logged" => true
+    ]);
+} else {
+    echo json_encode([
+        "success" => false,
+        "message" => "Failed to update doctor schedule"
+    ]);
+}
