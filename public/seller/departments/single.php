@@ -127,7 +127,9 @@ $columns = "
     meta_description,
     created_at,
     appointment_settings,
-    leave_dates,  -- ✅ ADD THIS LINE: Include leave_dates field
+    leave_dates,
+    appointment_time_from,  -- ✅ ADD THIS LINE: Include appointment_time_from field
+    appointment_time_to,    -- ✅ ADD THIS LINE: Include appointment_time_to field
     updated_at
 ";
 
@@ -203,11 +205,8 @@ $final["additionalImages"] = $additionalImages;
 error_log("Department data fetched for ID: " . $department_id);
 error_log("Has appointment_settings: " . (!empty($department['appointment_settings']) ? 'YES' : 'NO'));
 error_log("Has leave_dates: " . (!empty($department['leave_dates']) ? 'YES' : 'NO'));
-
-if (!empty($department['leave_dates'])) {
-    $leaveDates = json_decode($department['leave_dates'], true);
-    error_log("Leave dates count: " . (is_array($leaveDates) ? count($leaveDates) : 'NOT ARRAY'));
-}
+error_log("appointment_time_from: " . ($department['appointment_time_from'] ?? 'NULL'));
+error_log("appointment_time_to: " . ($department['appointment_time_to'] ?? 'NULL'));
 
 /* -----------------------------------------
    SEND RESPONSE

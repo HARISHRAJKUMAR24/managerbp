@@ -48,6 +48,8 @@ $user_id = $user["user_id"];
 $department_id = trim($data["department_id"] ?? "");
 $appointment_settings = $data["appointment_settings"] ?? null;
 $leave_dates = $data["leave_dates"] ?? [];
+$appointment_time_from = trim($data["appointment_time_from"] ?? "");
+$appointment_time_to = trim($data["appointment_time_to"] ?? "");
 
 if (!$department_id) {
     echo json_encode(["success" => false, "message" => "Department ID required"]);
@@ -61,6 +63,25 @@ if (!$appointment_settings) {
     echo json_encode(["success" => false, "message" => "Appointment settings required"]);
     exit();
 }
+
+/* ----------------------------------------------------
+   VALIDATE APPOINTMENT TIMING
+-----------------------------------------------------*/
+// Validate time format for appointment_time_from
+if ($appointment_time_from && !preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $appointment_time_from)) {
+    echo json_encode(["success" => false, "message" => "Invalid appointment_time_from format. Use HH:MM (24-hour format)"]);
+    exit();
+}
+
+// Validate time format for appointment_time_to
+if ($appointment_time_to && !preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $appointment_time_to)) {
+    echo json_encode(["success" => false, "message" => "Invalid appointment_time_to format. Use HH:MM (24-hour format)"]);
+    exit();
+}
+
+// Convert empty strings to null for database
+$appointment_time_from = $appointment_time_from ?: null;
+$appointment_time_to = $appointment_time_to ?: null;
 
 /* ----------------------------------------------------
    NORMALIZE APPOINTMENT SETTINGS (WITH BATCH_ID)
@@ -86,7 +107,6 @@ foreach ($days as $day) {
 
     if (!empty($dayData["slots"]) && is_array($dayData["slots"])) {
         foreach ($dayData["slots"] as $index => $slot) {
-            // Generate batch_id: dayIndex:slotIndex (e.g., "0:0" for Sun Slot 0)
             $dayIndex = array_search($day, $days);
             $batch_id = $slot["batch_id"] ?? $dayIndex . ":" . $index;
             
@@ -107,7 +127,6 @@ foreach ($days as $day) {
 -----------------------------------------------------*/
 $valid_leave_dates = [];
 
-// Check if leave_dates is JSON string or array
 if (is_string($leave_dates) && $leave_dates !== '') {
     $leave_dates = json_decode($leave_dates, true);
 }
@@ -115,7 +134,6 @@ if (is_string($leave_dates) && $leave_dates !== '') {
 if (is_array($leave_dates)) {
     foreach ($leave_dates as $date) {
         if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            // Validate it's a real date
             $dateObj = DateTime::createFromFormat('Y-m-d', $date);
             if ($dateObj && $dateObj->format('Y-m-d') === $date) {
                 $valid_leave_dates[] = $date;
@@ -124,7 +142,6 @@ if (is_array($leave_dates)) {
     }
 }
 
-// Remove duplicates and sort chronologically
 $valid_leave_dates = array_unique($valid_leave_dates);
 sort($valid_leave_dates);
 
@@ -157,6 +174,8 @@ try {
         UPDATE departments
         SET appointment_settings = ?, 
             leave_dates = ?, 
+            appointment_time_from = ?, 
+            appointment_time_to = ?,
             updated_at = NOW(3)
         WHERE department_id = ? AND user_id = ?
     ");
@@ -164,6 +183,8 @@ try {
     $success = $stmt->execute([
         $appointment_json,
         $leave_dates_json,
+        $appointment_time_from,
+        $appointment_time_to,
         $department_id,
         $user_id
     ]);
@@ -180,6 +201,8 @@ try {
         "message" => "Department appointment settings saved successfully",
         "appointment_settings" => $final_settings,
         "leave_dates" => $valid_leave_dates,
+        "appointment_time_from" => $appointment_time_from,
+        "appointment_time_to" => $appointment_time_to,
         "rows_affected" => $stmt->rowCount()
     ]);
 
