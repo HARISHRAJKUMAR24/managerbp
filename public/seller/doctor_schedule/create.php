@@ -29,6 +29,36 @@ $pdo = getDbConnection();
 $raw = file_get_contents("php://input");
 $input = json_decode($raw, true);
 
+/* ===============================
+   VALIDATE APPOINTMENT TIMES
+================================ */
+function convertTo24Hour($time, $period) {
+    if (!$time) return null;
+    
+    $timeParts = explode(':', $time);
+    $hours = (int)$timeParts[0];
+    $minutes = $timeParts[1] ?? '00';
+    
+    if ($period === 'PM' && $hours < 12) {
+        $hours += 12;
+    } elseif ($period === 'AM' && $hours == 12) {
+        $hours = 0;
+    }
+    
+    return sprintf("%02d:%s", $hours, $minutes);
+}
+
+$appointmentFromTime = $input["appointmentTimeFromFormatted"]["time"] ?? "";
+$appointmentFromPeriod = $input["appointmentTimeFromFormatted"]["period"] ?? "AM";
+$appointmentToTime = $input["appointmentTimeToFormatted"]["time"] ?? "";
+$appointmentToPeriod = $input["appointmentTimeToFormatted"]["period"] ?? "AM";
+
+$appointmentTimeFrom = convertTo24Hour($appointmentFromTime, $appointmentFromPeriod);
+$appointmentTimeTo = convertTo24Hour($appointmentToTime, $appointmentToPeriod);
+
+/* ===============================
+   LEAVE DATES
+================================ */
 $leaveDates = $input["leaveDates"] ?? [];
 if (!is_array($leaveDates)) {
     $leaveDates = [];
@@ -108,7 +138,6 @@ if (!empty($categoryId)) {
     $doctorDetails = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-
 /* ===============================
    SAFE VALUES
 ================================ */
@@ -146,6 +175,8 @@ $sql = "INSERT INTO doctor_schedule (
     address,
     map_link,
     weekly_schedule,
+    appointment_time_from,
+    appointment_time_to,
     leave_dates,
     created_at
 ) VALUES (
@@ -169,13 +200,15 @@ $sql = "INSERT INTO doctor_schedule (
     :address,
     :map_link,
     :weekly_schedule,
+    :appointment_time_from,
+    :appointment_time_to,
     :leave_dates,
     NOW()
 )";
 
 $stmt = $pdo->prepare($sql);
 
-$stmt->execute([
+$result = $stmt->execute([
     ":user_id" => (int)$input["user_id"],
     ":category_id" => $categoryId,
     ":name" => $doctorName,
@@ -196,12 +229,24 @@ $stmt->execute([
     ":address" => $loc["address"] ?? "",
     ":map_link" => $loc["mapLink"] ?? "",
     ":weekly_schedule" => json_encode($input["weeklySchedule"] ?? []),
+    ":appointment_time_from" => $appointmentTimeFrom,
+    ":appointment_time_to" => $appointmentTimeTo,
     ":leave_dates" => json_encode($leaveDates),
 ]);
 
-echo json_encode([
-    "success" => true,
-    "message" => "Doctor schedule created successfully",
-    "id" => $pdo->lastInsertId(),
-    "token_limit_saved" => $tokenLimit
-]);
+if ($result) {
+    echo json_encode([
+        "success" => true,
+        "message" => "Doctor schedule created successfully",
+        "id" => $pdo->lastInsertId(),
+        "token_limit_saved" => $tokenLimit,
+        "appointment_time_from" => $appointmentTimeFrom,
+        "appointment_time_to" => $appointmentTimeTo
+    ]);
+} else {
+    echo json_encode([
+        "success" => false,
+        "message" => "Failed to create doctor schedule",
+        "error_info" => $stmt->errorInfo()
+    ]);
+}

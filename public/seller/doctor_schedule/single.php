@@ -27,12 +27,14 @@ $stmt = $pdo->prepare("
         name,
         slug,
         amount,
+        token_limit,
         description,
         specialization,
         qualification,
         experience,
         doctor_image,
         weekly_schedule,
+        appointment_timings,  -- IMPORTANT: Get this field
         leave_dates,
         meta_title,
         meta_description,
@@ -67,6 +69,11 @@ $weeklySchedule = !empty($row["weekly_schedule"])
     ? json_decode($row["weekly_schedule"], true)
     : [];
 
+// IMPORTANT: Decode appointment_timings
+$appointmentTimings = !empty($row["appointment_timings"])
+    ? json_decode($row["appointment_timings"], true)
+    : [];
+
 $leaveDates = !empty($row["leave_dates"])
     ? json_decode($row["leave_dates"], true)
     : [];
@@ -84,7 +91,7 @@ $data = [
     "doctor_name" => $row["name"] ?? "",
     "slug" => $row["slug"] ?? "",
     "amount" => $row["amount"] !== null ? (string)$row["amount"] : "0",
-    "token_limit" => (string)($row["token_limit"] ?? "0"), // ✅ REQUIRED
+    "token_limit" => (string)($row["token_limit"] ?? "0"),
 
     "description" => $row["description"] ?? "",
     "specialization" => $row["specialization"] ?? "",
@@ -95,7 +102,8 @@ $data = [
     "doctor_image" => $row["doctor_image"] ?? "",
 
     "weeklySchedule" => $weeklySchedule,
-    "leaveDates" => $leaveDates,   // ✅ FIXED
+    "appointmentTimings" => $appointmentTimings,  // IMPORTANT: Include this
+    "leaveDates" => $leaveDates,
 
     "metaTitle" => $row["meta_title"] ?? "",
     "metaDescription" => $row["meta_description"] ?? "",
@@ -114,9 +122,13 @@ $data = [
 ];
 
 /* =========================
-   RESPONSE
+   DEBUG INFO
 ========================= */
 echo json_encode([
     "success" => true,
-    "data" => $data
+    "data" => $data,
+    "debug" => [
+        "appointment_timings_raw" => $row["appointment_timings"] ?? "NULL",
+        "appointment_timings_parsed" => $appointmentTimings
+    ]
 ]);

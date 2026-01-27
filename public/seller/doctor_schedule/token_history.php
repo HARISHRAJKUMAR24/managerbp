@@ -24,6 +24,7 @@ if (session_status() === PHP_SESSION_NONE) {
 if ($_SERVER["REQUEST_METHOD"] === "GET") {
     $categoryId = $_GET['category_id'] ?? null;
     $batchId = $_GET['batch_id'] ?? null;
+    $userId = $_GET['user_id'] ?? null; // Optional filter by user_id
     
     if (!$categoryId) {
         echo json_encode([
@@ -39,6 +40,11 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
     if ($batchId) {
         $sql .= " AND slot_batch_id = ?";
         $params[] = $batchId;
+    }
+    
+    if ($userId) {
+        $sql .= " AND user_id = ?";
+        $params[] = $userId;
     }
     
     $sql .= " ORDER BY created_at DESC LIMIT 50";
@@ -79,8 +85,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
     
-    // Get current schedule using category_id
-    $stmt = $pdo->prepare("SELECT weekly_schedule FROM doctor_schedule WHERE category_id = ? ORDER BY id DESC LIMIT 1");
+    // FIXED: Include 'id' in SELECT query
+    $stmt = $pdo->prepare("SELECT id, weekly_schedule, user_id FROM doctor_schedule WHERE category_id = ? ORDER BY id DESC LIMIT 1");
     $stmt->execute([$input['category_id']]);
     $schedule = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -92,11 +98,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
     
-    // Also get the doctor_schedule_id for reference
-    $stmtId = $pdo->prepare("SELECT id FROM doctor_schedule WHERE category_id = ? ORDER BY id DESC LIMIT 1");
-    $stmtId->execute([$input['category_id']]);
-    $scheduleRecord = $stmtId->fetch(PDO::FETCH_ASSOC);
-    $doctorScheduleId = $scheduleRecord['id'] ?? 0;
+    // Now these will have correct values
+    $doctorScheduleId = $schedule['id'] ?? 0;  // This will be 47, not 0
+    $userId = $schedule['user_id'] ?? null;
     
     $weeklySchedule = json_decode($schedule['weekly_schedule'], true);
     $updated = false;
@@ -140,21 +144,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $parsedSlotIndex = isset($parts[1]) ? (int)$parts[1] + 1 : null; // +1 for human readable
         }
         
-        // Log to history with EXACT column order
+        // Get updated_by from session (current logged in user)
+        $updatedBy = $_SESSION['user_id'] ?? null;
+        
+        // Log to history with user_id
         $historyStmt = $pdo->prepare("
             INSERT INTO doctor_token_history 
-            (doctor_schedule_id_temp, category_id, slot_batch_id, old_token, new_token, total_token, updated_by, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+            (doctor_schedule_id_temp, category_id, user_id, slot_batch_id, old_token, new_token, total_token, updated_by, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
         
         $historyStmt->execute([
-            $doctorScheduleId,
+            $doctorScheduleId,  // This will now be 47, not 0
             $input['category_id'],
+            $userId, // The user_id who owns the doctor schedule
             $input['batch_id'],
             $oldToken,
             $newToken,
             $newToken,
-            $_SESSION['user_id'] ?? null
+            $updatedBy // The user_id who made the update
         ]);
         
         echo json_encode([
@@ -164,6 +172,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             "new_token" => $newToken,
             "total_token" => $newToken,
             "batch_id" => $input['batch_id'],
+            "doctor_schedule_id_temp" => $doctorScheduleId, // Send back for debugging
+            "doctor_schedule_user_id" => $userId, // Send back the doctor schedule owner's user_id
+            "updated_by_user_id" => $updatedBy, // Send back who made the update
             "parsed_day_index" => $parsedDayIndex,
             "parsed_slot_index" => $parsedSlotIndex
         ]);

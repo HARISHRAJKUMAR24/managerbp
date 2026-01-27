@@ -612,3 +612,10 @@ FROM `doctor_token_history`;
 -- Drop old table and rename new table
 DROP TABLE `doctor_token_history`;
 RENAME TABLE `doctor_token_history_new` TO `doctor_token_history`;
+
+
+-- Add new columns for simple appointment timing
+ALTER TABLE `doctor_schedule` 
+
+ADD COLUMN `appointment_time_from` TIME DEFAULT NULL,
+ADD COLUMN `appointment_time_to` TIME DEFAULT NULL;

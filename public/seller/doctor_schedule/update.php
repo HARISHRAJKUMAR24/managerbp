@@ -1,71 +1,113 @@
 <?php
-header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: PUT, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Methods: PUT, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json");
 
-require_once "../../../config/config.php";
-require_once "../../../src/database.php";
-require_once "../../../src/functions.php";
-
-$pdo = getDbConnection();
-
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-/* =========================
-   OPTIONS PREFLIGHT
-========================= */
-if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-/* =========================
-   READ INPUT
-========================= */
-$rawInput = file_get_contents("php://input");
-$input = json_decode($rawInput, true);
-
-if (!$input || empty($input["id"])) {
+if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([
         "success" => false,
-        "message" => "Invalid input or ID missing"
+        "message" => "Invalid request method"
     ]);
     exit;
 }
 
-$id = (int)$input["id"];
+require_once "../../../config/config.php";
+require_once "../../../src/database.php";
 
-/* =========================
-   NORMALIZE INPUT
-========================= */
-$category_id = isset($input["categoryId"]) && $input["categoryId"] !== ""
-    ? $input["categoryId"]
-    : null;
+$pdo = getDbConnection();
 
-$name = $input["name"] ?? ($input["doctor_name"] ?? "");
-$slug = $input["slug"] ?? "";
+/* ===============================
+   READ INPUT
+================================ */
+$raw = file_get_contents("php://input");
+$input = json_decode($raw, true);
 
-$amount = isset($input["amount"]) && is_numeric($input["amount"])
-    ? (float)$input["amount"]
-    : 0;
+$id = $input["id"] ?? null;
+if (!$id) {
+    echo json_encode([
+        "success" => false,
+        "message" => "ID required"
+    ]);
+    exit;
+}
 
-/* =========================
+/* ===============================
+   VALIDATE APPOINTMENT TIMES
+================================ */
+function convertTo24Hour($time, $period) {
+    if (!$time) return null;
+    
+    $timeParts = explode(':', $time);
+    $hours = (int)$timeParts[0];
+    $minutes = $timeParts[1] ?? '00';
+    
+    if ($period === 'PM' && $hours < 12) {
+        $hours += 12;
+    } elseif ($period === 'AM' && $hours == 12) {
+        $hours = 0;
+    }
+    
+    return sprintf("%02d:%s", $hours, $minutes);
+}
+
+$appointmentFromTime = $input["appointmentTimeFromFormatted"]["time"] ?? "";
+$appointmentFromPeriod = $input["appointmentTimeFromFormatted"]["period"] ?? "AM";
+$appointmentToTime = $input["appointmentTimeToFormatted"]["time"] ?? "";
+$appointmentToPeriod = $input["appointmentTimeToFormatted"]["period"] ?? "AM";
+
+$appointmentTimeFrom = convertTo24Hour($appointmentFromTime, $appointmentFromPeriod);
+$appointmentTimeTo = convertTo24Hour($appointmentToTime, $appointmentToPeriod);
+
+/* ===============================
+   LEAVE DATES
+================================ */
+$leaveDates = $input["leaveDates"] ?? [];
+if (!is_array($leaveDates)) {
+    $leaveDates = [];
+}
+
+/* ===============================
+   AMOUNT VALIDATION
+================================ */
+$amountRaw = $input["amount"] ?? "";
+
+if (is_string($amountRaw)) {
+    $amountRaw = trim($amountRaw);
+}
+
+if ($amountRaw === "" || $amountRaw === null) {
+    $amountValue = 0;
+} else {
+    $amountValue = (float)$amountRaw;
+}
+
+if (!is_numeric($amountValue) || $amountValue <= 0) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid amount"
+    ]);
+    exit;
+}
+
+/* ===============================
    TOKEN LIMIT
-========================= */
+================================ */
 $tokenRaw = $input["tokenLimit"] ?? null;
 
 if ($tokenRaw === "" || $tokenRaw === null) {
-    $token_limit = 0; // unlimited
+    $tokenLimit = 0;
 } else {
-    $token_limit = (int)$tokenRaw;
+    $tokenLimit = (int)$tokenRaw;
 }
 
-if ($token_limit < 0) {
+if ($tokenLimit < 0) {
     echo json_encode([
         "success" => false,
         "message" => "Invalid token limit"
@@ -73,134 +115,107 @@ if ($token_limit < 0) {
     exit;
 }
 
-$description = $input["description"] ?? "";
-$specialization = $input["specialization"] ?? "";
-$qualification = $input["qualification"] ?? "";
+/* ===============================
+   FETCH DOCTOR DETAILS
+================================ */
+$categoryId = $input["categoryId"] ?? null;
 
-$experience = isset($input["experience"]) && is_numeric($input["experience"])
-    ? (int)$input["experience"]
-    : 0;
+$doctorDetails = null;
 
-$doctor_image = $input["doctorImage"] ?? ($input["doctor_image"] ?? "");
-$meta_title = $input["metaTitle"] ?? "";
-$meta_description = $input["metaDescription"] ?? "";
+if (!empty($categoryId)) {
+    if (is_numeric($categoryId)) {
+        $sql = "SELECT * FROM categories WHERE id = ?";
+    } else {
+        $sql = "SELECT * FROM categories WHERE category_id = ?";
+    }
 
-/* =========================
-   LOCATION
-========================= */
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$categoryId]);
+    $doctorDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+/* ===============================
+   SAFE VALUES
+================================ */
 $loc = $input["doctorLocation"] ?? [];
 
-$country  = $loc["country"] ?? "";
-$state    = $loc["state"] ?? "";
-$city     = $loc["city"] ?? "";
-$pincode  = $loc["pincode"] ?? "";
-$address  = $loc["address"] ?? "";
-$map_link = $loc["mapLink"] ?? "";
+$doctorName     = $doctorDetails["doctor_name"] ?? "";
+$specialization = $doctorDetails["specialization"] ?? "";
+$qualification  = $doctorDetails["qualification"] ?? "";
+$experience     = isset($doctorDetails["experience"])
+    ? (int)$doctorDetails["experience"]
+    : null;
+$doctorImage    = $doctorDetails["doctor_image"] ?? "";
 
-/* =========================
-   SCHEDULES
-========================= */
-$weekly_schedule = json_encode(
-    $input["weeklySchedule"] ?? [],
-    JSON_UNESCAPED_UNICODE
-);
-
-$leave_dates = json_encode(
-    $input["leaveDates"] ?? [],
-    JSON_UNESCAPED_UNICODE
-);
-
-/* =========================
-   UPDATE QUERY
-========================= */
-$sql = "
-UPDATE doctor_schedule SET
-    category_id      = :category_id,
-    name             = :name,
-    slug             = :slug,
-    amount           = :amount,
-    token_limit      = :token_limit,
-    description      = :description,
-    specialization   = :specialization,
-    qualification    = :qualification,
-    experience       = :experience,
-    doctor_image     = :doctor_image,
-    meta_title       = :meta_title,
+/* ===============================
+   UPDATE
+================================ */
+$sql = "UPDATE doctor_schedule SET
+    category_id = :category_id,
+    name = :name,
+    slug = :slug,
+    amount = :amount,
+    token_limit = :token_limit,
+    description = :description,
+    specialization = :specialization,
+    qualification = :qualification,
+    experience = :experience,
+    doctor_image = :doctor_image,
+    meta_title = :meta_title,
     meta_description = :meta_description,
-    country          = :country,
-    state            = :state,
-    city             = :city,
-    pincode          = :pincode,
-    address          = :address,
-    map_link         = :map_link,
-    weekly_schedule  = :weekly_schedule,
-    leave_dates      = :leave_dates,
-    updated_at       = NOW()
-WHERE id = :id
-";
+    country = :country,
+    state = :state,
+    city = :city,
+    pincode = :pincode,
+    address = :address,
+    map_link = :map_link,
+    weekly_schedule = :weekly_schedule,
+    appointment_time_from = :appointment_time_from,
+    appointment_time_to = :appointment_time_to,
+    leave_dates = :leave_dates,
+    updated_at = NOW()
+WHERE id = :id";
 
 $stmt = $pdo->prepare($sql);
 
-// Get current schedule BEFORE updating
-$stmtFetch = $pdo->prepare("SELECT weekly_schedule FROM doctor_schedule WHERE id = ?");
-$stmtFetch->execute([$id]);
-$currentRecord = $stmtFetch->fetch(PDO::FETCH_ASSOC);
-
-// Execute the update
 $result = $stmt->execute([
-    ":id" => $id,
-    ":category_id" => $category_id,
-    ":name" => $name,
-    ":slug" => $slug,
-    ":amount" => $amount,
-    ":token_limit" => $token_limit,
-    ":description" => $description,
+    ":id" => (int)$id,
+    ":category_id" => $categoryId,
+    ":name" => $doctorName,
+    ":slug" => $input["slug"] ?? "",
+    ":amount" => $amountValue,
+    ":token_limit" => $tokenLimit,
+    ":description" => $input["description"] ?? "",
     ":specialization" => $specialization,
     ":qualification" => $qualification,
     ":experience" => $experience,
-    ":doctor_image" => $doctor_image,
-    ":meta_title" => $meta_title,
-    ":meta_description" => $meta_description,
-    ":country" => $country,
-    ":state" => $state,
-    ":city" => $city,
-    ":pincode" => $pincode,
-    ":address" => $address,
-    ":map_link" => $map_link,
-    ":weekly_schedule" => $weekly_schedule,
-    ":leave_dates" => $leave_dates
+    ":doctor_image" => $doctorImage,
+    ":meta_title" => $input["metaTitle"] ?? "",
+    ":meta_description" => $input["metaDescription"] ?? "",
+    ":country" => $loc["country"] ?? "",
+    ":state" => $loc["state"] ?? "",
+    ":city" => $loc["city"] ?? "",
+    ":pincode" => $loc["pincode"] ?? "",
+    ":address" => $loc["address"] ?? "",
+    ":map_link" => $loc["mapLink"] ?? "",
+    ":weekly_schedule" => json_encode($input["weeklySchedule"] ?? []),
+    ":appointment_time_from" => $appointmentTimeFrom,
+    ":appointment_time_to" => $appointmentTimeTo,
+    ":leave_dates" => json_encode($leaveDates),
 ]);
 
-/* =========================
-   TOKEN UPDATE HISTORY LOGGING
-========================= */
-
-
-/* =========================
-   RESPONSE
-========================= */
 if ($result) {
-    // Log token changes if any
-    if ($currentRecord) {
-        compareAndLogTokenUpdates(
-            $currentRecord['weekly_schedule'] ?? '{}',
-            $weekly_schedule,
-            $id,
-            $pdo,
-            $category_id
-        );
-    }
-    
     echo json_encode([
         "success" => true,
         "message" => "Doctor schedule updated successfully",
-        "updated_id" => $id,
-        "token_limit_saved" => $token_limit,
-        "token_updates_logged" => true
+        "id" => $id,
+        "appointment_time_from" => $appointmentTimeFrom,
+        "appointment_time_to" => $appointmentTimeTo
     ]);
 } else {
     echo json_encode([
         "success" => false,
-        "message" => "Failed to update doctor schedule"
+        "message" => "Failed to update doctor schedule",
+        "error_info" => $stmt->errorInfo()
     ]);
 }

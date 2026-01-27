@@ -30,13 +30,15 @@ try {
             name,
             slug,
             amount,
-            token_limit,          -- ✅ IMPORTANT
+            token_limit,
             description,
             specialization,
             qualification,
             experience,
             doctor_image,
             weekly_schedule,
+            appointment_time_from,
+            appointment_time_to,
             leave_dates,
             meta_title,
             meta_description,
@@ -76,6 +78,37 @@ try {
         : [];
 
     /* =========================
+       FORMAT TIME FOR DISPLAY
+    ========================= */
+    $appointmentTimeFrom = $data['appointment_time_from'] ?? null;
+    $appointmentTimeTo = $data['appointment_time_to'] ?? null;
+    
+    // Format time for display (convert 24h to 12h)
+    function formatTimeForDisplay($time24) {
+        if (!$time24) return ["display" => "", "time" => "", "period" => "AM"];
+        
+        $time = explode(':', $time24);
+        $hours = (int)$time[0];
+        $minutes = $time[1] ?? '00';
+        $period = $hours >= 12 ? 'PM' : 'AM';
+        
+        if ($hours > 12) {
+            $hours -= 12;
+        } elseif ($hours === 0) {
+            $hours = 12;
+        }
+        
+        return [
+            "display" => sprintf("%02d:%s %s", $hours, $minutes, $period),
+            "time" => sprintf("%02d:%s", $hours, $minutes),
+            "period" => $period
+        ];
+    }
+    
+    $fromDisplay = formatTimeForDisplay($appointmentTimeFrom);
+    $toDisplay = formatTimeForDisplay($appointmentTimeTo);
+
+    /* =========================
        NORMALIZED RESPONSE
     ========================= */
     echo json_encode([
@@ -90,8 +123,6 @@ try {
             "doctor_name" => $data['name'] ?? "",
             "slug" => $data['slug'] ?? "",
             "amount" => $data['amount'] !== null ? (string)$data['amount'] : "0",
-
-            // ✅🔥 THIS IS THE FIX
             "token_limit" => (string)($data['token_limit'] ?? "0"),
 
             "description" => $data['description'] ?? "",
@@ -103,6 +134,18 @@ try {
             "doctor_image" => $data['doctor_image'] ?? "",
 
             "weeklySchedule" => $weeklySchedule,
+            "appointmentTimeFrom" => $appointmentTimeFrom,
+            "appointmentTimeTo" => $appointmentTimeTo,
+            "appointmentTimeFromDisplay" => $fromDisplay["display"],
+            "appointmentTimeToDisplay" => $toDisplay["display"],
+            "appointmentTimeFromFormatted" => [
+                "time" => $fromDisplay["time"],
+                "period" => $fromDisplay["period"]
+            ],
+            "appointmentTimeToFormatted" => [
+                "time" => $toDisplay["time"],
+                "period" => $toDisplay["period"]
+            ],
             "leaveDates" => $leaveDates,
 
             "metaTitle" => $data['meta_title'] ?? "",
