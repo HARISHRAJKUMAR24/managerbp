@@ -76,8 +76,9 @@ echo json_encode([
         "country"   => $user->country,
         "image"     => $user->image,
 
-        "siteSlug"  => $user->site_slug,
-        "siteName"  => $user->site_name,
+     "site_slug"  => $user->site_slug,
+"site_name"  => $user->site_name,
+
 
         "service_type_id" => (int)$user->service_type_id,
 
