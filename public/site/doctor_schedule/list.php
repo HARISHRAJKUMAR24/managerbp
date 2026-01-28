@@ -1,69 +1,81 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:3000");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
-header("Content-Type: application/json");
+header("Content-Type: application/json; charset=utf-8");
+header("Access-Control-Allow-Origin: *");
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
-
-require_once "../../../config/config.php";
-require_once "../../../src/database.php";
+require_once __DIR__ . "/../../../config/config.php";
+require_once __DIR__ . "/../../../src/database.php";
 
 $pdo = getDbConnection();
 
-/* =====================
-   AUTH VIA COOKIE TOKEN
-===================== */
-$token = $_COOKIE['token'] ?? null;
+$userId = (int)($_GET['user_id'] ?? 0);
 
-if (!$token) {
-    echo json_encode(["success" => false, "message" => "Unauthorized"]);
+if (!$userId) {
+    echo json_encode([
+        "success" => false,
+        "records" => [],
+        "message" => "user_id required"
+    ]);
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT user_id FROM users WHERE api_token = ? LIMIT 1");
-$stmt->execute([$token]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+$stmt = $pdo->prepare("
+    SELECT 
+        ds.id,
+        ds.name,
+        ds.slug,
+        ds.amount,
+        ds.token_limit,
+        ds.doctor_image AS doctorImage,
+        ds.weekly_schedule,
+        ds.leave_dates,
+        ds.category_id,
 
-if (!$user) {
-    echo json_encode(["success" => false, "message" => "Invalid token"]);
-    exit;
-}
+        c.name AS category_name,
+        c.doctor_name,
+        c.specialization,
+        c.qualification,
+        c.experience,
+        c.reg_number,
+        c.doctor_image AS cat_doctor_image,
+        c.user_id
 
-$userId = (int)$user['user_id'];
-
-/* =====================
-   FETCH DOCTOR SCHEDULES
-===================== */
-$sql = "
-SELECT
-    id AS serviceId,
-    id AS id,
-    user_id AS userId,
-    name,
-    slug,
-    amount,
-    doctor_image AS image,
-    specialization,
-    qualification,
-    created_at AS createdAt
-FROM doctor_schedule
-WHERE user_id = ?
-ORDER BY created_at DESC
-";
-
-$stmt = $pdo->prepare($sql);
+    FROM doctor_schedule ds
+    LEFT JOIN categories c 
+        ON c.category_id = ds.category_id 
+        AND c.user_id = ds.user_id
+    WHERE ds.user_id = ?
+");
 $stmt->execute([$userId]);
 
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+foreach ($records as &$row) {
+    $weeklySchedule = !empty($row['weekly_schedule'])
+        ? json_decode($row['weekly_schedule'], true)
+        : [];
+    $row['weeklySchedule'] = $weeklySchedule;
+
+    $leaveDates = !empty($row['leave_dates'])
+        ? json_decode($row['leave_dates'], true)
+        : [];
+    $row['leaveDates'] = $leaveDates;
+
+    $row['tokenLimit'] = $row['token_limit'] ?? null;
+
+    unset($row['weekly_schedule'], $row['leave_dates'], $row['token_limit']);
+
+    // NEW FIELDS
+    $row['category_id'] = $row['category_id'] ?? null;
+    $row['doctor_name'] = $row['doctor_name'] ?? $row['name'];
+    $row['specialization'] = $row['specialization'] ?? null;
+
+    if (!empty($row['cat_doctor_image'])) {
+        $row['doctorImage'] = $row['cat_doctor_image'];
+    }
+    unset($row['cat_doctor_image']);
+}
+
 echo json_encode([
     "success" => true,
-    "records" => $records,
-    "totalRecords" => count($records),
-    "totalPages" => 1
+    "records" => $records
 ]);
