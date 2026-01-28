@@ -5,6 +5,9 @@ header("Access-Control-Allow-Methods: PUT, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
 
+
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -146,6 +149,27 @@ $experience     = isset($doctorDetails["experience"])
     ? (int)$doctorDetails["experience"]
     : null;
 $doctorImage    = $doctorDetails["doctor_image"] ?? "";
+
+
+function validateAppointmentHours($from, $to) {
+    if (!$from || !$to) {
+        return [false, "Appointment start and end time required"];
+    }
+
+    // Convert HH:MM to minutes
+    list($fh, $fm) = explode(':', $from);
+    list($th, $tm) = explode(':', $to);
+
+    $fromMin = $fh * 60 + $fm;
+    $toMin   = $th * 60 + $tm;
+
+    if ($fromMin >= $toMin) {
+        return [false, "Appointment start time must be before end time"];
+    }
+
+    return [true, ""];
+}
+
 
 /* ===============================
    UPDATE

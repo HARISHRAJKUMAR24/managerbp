@@ -12,7 +12,6 @@ $userId = (int)($_GET['user_id'] ?? 0);
 if (!$userId) {
     echo json_encode([
         "success" => false,
-        "records" => [],
         "message" => "user_id required"
     ]);
     exit;
@@ -29,6 +28,8 @@ $stmt = $pdo->prepare("
         ds.weekly_schedule,
         ds.leave_dates,
         ds.category_id,
+        ds.appointment_time_from,
+        ds.appointment_time_to,
 
         c.name AS category_name,
         c.doctor_name,
@@ -50,29 +51,41 @@ $stmt->execute([$userId]);
 $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 foreach ($records as &$row) {
-    $weeklySchedule = !empty($row['weekly_schedule'])
+
+    // Weekly schedule
+    $row['weeklySchedule'] = !empty($row['weekly_schedule'])
         ? json_decode($row['weekly_schedule'], true)
         : [];
-    $row['weeklySchedule'] = $weeklySchedule;
 
-    $leaveDates = !empty($row['leave_dates'])
+    // Leave dates
+    $row['leaveDates'] = !empty($row['leave_dates'])
         ? json_decode($row['leave_dates'], true)
         : [];
-    $row['leaveDates'] = $leaveDates;
 
+    // Token limit
     $row['tokenLimit'] = $row['token_limit'] ?? null;
 
-    unset($row['weekly_schedule'], $row['leave_dates'], $row['token_limit']);
+    // NEW: include appointment times
+    $row['appointment_time_from'] = $row['appointment_time_from'] ?? null;
+    $row['appointment_time_to']   = $row['appointment_time_to'] ?? null;
 
-    // NEW FIELDS
+    // NEW: category and doctor info
     $row['category_id'] = $row['category_id'] ?? null;
     $row['doctor_name'] = $row['doctor_name'] ?? $row['name'];
     $row['specialization'] = $row['specialization'] ?? null;
 
+    // Override doctor image if category has one
     if (!empty($row['cat_doctor_image'])) {
         $row['doctorImage'] = $row['cat_doctor_image'];
     }
-    unset($row['cat_doctor_image']);
+
+    // Remove backend raw fields
+    unset(
+        $row['weekly_schedule'],
+        $row['leave_dates'],
+        $row['token_limit'],
+        $row['cat_doctor_image']
+    );
 }
 
 echo json_encode([
