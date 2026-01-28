@@ -1,50 +1,59 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:3001");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Headers: Content-Type");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Content-Type: application/json; charset=utf-8");
+header("Access-Control-Allow-Origin: *");
 
 require_once __DIR__ . "/../../../config/config.php";
 require_once __DIR__ . "/../../../src/database.php";
 
 $pdo = getDbConnection();
 
-/* READ SELLER ID */
-$seller_id = (int)($_GET['seller_id'] ?? 0);
+/* READ seller_id (mapped to user_id in DB) */
+$sellerId = (int)($_GET['seller_id'] ?? 0);
 
-if (!$seller_id) {
+if (!$sellerId) {
     echo json_encode([
         "success" => false,
-        "message" => "Missing seller_id"
+        "message" => "seller_id required"
     ]);
     exit;
 }
 
-/* FETCH DEPARTMENTS */
-$stmt = $pdo->prepare("
-    SELECT *
-    FROM departments
-    WHERE user_id = ?
-    ORDER BY created_at DESC
-");
-
-$stmt->execute([$seller_id]);
+/* FETCH ALL DEPARTMENTS */
+$stmt = $pdo->prepare("SELECT * FROM departments WHERE user_id = ? ORDER BY created_at DESC");
+$stmt->execute([$sellerId]);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-/* FORMAT SERVICES (type_1_name … type_25_amount) → single array */
-$departments = array_map(function ($row) {
+$departments = [];
 
+foreach ($rows as $row) {
+
+    // Appointment Settings JSON
+    $row["appointmentSettings"] = !empty($row["appointment_settings"])
+        ? json_decode($row["appointment_settings"], true)
+        : [];
+
+    // Leave Dates JSON
+    $row["leaveDates"] = !empty($row["leave_dates"])
+        ? json_decode($row["leave_dates"], true)
+        : [];
+
+    // Appointment Times
+    $row["appointmentTimeFrom"] = $row["appointment_time_from"] ?? null;
+    $row["appointmentTimeTo"]   = $row["appointment_time_to"] ?? null;
+
+    // Build services array from type_1_name … type_25_amount
     $services = [];
 
     for ($i = 1; $i <= 25; $i++) {
-        $name = $row["type_{$i}_name"];
-        $amount = $row["type_{$i}_amount"];
+        $name = $row["type_{$i}_name"] ?? null;
+        $amount = $row["type_{$i}_amount"] ?? null;
+        $hsn = $row["type_{$i}_hsn"] ?? null;
 
-        if ($name !== null && $name !== "") {
+        if (!empty($name)) {
             $services[] = [
                 "name" => $name,
-                "amount" => (float)$amount,
-                "hsn" => $row["type_{$i}_hsn"] ?? null
+                "amount" => floatval($amount),
+                "hsn" => $hsn
             ];
         }
 
@@ -54,11 +63,16 @@ $departments = array_map(function ($row) {
     }
 
     $row["services"] = $services;
-    return $row;
 
-}, $rows);
+    // Remove raw JSON columns
+    unset($row["appointment_settings"]);
+    unset($row["appointment_time_from"]);
+    unset($row["appointment_time_to"]);
+    unset($row["leave_dates"]);
 
-/* RESPONSE */
+    $departments[] = $row;
+}
+
 echo json_encode([
     "success" => true,
     "data" => $departments
