@@ -1,6 +1,17 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:3000");
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+
+header("Access-Control-Allow-Origin: $origin");
 header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+
+// Handle CORS preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 header("Content-Type: application/json");
 
 require_once "../../config/config.php";
@@ -30,7 +41,7 @@ if (!$user) {
 
 // Fetch site settings (logo, favicon, etc)
 $st = $pdo->prepare("SELECT * FROM site_settings WHERE user_id = :id LIMIT 1");
-$st->execute([":id" => $user->id]);
+$st->execute([":id" => $user->user_id]);
 $siteSettings = $st->fetch(PDO::FETCH_ASSOC);
 
 $baseUrl = "http://localhost/managerbp/public/uploads/";
@@ -86,6 +97,6 @@ echo json_encode([
         "is_suspended" => (int)$user->is_suspended,
         "suspension_reason" => $user->is_suspended ? getSuspendReason($pdo, $user->user_id) : null,
 
-        "siteSettings" => $siteSettings ?? []
+"siteSettings" => $siteSettings ? $siteSettings : new stdClass()
     ]
 ]);
