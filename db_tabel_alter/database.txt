@@ -619,3 +619,7 @@ ALTER TABLE `doctor_schedule`
 
 ADD COLUMN `appointment_time_from` TIME DEFAULT NULL,
 ADD COLUMN `appointment_time_to` TIME DEFAULT NULL;
+
+29/01/2026
+
+ALTER TABLE `customer_payment` MODIFY `service_name` TEXT;
