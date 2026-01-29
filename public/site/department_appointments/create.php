@@ -153,7 +153,6 @@ try {
     $payment_id = $pdo->lastInsertId();
     
     // Store booking data in session for payment page
-    session_start();
     $_SESSION['pending_booking'] = [
         'type' => 'department',
         'appointment_id' => $appointment_id,
