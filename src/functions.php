@@ -130,7 +130,7 @@ function uploadImage($file, $folder = 'uploads')
     return ['success' => false, 'error' => 'Upload failed'];
 }
 
-// get data from database
+// ---------------------- get data from database ---------------------- //
 function getData($column, $table, $condition = "")
 {
     $pdo = getDbConnection();
@@ -157,7 +157,7 @@ function getData($column, $table, $condition = "")
     }
 }
 
-// Get timezone from settings
+// ---------------------- Get timezone from settings ---------------------- //
 function getAppTimezone()
 {
     global $pdo;
@@ -170,7 +170,7 @@ function getAppTimezone()
     }
 }
 
-// Get current time in app timezone
+// ---------------------- Get current time in app timezone ---------------------- //
 function getCurrentAppTime($format = 'Y-m-d H:i:s')
 {
     $timezone = getAppTimezone();
@@ -183,7 +183,7 @@ function getCurrentAppTime($format = 'Y-m-d H:i:s')
     }
 }
 
-// Convert any datetime to app timezone
+// ---------------------- Convert any datetime to app timezone ---------------------- //
 function convertToAppTimezone($datetime, $format = 'Y-m-d H:i:s')
 {
     $timezone = getAppTimezone();
@@ -203,7 +203,7 @@ function convertToAppTimezone($datetime, $format = 'Y-m-d H:i:s')
     }
 }
 
-// Calculate expiry date using app timezone - FIXED VERSION
+//  ---------------------- Calculate expiry date using app timezone - FIXED VERSION ---------------------- //
 function calculateExpiryDate($value, $type)
 {
     $timezone = getAppTimezone();
@@ -243,7 +243,7 @@ function calculateExpiryDate($value, $type)
     }
 }
 
-// Check if message is expired considering timezone - FIXED
+//  ---------------------- Check if message is expired considering timezone - FIXED ---------------------- //
 function isMessageExpired($expiryDate)
 {
     try {
@@ -264,7 +264,7 @@ function isMessageExpired($expiryDate)
     }
 }
 
-// Check if seller is newly created (for just_created_seller feature)
+//  ---------------------- Check if seller is newly created (for just_created_seller feature) ---------------------- 
 function isNewlyCreatedSeller($sellerCreatedAt, $messageCreatedAt)
 {
     try {
@@ -283,9 +283,8 @@ function isNewlyCreatedSeller($sellerCreatedAt, $messageCreatedAt)
 }
 
 
-/**
- * Get user's plan limit for a specific resource WITH EXPIRY CHECK
- */
+ //---------------------- Get user's plan limit for a specific resource WITH EXPIRY CHECK  ---------------------- //
+
 function getUserPlanLimit($user_id, $resource_type)
 {
     $pdo = getDbConnection();
@@ -599,18 +598,16 @@ function getUserPlanLimit($user_id, $resource_type)
     ];
 }
 
-/**
- * Check if user can add a specific resource
- */
+// ----------------------  Check if user can add a specific resource ---------------------- //
+
 function canUserAddResource($user_id, $resource_type)
 {
     $result = getUserPlanLimit($user_id, $resource_type);
     return $result['can_add'];
 }
 
-/**
- * Get user's resource usage summary WITH EXPIRY CHECK
- */
+// ----------------------  Get user's resource usage summary WITH EXPIRY CHECK ---------------------- 
+
 function getUserResourceUsage($user_id, $resource_type = null)
 {
     if ($resource_type) {
@@ -629,9 +626,8 @@ function getUserResourceUsage($user_id, $resource_type = null)
     }
 }
 
-/**
- * Validate resource limit before adding (use in your API files) WITH EXPIRY CHECK
- */
+// ----------------------  Validate resource limit before adding (use in your API files) WITH EXPIRY CHECK ---------------------- 
+
 function validateResourceLimit($user_id, $resource_type)
 {
     $result = getUserPlanLimit($user_id, $resource_type);
@@ -654,7 +650,7 @@ function validateResourceLimit($user_id, $resource_type)
 }
 
 
-/* ------------- Get actual resource count for user based on service type ------------- */
+// ------------- Get actual resource count for user based on service type  ---------------------- 
 function getUserActualResourcesCount($user_id)
 {
     $pdo = getDbConnection();
@@ -728,7 +724,7 @@ function getUserActualResourcesCount($user_id)
     ];
 }
 
-/* ------------- Enhanced version of getUserPlanLimit with actual counts display ------------- */
+//  ----------------------  Enhanced version of getUserPlanLimit with actual counts display  ---------------------- //
 function getUserPlanLimitWithActual($user_id, $resource_type)
 {
     // First get the standard plan limit
@@ -769,8 +765,7 @@ function getUserPlanLimitWithActual($user_id, $resource_type)
 
 
 
-/* ------------- Get actual customer count for a specific user
- * This counts how many customers belong to a specific user_id ------------- */
+// ------------- Get actual customer count for a specific user This counts how many customers belong to a specific user_id  ---------------------- //
 function getActualCustomerCount($user_id)
 {
     $pdo = getDbConnection();
@@ -787,9 +782,7 @@ function getActualCustomerCount($user_id)
     }
 }
 
-/**
- * Get customer limit info with actual count
- */
+// ----------------------  Get customer limit info with actual count  ---------------------- //
 function getCustomerLimitWithCount($user_id)
 {
     // Get plan limit
@@ -807,9 +800,7 @@ function getCustomerLimitWithCount($user_id)
 
 
 
-
-// managerbp/src/function.php
-
+// ---------------------- Generate Appointment ID - Universal version ---------------------- //
 /**
  * Generate Appointment ID - Universal version
  * Works with or without services table
@@ -867,9 +858,9 @@ function generateAppointmentId($user_id, $db) {
     return $appointmentId;
 }
 
-//_______________________________________________________________________________________________
+//  ----------------------  Create Store CATEGORY_ID  ---------------------- //
 
-// Add to functions.php - Store CATEGORY_ID in service_reference_id
+// Store CATEGORY_ID in service_reference_id
 
 /**
  * Update payment with category reference
@@ -926,10 +917,10 @@ function updatePaymentWithCategoryReference($user_id, $customer_id, $payment_id,
         }
     }
     
-    // If no category found, fallback to old method
-    if (!isset($serviceInfo) || !$serviceInfo['success']) {
-        $serviceInfo = getServiceReference($user_id);
-    }
+    // // If no category found, fallback to old method
+    // if (!isset($serviceInfo) || !$serviceInfo['success']) {
+    //     $serviceInfo = getServiceReference($user_id);
+    // }
     
     if (!$serviceInfo['success']) {
         return $serviceInfo;
@@ -969,6 +960,66 @@ function updatePaymentWithCategoryReference($user_id, $customer_id, $payment_id,
             return [
                 'success' => false,
                 'message' => 'Payment record not found'
+            ];
+        }
+        
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ];
+    }
+}
+
+
+/**
+ * Update PayU payment with category reference
+ * This function is used in payu-success.php
+ */
+function updatePayUWithCategoryReference($user_id, $customer_id, $payment_id, $category_id = null) {
+    
+    $pdo = getDbConnection();
+    
+    // Get category details
+    $serviceInfo = getCategoryReference($user_id, $category_id);
+    
+    if (!$serviceInfo['success']) {
+        return $serviceInfo;
+    }
+    
+    // Update the payment record
+    try {
+        $update = $pdo->prepare("
+            UPDATE customer_payment 
+            SET 
+                service_reference_id = ?,
+                service_reference_type = ?,
+                service_name = ?
+            WHERE user_id = ? 
+            AND customer_id = ? 
+            AND payment_id = ?
+            LIMIT 1
+        ");
+        
+        $update->execute([
+            $serviceInfo['reference_id'],
+            $serviceInfo['reference_type'],
+            $serviceInfo['service_name'],
+            $user_id,
+            $customer_id,
+            $payment_id
+        ]);
+        
+        if ($update->rowCount() > 0) {
+            return [
+                'success' => true,
+                'message' => 'PayU payment updated with category reference',
+                'data' => $serviceInfo
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'PayU payment record not found'
             ];
         }
         
@@ -1032,77 +1083,10 @@ function getCategoryReference($user_id, $category_id = null) {
         'message' => 'Category not found'
     ];
 }
-/**
- * Update PayU payment with category reference
- * This function is used in payu-success.php
- */
-function updatePayUWithCategoryReference($user_id, $customer_id, $payment_id, $category_id = null) {
-    
-    $pdo = getDbConnection();
-    
-    // Get category details
-    $serviceInfo = getCategoryReference($user_id, $category_id);
-    
-    if (!$serviceInfo['success']) {
-        return $serviceInfo;
-    }
-    
-    // Update the payment record
-    try {
-        $update = $pdo->prepare("
-            UPDATE customer_payment 
-            SET 
-                service_reference_id = ?,
-                service_reference_type = ?,
-                service_name = ?
-            WHERE user_id = ? 
-            AND customer_id = ? 
-            AND payment_id = ?
-            LIMIT 1
-        ");
-        
-        $update->execute([
-            $serviceInfo['reference_id'],
-            $serviceInfo['reference_type'],
-            $serviceInfo['service_name'],
-            $user_id,
-            $customer_id,
-            $payment_id
-        ]);
-        
-        if ($update->rowCount() > 0) {
-            return [
-                'success' => true,
-                'message' => 'PayU payment updated with category reference',
-                'data' => $serviceInfo
-            ];
-        } else {
-            return [
-                'success' => false,
-                'message' => 'PayU payment record not found'
-            ];
-        }
-        
-    } catch (Exception $e) {
-        return [
-            'success' => false,
-            'message' => 'Database error: ' . $e->getMessage()
-        ];
-    }
-}
 
-//-----------------------------------------------------------------------------------------------------------
 
-/**
- * Check token availability for a specific doctor's batch
- * 
- * @param int $userId Doctor's user ID
- * @param string $batchId Batch ID (e.g., "0:0", "5:0")
- * @param string $appointmentDate Appointment date (YYYY-MM-DD)
- * @param PDO $pdo Database connection
- * 
- * @return array Returns availability status with details
- */
+// ---------------------- Check token availability for a specific doctor's batch ---------------------- //
+
 function checkTokenAvailability($userId, $batchId, $appointmentDate, $pdo = null) {
     try {
         // If no PDO connection provided, create one
@@ -1207,15 +1191,7 @@ function checkTokenAvailability($userId, $batchId, $appointmentDate, $pdo = null
     }
 }
 
-/**
- * Get available slots for a specific date with token availability
- * 
- * @param int $userId Doctor's user ID
- * @param string $date Appointment date (YYYY-MM-DD)
- * @param PDO $pdo Database connection
- * 
- * @return array List of available slots with token status
- */
+// ---------------------- Get available slots for a specific date with token availability  ---------------------- //
 function getAvailableSlotsForDate($userId, $date, $pdo = null) {
     try {
         if ($pdo === null) {
@@ -1357,7 +1333,7 @@ function apiCheckSlotAvailability() {
 // }
 
 
-
+// ---------------------- Token Histroy send to db token_history ---------------------- //
 function compareAndLogTokenUpdates($oldSchedule, $newSchedule, $scheduleId, $pdo, $categoryId) {
     $oldSlots = [];
     $newSlots = [];
