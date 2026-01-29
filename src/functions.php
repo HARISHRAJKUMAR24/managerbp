@@ -1423,9 +1423,6 @@ function compareAndLogTokenUpdates($oldSchedule, $newSchedule, $scheduleId, $pdo
  * Get service information based on user's service type - FIXED VERSION
  */
 
-/**
- * Get service information based on user's service type - CORRECTED VERSION
- */
 function getServiceInformation($db, $user_id, $service_type, $category_id = null, $service_name = '') {
     try {
         // First get user's service_type_id
@@ -1481,7 +1478,6 @@ function getServiceInformation($db, $user_id, $service_type, $category_id = null
             } else {
                 // Category/Doctor booking
                 if ($category_id) {
-                    // FIXED: Added specialization to SELECT query
                     $stmt = $db->prepare("
                         SELECT category_id, name, doctor_name, specialization 
                         FROM categories 
@@ -1495,37 +1491,12 @@ function getServiceInformation($db, $user_id, $service_type, $category_id = null
                     if ($category) {
                         $reference_id = $category['category_id'];
                         $reference_type = 'category_id';
-                        // FIXED: Include specialization in JSON
                         $service_name_json = json_encode([
                             "type" => "doctor",
                             "doctor_name" => $category['doctor_name'] ?? $category['name'],
                             "specialization" => $category['specialization'] ?? '',
                             "service_type" => "Hospital Consultation"
                         ]);
-                    } else {
-                        // Check doctor_schedule
-                        $stmt = $db->prepare("
-                            SELECT ds.category_id, ds.name, 
-                                   c.category_id as cat_ref_id, c.doctor_name, c.specialization, c.name as cat_name
-                            FROM doctor_schedule ds
-                            LEFT JOIN categories c ON ds.category_id = c.category_id
-                            WHERE ds.category_id = ? 
-                            AND ds.user_id = ?
-                            LIMIT 1
-                        ");
-                        $stmt->execute([$category_id, $user_id]);
-                        $doctor = $stmt->fetch(PDO::FETCH_ASSOC);
-                        
-                        if ($doctor) {
-                            $reference_id = $doctor['cat_ref_id'] ?? $doctor['category_id'];
-                            $reference_type = 'category_id';
-                            $service_name_json = json_encode([
-                                "type" => "doctor",
-                                "doctor_name" => $doctor['doctor_name'] ?? $doctor['name'],
-                                "specialization" => $doctor['specialization'] ?? '',
-                                "service_type" => "Hospital Consultation"
-                            ]);
-                        }
                     }
                 }
             }
@@ -1820,184 +1791,6 @@ function parseServiceNameJson($service_name_json) {
                 "error" => "Parse error",
                 "raw" => substr($service_name_json, 0, 100)
             ]
-        ];
-    }
-}
-
-
-
-
-/**
- * Get department service information for JSON storage
- * Returns service names in format: service_type-1, service_type-2, etc.
- */
-function getDepartmentServiceInformation($db, $user_id, $department_id, $department_name, $services = []) {
-    try {
-        // First get department details
-        $stmt = $db->prepare("
-            SELECT * FROM departments 
-            WHERE department_id = ? 
-            AND user_id = ?
-            LIMIT 1
-        ");
-        $stmt->execute([$department_id, $user_id]);
-        $department = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$department) {
-            return [
-                "success" => false,
-                "message" => "Department not found"
-            ];
-        }
-        
-        $serviceData = [
-            'department_name' => $department['name'] ?? $department_name,
-            'department_id' => $department['department_id'],
-            'services' => []
-        ];
-        
-        // If services array is provided, use it
-        if (!empty($services)) {
-            // Add main service (type_main)
-            if (!empty($services[0])) {
-                $mainService = $services[0];
-                $serviceData['services']['type_main'] = [
-                    'name' => $mainService['name'] ?? ($department['type_main_name'] ?? 'Main Service'),
-                    'price' => (float) ($mainService['price'] ?? ($department['type_main_amount'] ?? 0)),
-                    'quantity' => (int) ($mainService['quantity'] ?? 1),
-                    'hsn' => $mainService['hsn'] ?? ($department['type_main_hsn'] ?? null)
-                ];
-            }
-            
-            // Add additional services (type_1, type_2, etc.)
-            $additionalIndex = 1;
-            foreach ($services as $index => $service) {
-                if ($index > 0) { // Skip first (main) service
-                    // Get department service name if available
-                    $deptServiceName = $department['type_' . $additionalIndex . '_name'] ?? null;
-                    $deptServicePrice = $department['type_' . $additionalIndex . '_amount'] ?? 0;
-                    
-                    $serviceData['services']['type_' . $additionalIndex] = [
-                        'name' => $service['name'] ?? $deptServiceName ?? 'Service ' . $additionalIndex,
-                        'price' => (float) ($service['price'] ?? $deptServicePrice),
-                        'quantity' => (int) ($service['quantity'] ?? 1),
-                        'hsn' => $service['hsn'] ?? ($department['type_' . $additionalIndex . '_hsn'] ?? null)
-                    ];
-                    $additionalIndex++;
-                }
-            }
-        } else {
-            // Extract services from department fields
-            if ($department['type_main_name'] && $department['type_main_amount']) {
-                $serviceData['services']['type_main'] = [
-                    'name' => $department['type_main_name'],
-                    'price' => (float) $department['type_main_amount'],
-                    'quantity' => 1,
-                    'hsn' => $department['type_main_hsn'] ?? null
-                ];
-            }
-            
-            // Add additional services from department
-            for ($i = 1; $i <= 25; $i++) {
-                $nameField = 'type_' . $i . '_name';
-                $amountField = 'type_' . $i . '_amount';
-                $hsnField = 'type_' . $i . '_hsn';
-                
-                if (!empty($department[$nameField]) && !empty($department[$amountField])) {
-                    $serviceData['services']['type_' . $i] = [
-                        'name' => $department[$nameField],
-                        'price' => (float) $department[$amountField],
-                        'quantity' => 1,
-                        'hsn' => $department[$hsnField] ?? null
-                    ];
-                }
-            }
-        }
-        
-        // Create JSON
-        $service_name_json = json_encode($serviceData, JSON_UNESCAPED_UNICODE);
-        
-        return [
-            "success" => true,
-            "reference_id" => $department['department_id'],
-            "reference_type" => "department_id",
-            "service_name_json" => $service_name_json,
-            "service_name_display" => $department['name'],
-            "department_data" => $serviceData
-        ];
-        
-    } catch (Exception $e) {
-        return [
-            "success" => false,
-            "message" => "Error getting department service information: " . $e->getMessage()
-        ];
-    }
-}
-
-/**
- * Parse department service JSON for display
- */
-function parseDepartmentServiceJson($service_name_json) {
-    if (empty($service_name_json)) {
-        return [
-            "display" => "Department Service",
-            "services" => [],
-            "department_name" => ""
-        ];
-    }
-    
-    try {
-        $data = json_decode($service_name_json, true);
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return [
-                "display" => "Department Service",
-                "services" => [],
-                "department_name" => "",
-                "error" => "Invalid JSON"
-            ];
-        }
-        
-        $display = $data['department_name'] ?? "Department Service";
-        $services = [];
-        $services_list = [];
-        
-        if (isset($data['services']) && is_array($data['services'])) {
-            foreach ($data['services'] as $type => $service) {
-                if (isset($service['name']) && isset($service['price'])) {
-                    $services[] = [
-                        'type' => $type,
-                        'name' => $service['name'],
-                        'price' => $service['price'],
-                        'quantity' => $service['quantity'] ?? 1,
-                        'hsn' => $service['hsn'] ?? null
-                    ];
-                    
-                    // Create display list
-                    $qty = isset($service['quantity']) && $service['quantity'] > 1 ? " × " . $service['quantity'] : "";
-                    $services_list[] = $service['name'] . " (₹" . $service['price'] . $qty . ")";
-                }
-            }
-        }
-        
-        // Create detailed display
-        if (!empty($services_list)) {
-            $display .= " - " . implode(", ", $services_list);
-        }
-        
-        return [
-            "display" => $display,
-            "services" => $services,
-            "department_name" => $data['department_name'] ?? "",
-            "department_id" => $data['department_id'] ?? null
-        ];
-        
-    } catch (Exception $e) {
-        return [
-            "display" => "Department Service",
-            "services" => [],
-            "department_name" => "",
-            "error" => $e->getMessage()
         ];
     }
 }

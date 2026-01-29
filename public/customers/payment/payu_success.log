@@ -746,3 +746,67 @@ Array
     [SESSION_data] => Not exists
 )
 
+Array
+(
+    [timestamp] => 2026-01-29 19:36:05
+    [POST_data] => Array
+        (
+            [mihpayid] => 403993715536363785
+            [mode] => CC
+            [status] => success
+            [unmappedstatus] => captured
+            [key] => gtKFFx
+            [txnid] => TXN17697117362031
+            [amount] => 5.00
+            [cardCategory] => domestic
+            [discount] => 0.00
+            [net_amount_debit] => 5
+            [addedon] => 2026-01-30 00:05:37
+            [productinfo] => Booking Payment
+            [firstname] => Barani
+            [lastname] => 
+            [address1] => 
+            [address2] => 
+            [city] => 
+            [state] => 
+            [country] => 
+            [zipcode] => 
+            [email] => barani@gmail.com
+            [phone] => 918888888888
+            [udf1] => 85960HOS1satb6
+            [udf2] => 774100
+            [udf3] => 85960
+            [udf4] => 2026-02-04
+            [udf5] => {"slot_from":"18:00","slot_to":"21:00","token_count":1,"category_id":"CAT_69732006cc321","batch_id":"3:0","receipt":"receipt_774100_1769711736","gst_type":"inclusive","gst_percent":18,"gst_amount":0,"sub_total":5,"payment_id":"307","service_info":{"refere
+            [udf6] => 
+            [udf7] => 
+            [udf8] => 
+            [udf9] => 
+            [udf10] => 
+            [hash] => 61e2e6b58f21c57f2db859420a2d21a1e6bacc8adb114312ad4e9442d743a68531cd90023375700d8480264d27afe5aef08dd1fdef338bc97a9d8c9713a31073
+            [field1] => 905552963936683300
+            [field2] => 222188
+            [field3] => 5.00
+            [field4] => 
+            [field5] => 00
+            [field6] => 02
+            [field7] => AUTHPOSITIVE
+            [field8] => AUTHORIZED
+            [field9] => Transaction is Successful
+            [payment_source] => payu
+            [pa_name] => PayU
+            [PG_TYPE] => CC-PG
+            [bank_ref_num] => 905552963936683300
+            [bankcode] => CC
+            [error] => E000
+            [error_Message] => No Error
+            [cardnum] => XXXXXXXXXXXX2346
+        )
+
+    [GET_data] => Array
+        (
+        )
+
+    [SESSION_data] => Not exists
+)
+
