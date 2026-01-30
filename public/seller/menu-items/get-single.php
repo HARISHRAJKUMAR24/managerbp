@@ -25,7 +25,7 @@ $stmt = $pdo->prepare("
     id,
     name,
     description,
-    hsn_code, -- ✅ ADD THIS LINE
+    hsn_code,
     menu_id,
     category_id,
     food_type,
@@ -36,6 +36,10 @@ $stmt = $pdo->prepare("
     halal,
     customer_limit,
     customer_limit_period,
+    prebooking_enabled,        
+    prebooking_min_amount,    
+    prebooking_max_amount,     
+    prebooking_advance_days,   
     price,
     created_at,
     updated_at
@@ -52,6 +56,11 @@ if (!$item) {
     "message" => "Menu item not found"
   ]);
   exit;
+}
+
+// Convert prebooking_enabled to boolean for frontend
+if (isset($item['prebooking_enabled'])) {
+    $item['prebooking_enabled'] = (bool)$item['prebooking_enabled'];
 }
 
 /* ================= GET VARIATIONS ================= */

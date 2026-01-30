@@ -35,7 +35,12 @@ $stmt = $pdo->prepare("
         stock_unit,
         image,
         created_at,
-        updated_at
+        updated_at,
+        -- ✅ ADD THESE 4 PREBOOKING FIELDS:
+        prebooking_enabled,
+        prebooking_min_amount,
+        prebooking_max_amount,
+        prebooking_advance_days
     FROM menu_items
     WHERE user_id = ?
     ORDER BY created_at DESC
@@ -73,6 +78,9 @@ foreach ($items as $index => $item) {
     // Format food type
     $items[$index]['food_type'] =
         ($item['food_type'] === 'nonveg') ? 'non-veg' : 'veg';
+    
+    // ✅ Convert prebooking_enabled to boolean for better frontend handling
+    $items[$index]['prebooking_enabled'] = (bool)($item['prebooking_enabled'] ?? false);
 }
 
 /* SEND RESPONSE */

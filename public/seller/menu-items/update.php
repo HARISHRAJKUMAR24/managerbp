@@ -89,22 +89,31 @@ if (isset($input['stock_type']) && $input['stock_type'] === 'out_of_stock') {
     $input['stock_type'] = 'out';
 }
 
+// Handle prebooking values
+if (isset($input['prebooking_enabled'])) {
+    $input['prebooking_enabled'] = $input['prebooking_enabled'] ? 1 : 0;
+}
+
 /* ===============================
    UPDATE MENU ITEM
 ================================ */
 $allowed = [
     'name',
     'description',
-    'hsn_code', // NEW
+    'hsn_code',
     'menu_id',
     'category_id',
     'food_type',
     'stock_type',
-    'halal',  
+    'halal',
     'stock_qty',
     'stock_unit',
     'customer_limit',
     'customer_limit_period',
+    'prebooking_enabled',      // NEW
+    'prebooking_min_amount',   // NEW
+    'prebooking_max_amount',   // NEW
+    'prebooking_advance_days', // NEW
     'image'
 ];
 

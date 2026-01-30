@@ -109,7 +109,16 @@ $halal      = !empty($input["halal"]) ? 1 : 0;
 $stockQty   = $input["stock_qty"] ?? null;
 $stockUnit  = $input["stock_unit"] ?? null;
 $categoryId = $input["category_id"] ?? null;
-$hsnCode    = !empty($input["hsn_code"]) ? trim($input["hsn_code"]) : null; // NEW
+$hsnCode    = !empty($input["hsn_code"]) ? trim($input["hsn_code"]) : null;
+
+// NEW: Prebooking values
+$prebookingEnabled = isset($input["prebooking_enabled"]) && $input["prebooking_enabled"] ? 1 : 0;
+$prebookingMinAmount = isset($input["prebooking_min_amount"]) && $input["prebooking_min_amount"] > 0 
+    ? (float)$input["prebooking_min_amount"] : null;
+$prebookingMaxAmount = isset($input["prebooking_max_amount"]) && $input["prebooking_max_amount"] > 0 
+    ? (float)$input["prebooking_max_amount"] : null;
+$prebookingAdvanceDays = isset($input["prebooking_advance_days"]) && $input["prebooking_advance_days"] > 0 
+    ? (int)$input["prebooking_advance_days"] : null;
 
 /* ===============================
    TRANSACTION
@@ -119,7 +128,7 @@ $pdo->beginTransaction();
 try {
 
     /* ===============================
-       INSERT MENU ITEM (WITH HSN)
+       INSERT MENU ITEM (WITH PREBOOKING)
     ================================ */
     $stmt = $pdo->prepare("
         INSERT INTO menu_items (
@@ -128,7 +137,7 @@ try {
             category_id,
             name,
             description,
-            hsn_code, -- NEW
+            hsn_code,
             food_type,
             halal,
             stock_type,
@@ -136,6 +145,10 @@ try {
             stock_unit,
             customer_limit,
             customer_limit_period,
+            prebooking_enabled,        -- NEW
+            prebooking_min_amount,     -- NEW
+            prebooking_max_amount,     -- NEW
+            prebooking_advance_days,   -- NEW
             image,
             active,
             created_at
@@ -145,7 +158,7 @@ try {
             :category_id,
             :name,
             :description,
-            :hsn_code, -- NEW
+            :hsn_code,
             :food_type,
             :halal,
             :stock_type,
@@ -153,6 +166,10 @@ try {
             :stock_unit,
             :customer_limit,
             :customer_limit_period,
+            :prebooking_enabled,       -- NEW
+            :prebooking_min_amount,    -- NEW
+            :prebooking_max_amount,    -- NEW
+            :prebooking_advance_days,  -- NEW
             :image,
             1,
             NOW()
@@ -165,7 +182,7 @@ try {
         ":category_id"           => $categoryId,
         ":name"                  => trim($input["name"]),
         ":description"           => $input["description"] ?? "",
-        ":hsn_code"              => $hsnCode, // NEW
+        ":hsn_code"              => $hsnCode,
         ":food_type"             => $input["food_type"],
         ":halal"                 => $halal,
         ":stock_type"            => $input["stock_type"],
@@ -173,6 +190,10 @@ try {
         ":stock_unit"            => $stockUnit,
         ":customer_limit"        => $input["customer_limit"] ?? null,
         ":customer_limit_period" => $input["customer_limit_period"] ?? null,
+        ":prebooking_enabled"    => $prebookingEnabled,           // NEW
+        ":prebooking_min_amount" => $prebookingMinAmount,         // NEW
+        ":prebooking_max_amount" => $prebookingMaxAmount,         // NEW
+        ":prebooking_advance_days" => $prebookingAdvanceDays,     // NEW
         ":image"                 => $input["image"] ?? null,
     ]);
 
