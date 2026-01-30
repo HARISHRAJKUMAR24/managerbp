@@ -14,6 +14,7 @@ $services_limit = $_POST['services_limit'] ?? '';
 $menu_limit = $_POST['menu_limit'] ?? ''; // ✅ ADDED: Menu Limit
 $coupons_limit = $_POST['coupons_limit'] ?? '';
 $manual_payment_methods_limit = $_POST['manual_payment_methods_limit'] ?? '';
+$upi_payment_methods_limit = $_POST['upi_payment_methods_limit'] ?? '';
 $free_credits = $_POST['free_credits'] ?? '';
 $gst_type = $_POST['gst_type'] ?? '';
 $feature_lists = $_POST['feature_lists'] ?? '';
@@ -37,6 +38,7 @@ if (empty($services_limit)) exit(json_encode(["type" => "error", "msg" => "Servi
 if (empty($menu_limit)) exit(json_encode(["type" => "error", "msg" => "Menu Limit is required"])); // ✅ ADDED: Menu Limit validation
 if (empty($coupons_limit)) exit(json_encode(["type" => "error", "msg" => "Coupons Limit is required"]));
 if (empty($manual_payment_methods_limit)) exit(json_encode(["type" => "error", "msg" => "Manual Payment Method Limit is required"]));
+if (empty($upi_payment_methods_limit)) exit(json_encode(["type" => "error", "msg" => "UPI Payment Methods Limit is required"]));
 if (empty($free_credits)) exit(json_encode(["type" => "error", "msg" => "Free Credits is required"]));
 if (empty($gst_type)) exit(json_encode(["type" => "error", "msg" => "GST Type is required"]));
 if (empty($feature_lists)) exit(json_encode(["type" => "error", "msg" => "Feature Lists is required"]));
@@ -55,6 +57,7 @@ try {
         $menu_limit, // ✅ ADDED: Menu Limit parameter
         $coupons_limit,
         $manual_payment_methods_limit,
+        $upi_payment_methods_limit, // ✅ ADDED: UPI Payment Methods Limit
         $free_credits,
         $razorpay,
         $phonepe,

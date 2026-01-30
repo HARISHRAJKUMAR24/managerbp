@@ -308,21 +308,22 @@ function getUserPlanLimit($user_id, $resource_type)
         }
     }
 
-    // Map resource types to column names
+    // Map resource types to column names - ADDED: upi_payment_methods
     $column_map = [
         'appointments' => 'appointments_limit',
         'customers' => 'customers_limit',
         'services' => 'services_limit',
-        'menu' => 'menu_limit', // ✅ Support both 'menu'
-        'menu_items' => 'menu_limit', // ✅ and 'menu_items'
+        'menu' => 'menu_limit',
+        'menu_items' => 'menu_limit',
         'coupons' => 'coupons_limit',
         'manual_payment_methods' => 'manual_payment_methods_limit',
+        'upi_payment_methods' => 'upi_payment_methods_limit', // ✅ ADDED
         'free_credits' => 'free_credits'
     ];
 
     // Alias mapping for backward compatibility
     if ($resource_type === 'menu') {
-        $resource_type = 'menu_items'; // Treat 'menu' as 'menu_items'
+        $resource_type = 'menu_items';
     }
 
     if (!isset($column_map[$resource_type])) {
@@ -376,7 +377,8 @@ function getUserPlanLimit($user_id, $resource_type)
                 'appointments' => 'appointments',
                 'customers' => 'customers',
                 'coupons' => 'coupons',
-                'manual_payment_methods' => 'manual_payment_methods'
+                'manual_payment_methods' => 'manual_payment_methods',
+                'upi_payment_methods' => 'upi_payment_methods' // ✅ ADDED
             ];
 
             $current_count = 0;
@@ -471,7 +473,8 @@ function getUserPlanLimit($user_id, $resource_type)
                 'appointments' => 'appointments',
                 'customers' => 'customers',
                 'coupons' => 'coupons',
-                'manual_payment_methods' => 'manual_payment_methods'
+                'manual_payment_methods' => 'manual_payment_methods',
+                'upi_payment_methods' => 'upi_payment_methods' // ✅ ADDED
             ];
 
             $current_count = 0;
@@ -550,7 +553,8 @@ function getUserPlanLimit($user_id, $resource_type)
             'appointments' => 'appointments',
             'customers' => 'customers',
             'coupons' => 'coupons',
-            'manual_payment_methods' => 'manual_payment_methods'
+            'manual_payment_methods' => 'manual_payment_methods',
+            'upi_payment_methods' => 'upi_payment_methods' // ✅ ADDED
         ];
 
         if (isset($table_map[$resource_type])) {
@@ -747,7 +751,8 @@ function getUserPlanLimitWithActual($user_id, $resource_type)
             'appointments' => 'appointments',
             'customers' => 'customers',
             'coupons' => 'coupons',
-            'manual_payment_methods' => 'manual_payment_methods'
+            'manual_payment_methods' => 'manual_payment_methods',
+            'upi_payment_methods' => 'upi_payment_methods' // ✅ ADDED
         ];
 
         if (isset($table_map[$resource_type])) {
@@ -1353,4 +1358,32 @@ function compareAndLogTokenUpdates($oldSchedule, $newSchedule, $scheduleId, $pdo
             ]);
         }
     }
+}
+
+
+// ---------------------- Check if COH should be shown to user ---------------------- //
+function canShowCOH($user_id)
+{
+    $pdo = getDbConnection();
+    
+    // First check if COH is enabled in site settings
+    $stmt = $pdo->prepare("
+        SELECT cash_in_hand 
+        FROM site_settings 
+        WHERE user_id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([$user_id]);
+    $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    // If COH is not enabled in settings, return false
+    if (!$settings || $settings['cash_in_hand'] != 1) {
+        return false;
+    }
+    
+    // Now check the manual payment methods limit
+    $limitCheck = getUserPlanLimit($user_id, 'manual_payment_methods');
+    
+    // Return true only if user can add more manual payments
+    return $limitCheck['can_add'];
 }

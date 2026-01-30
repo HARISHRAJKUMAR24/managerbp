@@ -87,36 +87,94 @@ try {
     $customer_email = $input['customer_email'] ?? '';
     $customer_phone = $input['customer_phone'] ?? '';
     
+    // ⭐ NEW: Get services_json from input
+    $services_json = $input['services_json'] ?? null;
+    
     // Generate appointment ID
     $appointment_id = generateAppointmentId($user_id, $db);
     
     // Generate receipt
     $receipt = "UPI_" . time() . "_" . rand(1000, 9999);
     
-    // Get service name if category_id provided
+    // ⭐ UPDATED: Get service information with JSON support
     $service_ref_id = null;
     $service_ref_type = null;
-    $service_name = null;
+    $service_name_json = null;
+    $service_display_name = null;
     
-    if ($category_id) {
-        $catStmt = $db->prepare("
-            SELECT category_id, name, doctor_name 
-            FROM categories 
-            WHERE category_id = ? 
-            AND user_id = ?
-            LIMIT 1
-        ");
-        $catStmt->execute([$category_id, $user_id]);
-        $category = $catStmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($category) {
-            $service_ref_id = $category['category_id'];
+    // If services_json is provided (for department bookings)
+    if ($services_json) {
+        // Prepare service_name_json based on services_json
+        if (is_string($services_json)) {
+            $servicesData = json_decode($services_json, true);
+        } else {
+            $servicesData = $services_json;
+        }
+
+        // Create proper service_name_json
+        $service_name_json = json_encode($servicesData);
+
+        // Determine reference_id based on service type
+        $service_type = $input['service_type'] ?? 'category';
+        if ($service_type === 'department') {
+            $department_id = $input['department_id'] ?? $category_id;
+            $service_ref_id = $department_id;
+            $service_ref_type = 'department_id';
+
+            // If it's a primary ID, try to get department_id from database
+            if ($service_ref_id && !strpos($service_ref_id, 'DEPT_') === 0) {
+                $stmt = $db->prepare("SELECT department_id FROM departments WHERE id = ? AND user_id = ?");
+                $stmt->execute([$service_ref_id, $user_id]);
+                $dept = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($dept && $dept['department_id']) {
+                    $service_ref_id = $dept['department_id'];
+                }
+            }
+            
+            $service_display_name = $servicesData['department_name'] ?? $input['service_name'] ?? 'Department Service';
+        } else {
+            $service_ref_id = $category_id;
             $service_ref_type = 'category_id';
-            $service_name = $category['doctor_name'] ?? $category['name'];
+            $service_display_name = $input['service_name'] ?? 'Service';
+        }
+    } else {
+        // Fallback to category lookup if no services_json
+        if ($category_id) {
+            $catStmt = $db->prepare("
+                SELECT category_id, name, doctor_name 
+                FROM categories 
+                WHERE category_id = ? 
+                AND user_id = ?
+                LIMIT 1
+            ");
+            $catStmt->execute([$category_id, $user_id]);
+            $category = $catStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($category) {
+                $service_ref_id = $category['category_id'];
+                $service_ref_type = 'category_id';
+                $service_name_json = json_encode([
+                    "type" => "category",
+                    "doctor_name" => $category['doctor_name'] ?? '',
+                    "specialization" => $category['name'] ?? '',
+                    "service_type" => "category"
+                ]);
+                $service_display_name = $category['doctor_name'] ?? $category['name'];
+            }
         }
     }
     
-    // CORRECTED SQL query with all required columns including payment_method as 'upi'
+    // Final fallback if no service info found
+    if (!$service_name_json) {
+        $service_name_json = json_encode([
+            "type" => "generic",
+            "service_name" => $input['service_name'] ?? "Service Booking",
+            "service_type" => "UPI Payment"
+        ]);
+        $service_display_name = $input['service_name'] ?? "Service Booking";
+    }
+    
+    // ⭐ UPDATED SQL query to store service_name as JSON
     $sql = "INSERT INTO customer_payment 
             (user_id, customer_id, appointment_id, receipt, amount, total_amount, currency,
              status, payment_method, appointment_date, slot_from, slot_to, token_count,
@@ -126,7 +184,7 @@ try {
     
     $stmt = $db->prepare($sql);
     
-    // EXECUTE with 20 values for 20 placeholders
+    // EXECUTE with JSON service name
     $success = $stmt->execute([
         $user_id,                    // 1. user_id
         $customer_id,                // 2. customer_id
@@ -134,27 +192,25 @@ try {
         $receipt,                    // 4. receipt
         $sub_total,                  // 5. amount
         $total_amount,               // 6. total_amount
-        // 'INR' is hardcoded in SQL - placeholder 7
-        // 'pending' is hardcoded in SQL - placeholder 8
-        'upi',                       // 9. payment_method (set as 'upi')
-        $appointment_date,           // 10. appointment_date
-        $slot_from,                  // 11. slot_from
-        $slot_to,                    // 12. slot_to
-        $token_count,                // 13. token_count
-        $service_ref_id,             // 14. service_reference_id
-        $service_ref_type,           // 15. service_reference_type
-        $service_name,               // 16. service_name
-        $gst_type,                   // 17. gst_type
-        $gst_percent,                // 18. gst_percent
-        $gst_amount,                 // 19. gst_amount
-        $batch_id                    // 20. batch_id
+        'upi',                       // 7. payment_method (set as 'upi')
+        $appointment_date,           // 8. appointment_date
+        $slot_from,                  // 9. slot_from
+        $slot_to,                    // 10. slot_to
+        $token_count,                // 11. token_count
+        $service_ref_id,             // 12. service_reference_id
+        $service_ref_type,           // 13. service_reference_type
+        $service_name_json,          // 14. service_name (as JSON)
+        $gst_type,                   // 15. gst_type
+        $gst_percent,                // 16. gst_percent
+        $gst_amount,                 // 17. gst_amount
+        $batch_id                    // 18. batch_id
     ]);
     
     if ($success) {
         $payment_id = $db->lastInsertId();
         
         // Update token availability if batch_id exists
-        if ($batch_id && $appointment_date && $category_id) {
+        if ($batch_id && $appointment_date && $service_ref_id) {
             try {
                 $batchParts = explode(':', $batch_id);
                 if (count($batchParts) === 2) {
@@ -170,7 +226,7 @@ try {
                         AND user_id = ?
                         LIMIT 1
                     ");
-                    $stmtDoctor->execute([$category_id, $user_id]);
+                    $stmtDoctor->execute([$service_ref_id, $user_id]);
                     $doctor = $stmtDoctor->fetch(PDO::FETCH_ASSOC);
                     
                     if ($doctor && $doctor['weekly_schedule']) {
@@ -189,7 +245,7 @@ try {
                             ");
                             $updateSchedule->execute([
                                 json_encode($weeklySchedule),
-                                $category_id,
+                                $service_ref_id,
                                 $user_id
                             ]);
                         }
@@ -200,7 +256,7 @@ try {
             }
         }
         
-        // Return success response - just like COH
+        // Return success response with JSON service info
         echo json_encode([
             "success" => true,
             "message" => "UPI payment order created successfully",
@@ -209,7 +265,14 @@ try {
             "receipt" => $receipt,
             "status" => "pending",
             "payment_method" => "upi",
+            "service_info" => [
+                "reference_id" => $service_ref_id,
+                "reference_type" => $service_ref_type,
+                "display_name" => $service_display_name,
+                "has_services_json" => $services_json ? true : false
+            ],
             "data" => [
+                "customer_id" => $customer_id,
                 "customer_name" => $customer_name,
                 "customer_email" => $customer_email,
                 "customer_phone" => $customer_phone,

@@ -623,3 +623,13 @@ ADD COLUMN `appointment_time_to` TIME DEFAULT NULL;
 29/01/2026
 
 ALTER TABLE `customer_payment` MODIFY `service_name` TEXT;
+
+-- Add UPI payment limit field to subscription_plans table
+ALTER TABLE `subscription_plans` 
+ADD COLUMN `upi_payment_methods_limit` VARCHAR(191) NOT NULL DEFAULT 'unlimited' 
+AFTER `manual_payment_methods_limit`;
+
+-- Update existing records to have a default value
+UPDATE `subscription_plans` 
+SET `upi_payment_methods_limit` = 'unlimited' 
+WHERE `upi_payment_methods_limit` IS NULL OR `upi_payment_methods_limit` = '';

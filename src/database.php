@@ -222,6 +222,7 @@ function addPlan(
     $menu_limit,
     $coupons_limit,
     $manual_payment_methods_limit,
+    $upi_payment_methods_limit,
     $free_credits,
     $razorpay,
     $phonepe,
@@ -232,7 +233,7 @@ function addPlan(
     $stmt = $pdo->prepare("INSERT INTO subscription_plans
     (plan_id, name, amount, previous_amount, duration, description, feature_lists, 
      appointments_limit, customers_limit, services_limit, menu_limit, 
-     coupons_limit, manual_payment_methods_limit, free_credits, razorpay, phonepe, payu, gst_type)
+     coupons_limit, manual_payment_methods_limit, upi_payment_methods_limit, free_credits, razorpay, phonepe, payu, gst_type)
     VALUES
     (:plan_id, :name, :amount, :previous_amount, :duration, :description, :feature_lists, 
      :appointments_limit, :customers_limit, :services_limit, :menu_limit, 
@@ -252,6 +253,7 @@ function addPlan(
         'menu_limit' => $menu_limit,
         'coupons_limit' => $coupons_limit,
         'manual_payment_methods_limit' => $manual_payment_methods_limit,
+        'upi_payment_methods_limit' => $upi_payment_methods_limit,
         'free_credits' => $free_credits,
         'razorpay' => $razorpay,
         'phonepe' => $phonepe,
@@ -274,6 +276,7 @@ function updatePlan(
     $menu_limit,
     $coupons_limit,
     $manual_payment_methods_limit,
+    $upi_payment_methods_limit,
     $free_credits,
     $razorpay,
     $phonepe,
@@ -294,6 +297,7 @@ function updatePlan(
         menu_limit = :menu_limit,
         coupons_limit = :coupons_limit,
         manual_payment_methods_limit = :manual_payment_methods_limit,
+        upi_payment_methods_limit = :upi_payment_methods_limit,
         free_credits = :free_credits,
         razorpay = :razorpay,
         phonepe = :phonepe,
@@ -315,6 +319,7 @@ function updatePlan(
         'menu_limit' => $menu_limit,
         'coupons_limit' => $coupons_limit,
         'manual_payment_methods_limit' => $manual_payment_methods_limit,
+        'upi_payment_methods_limit' => $upi_payment_methods_limit,
         'free_credits' => $free_credits,
         'razorpay' => $razorpay,
         'phonepe' => $phonepe,

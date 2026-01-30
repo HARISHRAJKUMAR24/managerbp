@@ -21,7 +21,6 @@ header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
 
-
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
     http_response_code(200);
     exit();
@@ -29,6 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
+require_once "../../../src/functions.php"; // ✅ ADD THIS LINE
 
 $user_id = $_GET["user_id"] ?? null;
 
@@ -58,7 +58,10 @@ try {
 
     // Convert database types
     $settings["cash_in_hand"] = intval($settings["cash_in_hand"] ?? 0);
-
+    
+    // ✅ ADD: Check if COH should be shown based on user's plan limit
+    $settings["show_cash_in_hand"] = $settings["cash_in_hand"] && canShowCOH($user_id);
+    
     foreach ($settings as $k => $v) {
         if ($v === null) $settings[$k] = "";
     }

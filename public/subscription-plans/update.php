@@ -157,6 +157,12 @@ $plan = fetchPlan($_GET['id']);
                 </div>
 
                 <div class="col-sm-6 mb-5">
+                    <label class="required form-label">UPI Payment Methods Limit</label>
+                    <input type="text" name="upi_payment_methods_limit" class="form-control form-control-solid" value="<?= $plan->upi_payment_methods_limit ?? 'unlimited' ?>" />
+                    <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
+                </div>
+
+                <div class="col-sm-6 mb-5">
                     <label class="required form-label">Free Credits</label>
                     <input type="text" name="free_credits" class="form-control form-control-solid" value="<?= $plan->free_credits ?>" />
                     <small class="d-block mt-2">Please use the term <mark>unlimited</mark> to indicate the granting of unrestricted permission.</small>
