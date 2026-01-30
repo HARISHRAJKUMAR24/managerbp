@@ -87,10 +87,14 @@ try {
     $slot_to = $input['slot_to'] ?? '';
     $token_count = (int) ($input['token_count'] ?? 1);
     $category_id = $input['category_id'] ?? null;
+    $department_id = $input['department_id'] ?? null;
     
     // Service type and name
     $service_type = $input['service_type'] ?? 'category';
     $service_name = $input['service_name'] ?? '';
+    
+    // ⭐ NEW: Services data in JSON format
+    $services_json = $input['services_json'] ?? null;
     
     // ⭐ NEW: Extract batch_id
     $batch_id = $input['batch_id'] ?? null;
@@ -119,21 +123,40 @@ try {
         exit;
     }
     
-    // ⭐ NEW: Get service information based on service_type and user's service_type_id
-    $serviceInfo = getServiceInformation($db, $user_id, $service_type, $category_id, $service_name);
+    // ⭐ NEW: Prepare service_name_json based on services data
+    $service_name_json = '';
     
-    if (!$serviceInfo['success']) {
-        echo json_encode([
-            "success" => false,
-            "message" => $serviceInfo['message'] ?? "Failed to get service information"
-        ]);
-        exit;
+    if ($services_json) {
+        // Use the provided services JSON
+        $service_name_json = json_encode($services_json);
+    } else {
+        // Generate service_name_json based on service type
+        $serviceInfo = getServiceInformation($db, $user_id, $service_type, $category_id, $service_name);
+        
+        if ($serviceInfo['success']) {
+            $service_name_json = $serviceInfo['service_name_json'];
+        } else {
+            // Fallback if service info not found
+            if ($service_type === 'department') {
+                $service_name_json = json_encode([
+                    "type" => "department",
+                    "department_name" => $service_name ?: "Department Service",
+                    "services" => []
+                ]);
+            } else {
+                $service_name_json = json_encode([
+                    "type" => "category",
+                    "service_name" => $service_name ?: "Service",
+                    "services" => []
+                ]);
+            }
+        }
     }
     
     // Generate receipt for COH
     $receipt = "COH_" . time() . "_" . rand(1000, 9999);
     
-    // ⭐ UPDATE: Insert COH order into database WITH batch_id and JSON service_name
+    // ⭐ UPDATE: Insert COH order into database WITH services_json
     $sql = "INSERT INTO customer_payment 
             (user_id, customer_id, appointment_id, receipt, amount, total_amount, currency, 
              status, payment_method, appointment_date, slot_from, slot_to, token_count,
@@ -142,6 +165,15 @@ try {
             VALUES (?, ?, ?, ?, ?, ?, 'INR', 'pending', 'cash', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
     
     $stmt = $db->prepare($sql);
+    
+    // Determine reference type and ID
+    $reference_type = 'category_id';
+    $reference_id = $category_id;
+    
+    if ($service_type === 'department') {
+        $reference_type = 'department_id';
+        $reference_id = $department_id ?? $category_id;
+    }
     
     $success = $stmt->execute([
         $user_id,
@@ -154,9 +186,9 @@ try {
         $slot_from,
         $slot_to,
         $token_count,
-        $serviceInfo['reference_id'],
-        $serviceInfo['reference_type'],
-        $serviceInfo['service_name_json'], // JSON format
+        $reference_id,
+        $reference_type,
+        $service_name_json, // JSON format with services
         $gst_type,
         $gst_percent,
         $gst_amount,
@@ -168,7 +200,7 @@ try {
         
         // ⭐ UPDATE TOKEN AVAILABILITY FOR THIS BATCH
         $tokenUpdateMessage = null;
-        if ($batch_id && $appointment_date && $category_id) {
+        if ($batch_id && $appointment_date && $reference_id) {
             try {
                 // Extract day index and slot index from batch_id (format: "dayIndex:slotIndex")
                 $batchParts = explode(':', $batch_id);
@@ -179,7 +211,7 @@ try {
                     // Convert appointment date to day name
                     $dayName = date('D', strtotime($appointment_date));
                     
-                    // Get doctor schedule for this category
+                    // Get doctor schedule for this category/department
                     $stmtDoctor = $db->prepare("
                         SELECT weekly_schedule 
                         FROM doctor_schedule 
@@ -187,7 +219,7 @@ try {
                         AND user_id = ?
                         LIMIT 1
                     ");
-                    $stmtDoctor->execute([$category_id, $user_id]);
+                    $stmtDoctor->execute([$reference_id, $user_id]);
                     $doctor = $stmtDoctor->fetch(PDO::FETCH_ASSOC);
                     
                     if ($doctor && $doctor['weekly_schedule']) {
@@ -208,7 +240,7 @@ try {
                             ");
                             $updateSchedule->execute([
                                 json_encode($weeklySchedule),
-                                $category_id,
+                                $reference_id,
                                 $user_id
                             ]);
                             
@@ -231,7 +263,7 @@ try {
             "receipt" => $receipt,
             "status" => "pending",
             "payment_method" => "cash",
-            "service_info" => $serviceInfo,
+            "service_name_json" => $service_name_json,
             "token_update" => $tokenUpdateMessage ?? "No token update performed",
             "data" => [
                 "customer_name" => $customer_name,
@@ -241,7 +273,8 @@ try {
                 "slot_from" => $slot_from,
                 "slot_to" => $slot_to,
                 "token_count" => $token_count,
-                "category_id" => $category_id,
+                "reference_id" => $reference_id,
+                "reference_type" => $reference_type,
                 "service_type" => $service_type,
                 "batch_id" => $batch_id
             ]
@@ -266,4 +299,3 @@ try {
 }
 
 exit;
-

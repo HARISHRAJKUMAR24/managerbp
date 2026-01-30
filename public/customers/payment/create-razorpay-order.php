@@ -55,9 +55,13 @@ $user_id         = intval($input["user_id"]);
 $customer_id     = intval($input["customer_id"]);
 
 // ⭐ Get service information from input
-$service_type = $input["service_reference_type"] ?? 'category';
+$service_type = $input["service_reference_type"] ?? ($input["service_type"] ?? 'category');
 $category_id = $input["category_id"] ?? $input["service_reference_id"] ?? null;
+$department_id = $input["department_id"] ?? null;
 $service_name = $input["service_name"] ?? '';
+
+// ⭐ NEW: Get services_json if available (for department bookings with multiple services)
+$services_json = $input["services_json"] ?? null;
 
 $db = getDbConnection();
 
@@ -70,22 +74,65 @@ $customer_phone  = $input["customer_phone"] ?? "";
 $receipt = "receipt_" . $customer_id . "_" . time();
 
 /* -------------------------------
-   ⭐ GET SERVICE INFORMATION FOR JSON STORAGE - FIXED VERSION
+   ⭐ GET SERVICE INFORMATION FOR JSON STORAGE - UPDATED FOR DEPARTMENT
 -------------------------------- */
-$serviceInfo = getServiceInformation($db, $user_id, $service_type, $category_id, $service_name);
+$serviceInfo = [];
+
+// ⭐ If services_json is provided, use it to create service_name_json
+if ($services_json) {
+    // Prepare service_name_json based on services_json
+    if (is_string($services_json)) {
+        $servicesData = json_decode($services_json, true);
+    } else {
+        $servicesData = $services_json;
+    }
+
+    // Create proper service_name_json
+    $service_name_json = json_encode($servicesData);
+
+    // Determine reference_id based on service type
+    if ($service_type === 'department') {
+        $reference_id = $department_id ?? $category_id;
+        $reference_type = 'department_id';
+
+        // If it's a primary ID, try to get department_id from database
+        if ($reference_id && !strpos($reference_id, 'DEPT_') === 0) {
+            $stmt = $db->prepare("SELECT department_id FROM departments WHERE id = ? AND user_id = ?");
+            $stmt->execute([$reference_id, $user_id]);
+            $dept = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($dept && $dept['department_id']) {
+                $reference_id = $dept['department_id'];
+            }
+        }
+    } else {
+        $reference_id = $category_id;
+        $reference_type = 'category_id';
+    }
+
+    $serviceInfo = [
+        "success" => true,
+        "reference_id" => $reference_id,
+        "reference_type" => $reference_type,
+        "service_name_json" => $service_name_json,
+        "service_name_display" => $servicesData['department_name'] ?? $servicesData['service_name'] ?? $service_name
+    ];
+} else {
+    // Fallback to original function if no services_json
+    $serviceInfo = getServiceInformation($db, $user_id, $service_type, $category_id, $service_name);
+}
 
 // Debug log
 error_log("Razorpay Create - Service Info: " . json_encode($serviceInfo));
 
 if (!$serviceInfo || !isset($serviceInfo['success']) || !$serviceInfo['success']) {
     error_log("Service info error: " . ($serviceInfo['message'] ?? 'Unknown error'));
-    
+
     // Fallback service info
     $serviceInfo = [
-        "reference_id" => $category_id ?? 'GENERIC_' . $user_id,
-        "reference_type" => $category_id ? 'category_id' : 'generic_service',
+        "reference_id" => $department_id ?? $category_id ?? 'GENERIC_' . $user_id,
+        "reference_type" => ($service_type === 'department') ? 'department_id' : 'category_id',
         "service_name_json" => json_encode([
-            "type" => "generic",
+            "type" => $service_type === 'department' ? "department" : "generic",
             "service_name" => $service_name ?: "Service Booking",
             "service_type" => "Razorpay Payment"
         ]),
@@ -127,7 +174,9 @@ $orderData = [
         "email"          => $customer_email,
         "phone"          => $customer_phone,
         "service_reference" => $serviceInfo['reference_id'],
-        "service_name"   => $serviceInfo['service_name_display']
+        "service_name"   => $serviceInfo['service_name_display'],
+        "service_type"   => $service_type,
+        "services_json"  => $services_json ? 'yes' : 'no'
     ]
 ];
 
@@ -155,14 +204,15 @@ if ($httpCode === 200) {
     // Debug: Check what we're inserting
     error_log("Inserting Razorpay order with service_name_json: " . $serviceInfo['service_name_json']);
 
-    // ⭐ INSERT WITH SERVICE INFORMATION (JSON format) - FIXED
+    // ⭐ INSERT WITH SERVICE INFORMATION (JSON format) - UPDATED WITH ALL FIELDS
     $ins = $db->prepare("
         INSERT INTO customer_payment 
         (user_id, customer_id, appointment_id, payment_id, receipt, amount, currency, 
          gst_type, gst_percent, gst_amount, total_amount, status, payment_method,
-         service_reference_id, service_reference_type, service_name) 
+         service_reference_id, service_reference_type, service_name,
+         appointment_date, slot_from, slot_to, token_count, batch_id) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?,
-                ?, ?, ?)
+                ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
     // Prepare values for insertion
@@ -179,9 +229,14 @@ if ($httpCode === 200) {
         $input["gst_amount"] ?? 0,
         $input["total_amount"] ?? 0,
         'razorpay',
-        $serviceInfo['reference_id'],           // CAT_xxx or department_id
-        $serviceInfo['reference_type'],         // category_id or department_id
-        $serviceInfo['service_name_json']       // ⭐ JSON format
+        $serviceInfo['reference_id'],           // DEPT_xxx or CAT_xxx
+        $serviceInfo['reference_type'],         // department_id or category_id
+        $serviceInfo['service_name_json'],      // ⭐ JSON format
+        $input["appointment_date"] ?? null,
+        $input["slot_from"] ?? null,
+        $input["slot_to"] ?? null,
+        $input["token_count"] ?? 1,
+        $input["batch_id"] ?? null
     ];
 
     // Debug log insertion values
@@ -193,7 +248,7 @@ if ($httpCode === 200) {
     if (!$ins) {
         $errorInfo = $db->errorInfo();
         error_log("Database insert error: " . json_encode($errorInfo));
-        
+
         echo json_encode([
             "success" => false,
             "message" => "Failed to store payment record: " . ($errorInfo[2] ?? 'Unknown error')
@@ -202,12 +257,12 @@ if ($httpCode === 200) {
     }
 
     $payment_id = $db->lastInsertId();
-    
+
     // Verify the record was created
     $checkStmt = $db->prepare("SELECT id, service_name FROM customer_payment WHERE id = ?");
     $checkStmt->execute([$payment_id]);
     $checkResult = $checkStmt->fetch(PDO::FETCH_ASSOC);
-    
+
     error_log("Record created - ID: " . $payment_id . ", service_name: " . ($checkResult['service_name'] ?? 'NULL'));
 
     // Parse service name for response
@@ -215,10 +270,10 @@ if ($httpCode === 200) {
     if ($serviceInfo['service_name_json']) {
         try {
             $serviceJson = json_decode($serviceInfo['service_name_json'], true);
-            if (isset($serviceJson['doctor_name'])) {
-                $serviceDisplay = $serviceJson['doctor_name'];
-            } elseif (isset($serviceJson['department_name'])) {
+            if (isset($serviceJson['department_name'])) {
                 $serviceDisplay = $serviceJson['department_name'];
+            } elseif (isset($serviceJson['doctor_name'])) {
+                $serviceDisplay = $serviceJson['doctor_name'];
             } elseif (isset($serviceJson['service_name'])) {
                 $serviceDisplay = $serviceJson['service_name'];
             }
@@ -238,7 +293,8 @@ if ($httpCode === 200) {
             "reference_type" => $serviceInfo['reference_type'],
             "display_name" => $serviceDisplay,
             "service_type" => $service_type,
-            "json_stored" => $serviceInfo['service_name_json'] ? true : false
+            "json_stored" => $serviceInfo['service_name_json'] ? true : false,
+            "has_services_json" => $services_json ? true : false
         ]
     ]);
     exit;

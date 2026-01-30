@@ -283,7 +283,7 @@ function isNewlyCreatedSeller($sellerCreatedAt, $messageCreatedAt)
 }
 
 
- //---------------------- Get user's plan limit for a specific resource WITH EXPIRY CHECK  ---------------------- //
+//---------------------- Get user's plan limit for a specific resource WITH EXPIRY CHECK  ---------------------- //
 
 function getUserPlanLimit($user_id, $resource_type)
 {
@@ -799,22 +799,13 @@ function getCustomerLimitWithCount($user_id)
 }
 
 
+// ---------------------- Generate Appoimnet id Universal work  ---------------------- //
+function generateAppointmentId($user_id, $db)
+{
 
-// ---------------------- Generate Appointment ID - Universal version ---------------------- //
-/**
- * Generate Appointment ID - Universal version
- * Works with or without services table
- */// managerbp/src/functions.php
-
-/**
- * Generate Appointment ID in format: {user_id}{SERVICE_CODE}{random_string}
- * Simple and working version
- */
-function generateAppointmentId($user_id, $db) {
-    
     // Section 1: User ID
     $section1 = (string)$user_id;
-    
+
     // Section 2: Get service type code
     $stmt = $db->prepare("
         SELECT st.code, st.id as service_type_id 
@@ -823,10 +814,10 @@ function generateAppointmentId($user_id, $db) {
         WHERE u.user_id = ? 
         LIMIT 1
     ");
-    
+
     if ($stmt->execute([$user_id])) {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($result && !empty($result['code'])) {
             // Get first 3 letters of service type code
             $code = strtoupper(substr($result['code'], 0, 3));
@@ -840,590 +831,29 @@ function generateAppointmentId($user_id, $db) {
         // Error in query, use fallback
         $section2 = 'DEF1';
     }
-    
+
     // Section 3: Random string (4-5 chars, lowercase only)
     $characters = '0123456789abcdefghijklmnopqrstuvwxyz';
     $length = rand(4, 5);
     $randomString = '';
-    
+
     for ($i = 0; $i < $length; $i++) {
         $randomString .= $characters[rand(0, strlen($characters) - 1)];
     }
-    
+
     $section3 = $randomString;
-    
+
     // Combine all sections
     $appointmentId = $section1 . $section2 . $section3;
-    
+
     return $appointmentId;
 }
 
-//  ----------------------  Create Store CATEGORY_ID  ---------------------- //
-
-// Store CATEGORY_ID in service_reference_id
-
-/**
- * Update payment with category reference
- * Stores category_id (CAT_xxx) in service_reference_id
- */
-// function updatePaymentWithCategoryReference($user_id, $customer_id, $payment_id, $category_id = null) {
-    
-//     $pdo = getDbConnection();
-    
-//     // If category_id is provided, use it
-//     if ($category_id) {
-//         // Get category details
-//         $stmt = $pdo->prepare("
-//             SELECT category_id, name, doctor_name 
-//             FROM categories 
-//             WHERE category_id = ? 
-//             AND user_id = ?
-//             LIMIT 1
-//         ");
-//         $stmt->execute([$category_id, $user_id]);
-//         $category = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-//         if ($category) {
-//             $serviceInfo = [
-//                 'success' => true,
-//                 'reference_id' => $category['category_id'], // CAT_xxx
-//                 'reference_type' => 'category_id',
-//                 'service_name' => $category['doctor_name'] ?? $category['name'],
-//                 'doctor_name' => $category['doctor_name'] ?? $category['name']
-//             ];
-//         } else {
-//             // Category not found, check doctor_schedule
-//             $stmt = $pdo->prepare("
-//                 SELECT ds.id, ds.category_id, ds.name, 
-//                        c.category_id as cat_ref_id, c.doctor_name, c.name as cat_name
-//                 FROM doctor_schedule ds
-//                 LEFT JOIN categories c ON ds.category_id = c.category_id
-//                 WHERE ds.category_id = ? 
-//                 AND ds.user_id = ?
-//                 LIMIT 1
-//             ");
-//             $stmt->execute([$category_id, $user_id]);
-//             $doctor = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-//             if ($doctor && $doctor['cat_ref_id']) {
-//                 $serviceInfo = [
-//                     'success' => true,
-//                     'reference_id' => $doctor['cat_ref_id'], // CAT_xxx from categories
-//                     'reference_type' => 'category_id',
-//                     'service_name' => $doctor['doctor_name'] ?? $doctor['cat_name'] ?? $doctor['name'],
-//                     'doctor_name' => $doctor['doctor_name'] ?? $doctor['name']
-//                 ];
-//             }
-//         }
-//     }
-    
-//     // // If no category found, fallback to old method
-//     // if (!isset($serviceInfo) || !$serviceInfo['success']) {
-//     //     $serviceInfo = getServiceReference($user_id);
-//     // }
-    
-//     if (!$serviceInfo['success']) {
-//         return $serviceInfo;
-//     }
-    
-//     // Update the payment record
-//     try {
-//         // Update the record
-//         $update = $pdo->prepare("
-//             UPDATE customer_payment 
-//             SET 
-//                 service_reference_id = ?,
-//                 service_reference_type = ?,
-//                 service_name = ?
-//             WHERE user_id = ? 
-//             AND customer_id = ? 
-//             AND payment_id = ?
-//             LIMIT 1
-//         ");
-        
-//         $update->execute([
-//             $serviceInfo['reference_id'],
-//             $serviceInfo['reference_type'],
-//             $serviceInfo['service_name'],
-//             $user_id,
-//             $customer_id,
-//             $payment_id
-//         ]);
-        
-//         if ($update->rowCount() > 0) {
-//             return [
-//                 'success' => true,
-//                 'message' => 'Payment updated with category reference',
-//                 'data' => $serviceInfo
-//             ];
-//         } else {
-//             return [
-//                 'success' => false,
-//                 'message' => 'Payment record not found'
-//             ];
-//         }
-        
-//     } catch (Exception $e) {
-//         return [
-//             'success' => false,
-//             'message' => 'Database error: ' . $e->getMessage()
-//         ];
-//     }
-// }
+//  ----------------------  Get service information based on user's service type  ---------------------- //
 
 
-// /**
-//  * Update PayU payment with category reference
-//  * This function is used in payu-success.php
-//  */
-// function updatePayUWithCategoryReference($user_id, $customer_id, $payment_id, $category_id = null) {
-    
-//     $pdo = getDbConnection();
-    
-//     // Get category details
-//     $serviceInfo = getCategoryReference($user_id, $category_id);
-    
-//     if (!$serviceInfo['success']) {
-//         return $serviceInfo;
-//     }
-    
-//     // Update the payment record
-//     try {
-//         $update = $pdo->prepare("
-//             UPDATE customer_payment 
-//             SET 
-//                 service_reference_id = ?,
-//                 service_reference_type = ?,
-//                 service_name = ?
-//             WHERE user_id = ? 
-//             AND customer_id = ? 
-//             AND payment_id = ?
-//             LIMIT 1
-//         ");
-        
-//         $update->execute([
-//             $serviceInfo['reference_id'],
-//             $serviceInfo['reference_type'],
-//             $serviceInfo['service_name'],
-//             $user_id,
-//             $customer_id,
-//             $payment_id
-//         ]);
-        
-//         if ($update->rowCount() > 0) {
-//             return [
-//                 'success' => true,
-//                 'message' => 'PayU payment updated with category reference',
-//                 'data' => $serviceInfo
-//             ];
-//         } else {
-//             return [
-//                 'success' => false,
-//                 'message' => 'PayU payment record not found'
-//             ];
-//         }
-        
-//     } catch (Exception $e) {
-//         return [
-//             'success' => false,
-//             'message' => 'Database error: ' . $e->getMessage()
-//         ];
-//     }
-// }
-
-/**
- * Simple function to get category reference
- */
-// function getCategoryReference($user_id, $category_id = null) {
-//     $pdo = getDbConnection();
-    
-//     // If category_id provided, get specific category
-//     if ($category_id) {
-//         $stmt = $pdo->prepare("
-//             SELECT category_id, name, doctor_name 
-//             FROM categories 
-//             WHERE category_id = ? 
-//             AND user_id = ?
-//             LIMIT 1
-//         ");
-//         $stmt->execute([$category_id, $user_id]);
-//         $category = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-//         if ($category) {
-//             return [
-//                 'success' => true,
-//                 'reference_id' => $category['category_id'], // CAT_xxx
-//                 'reference_type' => 'category_id',
-//                 'service_name' => $category['doctor_name'] ?? $category['name']
-//             ];
-//         }
-//     }
-    
-//     // Get first category for this user
-//     $stmt = $pdo->prepare("
-//         SELECT category_id, name, doctor_name 
-//         FROM categories 
-//         WHERE user_id = ? 
-//         LIMIT 1
-//     ");
-//     $stmt->execute([$user_id]);
-//     $category = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-//     if ($category) {
-//         return [
-//             'success' => true,
-//             'reference_id' => $category['category_id'], // CAT_xxx
-//             'reference_type' => 'category_id',
-//             'service_name' => $category['doctor_name'] ?? $category['name']
-//         ];
-//     }
-    
-//     return [
-//         'success' => false,
-//         'message' => 'Category not found'
-//     ];
-// }
-
-
-// ---------------------- Check token availability for a specific doctor's batch ---------------------- //
-
-function checkTokenAvailability($userId, $batchId, $appointmentDate, $pdo = null) {
-    try {
-        // If no PDO connection provided, create one
-        if ($pdo === null) {
-            require_once __DIR__ . "/config.php";
-            require_once __DIR__ . "/database.php";
-            $pdo = getDbConnection();
-        }
-        
-        // Step 1: Get doctor's schedule to find token limit for this batch
-        $scheduleStmt = $pdo->prepare("
-            SELECT token_limit, weekly_schedule 
-            FROM doctor_schedule 
-            WHERE user_id = ?
-        ");
-        $scheduleStmt->execute([$userId]);
-        $doctor = $scheduleStmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$doctor) {
-            return [
-                'available' => false,
-                'message' => 'Doctor schedule not found',
-                'booked' => 0,
-                'total' => 0,
-                'remaining' => 0
-            ];
-        }
-        
-        $tokenLimit = (int)$doctor['token_limit'];
-        
-        // Step 2: Parse weekly schedule to get token for this specific batch
-        $weeklySchedule = !empty($doctor['weekly_schedule']) 
-            ? json_decode($doctor['weekly_schedule'], true) 
-            : [];
-        
-        $batchToken = 0;
-        
-        // Find the token count for this batch from weekly schedule
-        foreach ($weeklySchedule as $day => $daySchedule) {
-            if (!empty($daySchedule['slots'])) {
-                foreach ($daySchedule['slots'] as $slot) {
-                    if (isset($slot['batch_id']) && $slot['batch_id'] == $batchId) {
-                        $batchToken = isset($slot['token']) ? (int)$slot['token'] : $tokenLimit;
-                        break 2;
-                    }
-                }
-            }
-        }
-        
-        // If batch not found in schedule
-        if ($batchToken === 0) {
-            return [
-                'available' => false,
-                'message' => 'Batch not found in schedule',
-                'booked' => 0,
-                'total' => 0,
-                'remaining' => 0
-            ];
-        }
-        
-        // Step 3: Count how many appointments are already booked for this batch and date
-        $bookingStmt = $pdo->prepare("
-            SELECT SUM(token_count) as total_booked 
-            FROM customer_payment 
-            WHERE user_id = ? 
-            AND batch_id = ? 
-            AND appointment_date = ? 
-            AND status IN ('paid', 'pending', 'confirmed')
-        ");
-        
-        $bookingStmt->execute([$userId, $batchId, $appointmentDate]);
-        $result = $bookingStmt->fetch(PDO::FETCH_ASSOC);
-        
-        $bookedCount = (int)($result['total_booked'] ?? 0);
-        
-        // Step 4: Calculate remaining tokens
-        $remainingTokens = max(0, $batchToken - $bookedCount);
-        
-        // Step 5: Determine availability
-        $isAvailable = $remainingTokens > 0;
-        
-        return [
-            'available' => $isAvailable,
-            'message' => $isAvailable 
-                ? "Available ($remainingTokens tokens left)" 
-                : "Appointment full ($bookedCount/$batchToken)",
-            'booked' => $bookedCount,
-            'total' => $batchToken,
-            'remaining' => $remainingTokens,
-            'token_limit' => $tokenLimit,
-            'batch_token' => $batchToken
-        ];
-        
-    } catch (Exception $e) {
-        return [
-            'available' => false,
-            'message' => 'Error checking availability: ' . $e->getMessage(),
-            'booked' => 0,
-            'total' => 0,
-            'remaining' => 0
-        ];
-    }
-}
-
-// ---------------------- Get available slots for a specific date with token availability  ---------------------- //
-function getAvailableSlotsForDate($userId, $date, $pdo = null) {
-    try {
-        if ($pdo === null) {
-            require_once __DIR__ . "/config.php";
-            require_once __DIR__ . "/database.php";
-            $pdo = getDbConnection();
-        }
-        
-        // Step 1: Get doctor's schedule
-        $scheduleStmt = $pdo->prepare("
-            SELECT weekly_schedule, leave_dates, token_limit
-            FROM doctor_schedule 
-            WHERE user_id = ?
-        ");
-        $scheduleStmt->execute([$userId]);
-        $doctor = $scheduleStmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$doctor) {
-            return ['available' => false, 'slots' => [], 'message' => 'Doctor not found'];
-        }
-        
-        // Check if date is a leave day
-        $leaveDates = !empty($doctor['leave_dates']) 
-            ? json_decode($doctor['leave_dates'], true) 
-            : [];
-        
-        if (in_array($date, $leaveDates)) {
-            return ['available' => false, 'slots' => [], 'message' => 'Doctor is on leave'];
-        }
-        
-        // Get day of week for this date
-        $dateTime = new DateTime($date);
-        $dayOfWeek = $dateTime->format('D'); // Returns "Sun", "Mon", etc.
-        
-        $weeklySchedule = !empty($doctor['weekly_schedule']) 
-            ? json_decode($doctor['weekly_schedule'], true) 
-            : [];
-        
-        // Check if doctor has schedule for this day
-        if (!isset($weeklySchedule[$dayOfWeek]) || !$weeklySchedule[$dayOfWeek]['enabled']) {
-            return ['available' => false, 'slots' => [], 'message' => 'No schedule for this day'];
-        }
-        
-        $daySchedule = $weeklySchedule[$dayOfWeek];
-        $availableSlots = [];
-        
-        // Step 2: Check each slot's availability
-        if (!empty($daySchedule['slots'])) {
-            foreach ($daySchedule['slots'] as $slot) {
-                $batchId = $slot['batch_id'] ?? '';
-                
-                if (!$batchId) {
-                    continue;
-                }
-                
-                // Check token availability for this batch
-                $availability = checkTokenAvailability($userId, $batchId, $date, $pdo);
-                
-                if ($availability['available']) {
-                    $slot['availability'] = $availability;
-                    $slot['available_tokens'] = $availability['remaining'];
-                    $slot['booked_tokens'] = $availability['booked'];
-                    $slot['total_tokens'] = $availability['total'];
-                    $availableSlots[] = $slot;
-                }
-            }
-        }
-        
-        return [
-            'available' => count($availableSlots) > 0,
-            'slots' => $availableSlots,
-            'message' => count($availableSlots) > 0 
-                ? count($availableSlots) . ' slot(s) available' 
-                : 'No available slots',
-            'date' => $date,
-            'day' => $dayOfWeek
-        ];
-        
-    } catch (Exception $e) {
-        return [
-            'available' => false,
-            'slots' => [],
-            'message' => 'Error: ' . $e->getMessage()
-        ];
-    }
-}
-
-/**
- * API endpoint to check slot availability
- */
-function apiCheckSlotAvailability() {
-    header("Content-Type: application/json; charset=utf-8");
-    header("Access-Control-Allow-Origin: *");
-    
-    try {
-        require_once __DIR__ . "/../../../config/config.php";
-        require_once __DIR__ . "/../../../src/database.php";
-        $pdo = getDbConnection();
-        
-        $userId = (int)($_GET['user_id'] ?? 0);
-        $batchId = $_GET['batch_id'] ?? '';
-        $date = $_GET['date'] ?? '';
-        
-        if (!$userId || !$batchId || !$date) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Missing parameters: user_id, batch_id, and date are required'
-            ]);
-            exit;
-        }
-        
-        // Validate date format
-        if (!DateTime::createFromFormat('Y-m-d', $date)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid date format. Use YYYY-MM-DD'
-            ]);
-            exit;
-        }
-        
-        $availability = checkTokenAvailability($userId, $batchId, $date, $pdo);
-        
-        echo json_encode([
-            'success' => true,
-            'data' => $availability
-        ]);
-        
-    } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Server error: ' . $e->getMessage()
-        ]);
-    }
-}
-
-// Uncomment to test the API endpoint directly
-// if (basename($_SERVER['PHP_SELF']) === 'check_availability.php') {
-//     apiCheckSlotAvailability();
-// }
-
-
-// ---------------------- Token Histroy send to db token_history ---------------------- //
-function compareAndLogTokenUpdates($oldSchedule, $newSchedule, $scheduleId, $pdo, $categoryId) {
-    $oldSlots = [];
-    $newSlots = [];
-    
-    // Parse old slots
-    $oldScheduleArray = json_decode($oldSchedule, true);
-    foreach ($oldScheduleArray as $day => $dayData) {
-        if ($dayData['enabled'] && !empty($dayData['slots'])) {
-            foreach ($dayData['slots'] as $slot) {
-                if (isset($slot['batch_id'])) {
-                    $oldSlots[$slot['batch_id']] = [
-                        'token' => (int)($slot['token'] ?? 0),
-                        'batch_id' => $slot['batch_id']
-                    ];
-                }
-            }
-        }
-    }
-    
-    // Parse new slots
-    $newScheduleArray = json_decode($newSchedule, true);
-    foreach ($newScheduleArray as $day => $dayData) {
-        if ($dayData['enabled'] && !empty($dayData['slots'])) {
-            foreach ($dayData['slots'] as $slot) {
-                if (isset($slot['batch_id'])) {
-                    $newSlots[$slot['batch_id']] = [
-                        'token' => (int)($slot['token'] ?? 0),
-                        'batch_id' => $slot['batch_id']
-                    ];
-                }
-            }
-        }
-    }
-    
-    // Find differences
-    $updates = [];
-    foreach ($newSlots as $batchId => $newData) {
-        $oldData = $oldSlots[$batchId] ?? null;
-        $oldToken = $oldData['token'] ?? 0;
-        $newToken = $newData['token'];
-        
-        if ($oldToken !== $newToken) {
-            // Parse slot_index from batch_id
-            $slotIndex = null;
-            $parts = explode(':', $batchId);
-            if (isset($parts[1])) {
-                $slotIndex = (int)$parts[1];
-            }
-            
-            $updates[] = [
-                'batch_id' => $batchId,
-                'slot_index' => $slotIndex,
-                'old_token' => $oldToken,
-                'new_token' => $newToken,
-                'total_token' => $newToken
-            ];
-        }
-    }
-    
-    // Log to history table
-    if (!empty($updates)) {
-        $historyStmt = $pdo->prepare("
-            INSERT INTO doctor_token_history 
-            (category_id, slot_batch_id, slot_index, old_token, new_token, total_token, doctor_schedule_id_temp, updated_by, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-        ");
-        
-        foreach ($updates as $update) {
-            $historyStmt->execute([
-                $categoryId,
-                $update['batch_id'],
-                $update['slot_index'],
-                $update['old_token'],
-                $update['new_token'],
-                $update['total_token'],
-                $scheduleId,
-                $_SESSION['user_id'] ?? null
-            ]);
-        }
-    }
-}
-
-
-
-
-/**
- * Get service information based on user's service type - FIXED VERSION
- */
-
-function getServiceInformation($db, $user_id, $service_type, $category_id = null, $service_name = '') {
+function getServiceInformation($db, $user_id, $service_type, $category_id = null, $service_name = '', $services_json = null)
+{
     try {
         // First get user's service_type_id
         $stmt = $db->prepare("
@@ -1435,21 +865,45 @@ function getServiceInformation($db, $user_id, $service_type, $category_id = null
         ");
         $stmt->execute([$user_id]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$user) {
             return [
                 "success" => false,
                 "message" => "User not found"
             ];
         }
-        
+
         $service_type_id = $user['service_type_id'];
         $service_type_name = $user['service_type_name'] ?? 'Others';
-        
+
         $reference_id = null;
         $reference_type = null;
         $service_name_json = '';
-        
+
+        // ⭐ If services_json is provided, use it
+        if ($services_json) {
+            $service_name_json = json_encode($services_json);
+
+            // Determine reference based on service type
+            if ($service_type === 'department') {
+                $reference_type = 'department_id';
+                $reference_id = $category_id;
+            } else {
+                $reference_type = 'category_id';
+                $reference_id = $category_id;
+            }
+
+            return [
+                "success" => true,
+                "reference_id" => $reference_id,
+                "reference_type" => $reference_type,
+                "service_name_json" => $service_name_json,
+                "service_name_display" => $service_name_json['department_name'] ?? $service_name,
+                "service_type_id" => $service_type_id,
+                "service_type_name" => $service_type_name
+            ];
+        }
+
         // For HOSPITAL type (service_type_id = 1)
         if ($service_type_id == 1) {
             if ($service_type === 'department') {
@@ -1464,7 +918,7 @@ function getServiceInformation($db, $user_id, $service_type, $category_id = null
                     ");
                     $stmt->execute([$category_id, $user_id]);
                     $department = $stmt->fetch(PDO::FETCH_ASSOC);
-                    
+
                     if ($department) {
                         $reference_id = $department['department_id'];
                         $reference_type = 'department_id';
@@ -1487,7 +941,7 @@ function getServiceInformation($db, $user_id, $service_type, $category_id = null
                     ");
                     $stmt->execute([$category_id, $user_id]);
                     $category = $stmt->fetch(PDO::FETCH_ASSOC);
-                    
+
                     if ($category) {
                         $reference_id = $category['category_id'];
                         $reference_type = 'category_id';
@@ -1512,11 +966,11 @@ function getServiceInformation($db, $user_id, $service_type, $category_id = null
                 ");
                 $stmt->execute([$category_id, $user_id]);
                 $category = $stmt->fetch(PDO::FETCH_ASSOC);
-                
+
                 if ($category) {
                     $reference_id = $category['category_id'];
                     $reference_type = 'category_id';
-                    
+
                     if ($service_type_id == 2) { // HOTEL
                         $service_name_json = json_encode([
                             "type" => "hotel_service",
@@ -1533,7 +987,7 @@ function getServiceInformation($db, $user_id, $service_type, $category_id = null
                 }
             }
         }
-        
+
         // If no specific service found
         if (!$reference_id) {
             if ($service_name) {
@@ -1554,7 +1008,7 @@ function getServiceInformation($db, $user_id, $service_type, $category_id = null
                 ]);
             }
         }
-        
+
         return [
             "success" => true,
             "reference_id" => $reference_id,
@@ -1564,7 +1018,6 @@ function getServiceInformation($db, $user_id, $service_type, $category_id = null
             "service_type_id" => $service_type_id,
             "service_type_name" => $service_type_name
         ];
-        
     } catch (Exception $e) {
         error_log("getServiceInformation error: " . $e->getMessage());
         return [
@@ -1575,222 +1028,329 @@ function getServiceInformation($db, $user_id, $service_type, $category_id = null
 }
 
 
-// Add these functions to your existing functions.php file
+// ---------------------- Check token availability for a specific doctor's batch ---------------------- //
 
-/**
- * Get service information for payment records
- */
-function getServiceInfoForPayment($user_id, $service_type, $reference_id = null) {
-    $pdo = getDbConnection();
-    
+function checkTokenAvailability($userId, $batchId, $appointmentDate, $pdo = null)
+{
     try {
-        // Get user's service type
-        $stmt = $pdo->prepare("
-            SELECT u.service_type_id, st.code, st.name as service_type_name
-            FROM users u 
-            LEFT JOIN service_types st ON u.service_type_id = st.id 
-            WHERE u.user_id = ? 
-            LIMIT 1
+        // If no PDO connection provided, create one
+        if ($pdo === null) {
+            require_once __DIR__ . "/config.php";
+            require_once __DIR__ . "/database.php";
+            $pdo = getDbConnection();
+        }
+
+        // Step 1: Get doctor's schedule to find token limit for this batch
+        $scheduleStmt = $pdo->prepare("
+            SELECT token_limit, weekly_schedule 
+            FROM doctor_schedule 
+            WHERE user_id = ?
         ");
-        $stmt->execute([$user_id]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$user) {
+        $scheduleStmt->execute([$userId]);
+        $doctor = $scheduleStmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$doctor) {
             return [
-                "success" => false,
-                "message" => "User not found"
+                'available' => false,
+                'message' => 'Doctor schedule not found',
+                'booked' => 0,
+                'total' => 0,
+                'remaining' => 0
             ];
         }
-        
-        $service_type_id = $user['service_type_id'];
-        $service_type_code = $user['code'] ?? 'OTH';
-        $service_type_name = $user['service_type_name'] ?? 'Others';
-        
-        $result = [
-            "service_type_id" => $service_type_id,
-            "service_type_code" => $service_type_code,
-            "service_type_name" => $service_type_name,
-            "reference_type" => null,
-            "reference_id" => null,
-            "service_name_json" => null,
-            "display_name" => null
+
+        $tokenLimit = (int)$doctor['token_limit'];
+
+        // Step 2: Parse weekly schedule to get token for this specific batch
+        $weeklySchedule = !empty($doctor['weekly_schedule'])
+            ? json_decode($doctor['weekly_schedule'], true)
+            : [];
+
+        $batchToken = 0;
+
+        // Find the token count for this batch from weekly schedule
+        foreach ($weeklySchedule as $day => $daySchedule) {
+            if (!empty($daySchedule['slots'])) {
+                foreach ($daySchedule['slots'] as $slot) {
+                    if (isset($slot['batch_id']) && $slot['batch_id'] == $batchId) {
+                        $batchToken = isset($slot['token']) ? (int)$slot['token'] : $tokenLimit;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // If batch not found in schedule
+        if ($batchToken === 0) {
+            return [
+                'available' => false,
+                'message' => 'Batch not found in schedule',
+                'booked' => 0,
+                'total' => 0,
+                'remaining' => 0
+            ];
+        }
+
+        // Step 3: Count how many appointments are already booked for this batch and date
+        $bookingStmt = $pdo->prepare("
+            SELECT SUM(token_count) as total_booked 
+            FROM customer_payment 
+            WHERE user_id = ? 
+            AND batch_id = ? 
+            AND appointment_date = ? 
+            AND status IN ('paid', 'pending', 'confirmed')
+        ");
+
+        $bookingStmt->execute([$userId, $batchId, $appointmentDate]);
+        $result = $bookingStmt->fetch(PDO::FETCH_ASSOC);
+
+        $bookedCount = (int)($result['total_booked'] ?? 0);
+
+        // Step 4: Calculate remaining tokens
+        $remainingTokens = max(0, $batchToken - $bookedCount);
+
+        // Step 5: Determine availability
+        $isAvailable = $remainingTokens > 0;
+
+        return [
+            'available' => $isAvailable,
+            'message' => $isAvailable
+                ? "Available ($remainingTokens tokens left)"
+                : "Appointment full ($bookedCount/$batchToken)",
+            'booked' => $bookedCount,
+            'total' => $batchToken,
+            'remaining' => $remainingTokens,
+            'token_limit' => $tokenLimit,
+            'batch_token' => $batchToken
         ];
-        
-        // Handle based on service type
-        if ($service_type === 'department') {
-            if ($reference_id) {
-                $stmt = $pdo->prepare("
-                    SELECT department_id, name 
-                    FROM departments 
-                    WHERE department_id = ? 
-                    AND user_id = ?
-                    LIMIT 1
-                ");
-                $stmt->execute([$reference_id, $user_id]);
-                $department = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($department) {
-                    $result['reference_type'] = 'department_id';
-                    $result['reference_id'] = $department['department_id'];
-                    
-                    if ($service_type_id == 1) { // HOSPITAL
-                        $result['service_name_json'] = json_encode([
-                            "type" => "hospital_department",
-                            "department_name" => $department['name'],
-                            "service_type" => "Hospital Department"
-                        ]);
-                    } else { // OTHERS
-                        $result['service_name_json'] = json_encode([
-                            "type" => "department",
-                            "department_name" => $department['name'],
-                            "service_type" => "Department Service"
-                        ]);
-                    }
-                    $result['display_name'] = $department['name'];
-                }
-            }
-        } else {
-            // category/service type
-            if ($reference_id) {
-                $stmt = $pdo->prepare("
-                    SELECT category_id, name, doctor_name, specialization 
-                    FROM categories 
-                    WHERE category_id = ? 
-                    AND user_id = ?
-                    LIMIT 1
-                ");
-                $stmt->execute([$reference_id, $user_id]);
-                $category = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($category) {
-                    $result['reference_type'] = 'category_id';
-                    $result['reference_id'] = $category['category_id'];
-                    
-                    switch ($service_type_id) {
-                        case 1: // HOSPITAL
-                            $result['service_name_json'] = json_encode([
-                                "type" => "doctor",
-                                "doctor_name" => $category['doctor_name'] ?? $category['name'],
-                                "specialization" => $category['specialization'] ?? '',
-                                "service_type" => "Hospital Consultation"
-                            ]);
-                            $result['display_name'] = $category['doctor_name'] ?? $category['name'];
-                            break;
-                            
-                        case 2: // HOTEL
-                            $result['service_name_json'] = json_encode([
-                                "type" => "hotel_service",
-                                "service_name" => $category['name'],
-                                "service_type" => "Hotel Service"
-                            ]);
-                            $result['display_name'] = $category['name'];
-                            break;
-                            
-                        default: // OTHERS
-                            $result['service_name_json'] = json_encode([
-                                "type" => "service",
-                                "service_name" => $category['name'],
-                                "service_type" => $service_type_name
-                            ]);
-                            $result['display_name'] = $category['name'];
-                            break;
-                    }
-                }
-            }
-        }
-        
-        // If no specific service found
-        if (!$result['reference_id']) {
-            $result['reference_type'] = 'generic_service';
-            $result['reference_id'] = 'GENERIC_' . $user_id;
-            $result['service_name_json'] = json_encode([
-                "type" => "generic",
-                "service_name" => "Service Booking",
-                "service_type" => $service_type_name
-            ]);
-            $result['display_name'] = "Service Booking";
-        }
-        
-        $result['success'] = true;
-        return $result;
-        
     } catch (Exception $e) {
         return [
-            "success" => false,
-            "message" => "Error: " . $e->getMessage()
+            'available' => false,
+            'message' => 'Error checking availability: ' . $e->getMessage(),
+            'booked' => 0,
+            'total' => 0,
+            'remaining' => 0
+        ];
+    }
+}
+
+// ---------------------- Get available slots for a specific date with token availability  ---------------------- //
+function getAvailableSlotsForDate($userId, $date, $pdo = null)
+{
+    try {
+        if ($pdo === null) {
+            require_once __DIR__ . "/config.php";
+            require_once __DIR__ . "/database.php";
+            $pdo = getDbConnection();
+        }
+
+        // Step 1: Get doctor's schedule
+        $scheduleStmt = $pdo->prepare("
+            SELECT weekly_schedule, leave_dates, token_limit
+            FROM doctor_schedule 
+            WHERE user_id = ?
+        ");
+        $scheduleStmt->execute([$userId]);
+        $doctor = $scheduleStmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$doctor) {
+            return ['available' => false, 'slots' => [], 'message' => 'Doctor not found'];
+        }
+
+        // Check if date is a leave day
+        $leaveDates = !empty($doctor['leave_dates'])
+            ? json_decode($doctor['leave_dates'], true)
+            : [];
+
+        if (in_array($date, $leaveDates)) {
+            return ['available' => false, 'slots' => [], 'message' => 'Doctor is on leave'];
+        }
+
+        // Get day of week for this date
+        $dateTime = new DateTime($date);
+        $dayOfWeek = $dateTime->format('D'); // Returns "Sun", "Mon", etc.
+
+        $weeklySchedule = !empty($doctor['weekly_schedule'])
+            ? json_decode($doctor['weekly_schedule'], true)
+            : [];
+
+        // Check if doctor has schedule for this day
+        if (!isset($weeklySchedule[$dayOfWeek]) || !$weeklySchedule[$dayOfWeek]['enabled']) {
+            return ['available' => false, 'slots' => [], 'message' => 'No schedule for this day'];
+        }
+
+        $daySchedule = $weeklySchedule[$dayOfWeek];
+        $availableSlots = [];
+
+        // Step 2: Check each slot's availability
+        if (!empty($daySchedule['slots'])) {
+            foreach ($daySchedule['slots'] as $slot) {
+                $batchId = $slot['batch_id'] ?? '';
+
+                if (!$batchId) {
+                    continue;
+                }
+
+                // Check token availability for this batch
+                $availability = checkTokenAvailability($userId, $batchId, $date, $pdo);
+
+                if ($availability['available']) {
+                    $slot['availability'] = $availability;
+                    $slot['available_tokens'] = $availability['remaining'];
+                    $slot['booked_tokens'] = $availability['booked'];
+                    $slot['total_tokens'] = $availability['total'];
+                    $availableSlots[] = $slot;
+                }
+            }
+        }
+
+        return [
+            'available' => count($availableSlots) > 0,
+            'slots' => $availableSlots,
+            'message' => count($availableSlots) > 0
+                ? count($availableSlots) . ' slot(s) available'
+                : 'No available slots',
+            'date' => $date,
+            'day' => $dayOfWeek
+        ];
+    } catch (Exception $e) {
+        return [
+            'available' => false,
+            'slots' => [],
+            'message' => 'Error: ' . $e->getMessage()
         ];
     }
 }
 
 /**
- * Parse service_name JSON from database
+ * API endpoint to check slot availability
  */
-function parseServiceNameJson($service_name_json) {
-    if (empty($service_name_json)) {
-        return [
-            "display" => "Service",
-            "details" => []
-        ];
-    }
-    
+function apiCheckSlotAvailability()
+{
+    header("Content-Type: application/json; charset=utf-8");
+    header("Access-Control-Allow-Origin: *");
+
     try {
-        $data = json_decode($service_name_json, true);
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            // If it's not valid JSON, treat it as plain text
-            return [
-                "display" => $service_name_json,
-                "details" => [
-                    "type" => "plain_text",
-                    "service_name" => $service_name_json
-                ]
+        require_once __DIR__ . "/../../../config/config.php";
+        require_once __DIR__ . "/../../../src/database.php";
+        $pdo = getDbConnection();
+
+        $userId = (int)($_GET['user_id'] ?? 0);
+        $batchId = $_GET['batch_id'] ?? '';
+        $date = $_GET['date'] ?? '';
+
+        if (!$userId || !$batchId || !$date) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Missing parameters: user_id, batch_id, and date are required'
+            ]);
+            exit;
+        }
+
+        // Validate date format
+        if (!DateTime::createFromFormat('Y-m-d', $date)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid date format. Use YYYY-MM-DD'
+            ]);
+            exit;
+        }
+
+        $availability = checkTokenAvailability($userId, $batchId, $date, $pdo);
+
+        echo json_encode([
+            'success' => true,
+            'data' => $availability
+        ]);
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+
+// ---------------------- Token Histroy send to db token_history ---------------------- //
+function compareAndLogTokenUpdates($oldSchedule, $newSchedule, $scheduleId, $pdo, $categoryId)
+{
+    $oldSlots = [];
+    $newSlots = [];
+
+    // Parse old slots
+    $oldScheduleArray = json_decode($oldSchedule, true);
+    foreach ($oldScheduleArray as $day => $dayData) {
+        if ($dayData['enabled'] && !empty($dayData['slots'])) {
+            foreach ($dayData['slots'] as $slot) {
+                if (isset($slot['batch_id'])) {
+                    $oldSlots[$slot['batch_id']] = [
+                        'token' => (int)($slot['token'] ?? 0),
+                        'batch_id' => $slot['batch_id']
+                    ];
+                }
+            }
+        }
+    }
+
+    // Parse new slots
+    $newScheduleArray = json_decode($newSchedule, true);
+    foreach ($newScheduleArray as $day => $dayData) {
+        if ($dayData['enabled'] && !empty($dayData['slots'])) {
+            foreach ($dayData['slots'] as $slot) {
+                if (isset($slot['batch_id'])) {
+                    $newSlots[$slot['batch_id']] = [
+                        'token' => (int)($slot['token'] ?? 0),
+                        'batch_id' => $slot['batch_id']
+                    ];
+                }
+            }
+        }
+    }
+
+    // Find differences
+    $updates = [];
+    foreach ($newSlots as $batchId => $newData) {
+        $oldData = $oldSlots[$batchId] ?? null;
+        $oldToken = $oldData['token'] ?? 0;
+        $newToken = $newData['token'];
+
+        if ($oldToken !== $newToken) {
+            // Parse slot_index from batch_id
+            $slotIndex = null;
+            $parts = explode(':', $batchId);
+            if (isset($parts[1])) {
+                $slotIndex = (int)$parts[1];
+            }
+
+            $updates[] = [
+                'batch_id' => $batchId,
+                'slot_index' => $slotIndex,
+                'old_token' => $oldToken,
+                'new_token' => $newToken,
+                'total_token' => $newToken
             ];
         }
-        
-        // Format display text based on type
-        $display = "Service";
-        if (isset($data['type'])) {
-            switch ($data['type']) {
-                case 'doctor':
-                    $display = $data['doctor_name'] ?? "Doctor Consultation";
-                    if (isset($data['specialization']) && $data['specialization']) {
-                        $display .= " - " . $data['specialization'];
-                    }
-                    break;
-                    
-                case 'hospital_department':
-                case 'department':
-                    $display = $data['department_name'] ?? "Department";
-                    break;
-                    
-                case 'hotel_service':
-                    $display = $data['service_name'] ?? "Hotel Service";
-                    break;
-                    
-                case 'service':
-                    $display = $data['service_name'] ?? "Service";
-                    break;
-                    
-                default:
-                    $display = $data['service_name'] ?? "Service";
-                    break;
-            }
-        } elseif (isset($data['service_name'])) {
-            $display = $data['service_name'];
+    }
+
+    // Log to history table
+    if (!empty($updates)) {
+        $historyStmt = $pdo->prepare("
+            INSERT INTO doctor_token_history 
+            (category_id, slot_batch_id, slot_index, old_token, new_token, total_token, doctor_schedule_id_temp, updated_by, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        ");
+
+        foreach ($updates as $update) {
+            $historyStmt->execute([
+                $categoryId,
+                $update['batch_id'],
+                $update['slot_index'],
+                $update['old_token'],
+                $update['new_token'],
+                $update['total_token'],
+                $scheduleId,
+                $_SESSION['user_id'] ?? null
+            ]);
         }
-        
-        return [
-            "display" => $display,
-            "details" => $data
-        ];
-        
-    } catch (Exception $e) {
-        return [
-            "display" => "Service",
-            "details" => [
-                "error" => "Parse error",
-                "raw" => substr($service_name_json, 0, 100)
-            ]
-        ];
     }
 }

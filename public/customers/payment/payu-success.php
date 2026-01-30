@@ -1,15 +1,11 @@
 <?php
 // managerbp/public/customers/payment/payu-success.php
 
-// Start session to get the data that was stored before redirect
-// session_start();
-
 // Log everything for debugging
 $logData = [
     'timestamp' => date('Y-m-d H:i:s'),
     'POST_data' => $_POST,
-    'GET_data' => $_GET,
-    'SESSION_data' => isset($_SESSION['payu_pending_data']) ? 'Exists' : 'Not exists'
+    'GET_data' => $_GET
 ];
 
 file_put_contents(__DIR__."/payu_success.log", print_r($logData, true) . "\n", FILE_APPEND);
@@ -30,8 +26,7 @@ $db = getDbConnection();
 
 if ($status == "success") {
     
-    // ⭐ FIX: FIRST GET THE ORIGINAL PENDING RECORD
-    // Find the pending payment record first
+    // Get the pending payment record
     $stmt = $db->prepare("
         SELECT * FROM customer_payment 
         WHERE payment_id = ? 
@@ -43,32 +38,6 @@ if ($status == "success") {
     $pendingRecord = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$pendingRecord) {
-        // Try alternative search
-        $stmt = $db->prepare("
-            SELECT * FROM customer_payment 
-            WHERE receipt LIKE ? 
-            AND user_id = ? 
-            AND status = 'pending'
-            LIMIT 1
-        ");
-        $stmt->execute(["%" . $txnid . "%", $udf3]);
-        $pendingRecord = $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-    
-    if (!$pendingRecord) {
-        // Last try: check by appointment_id
-        $stmt = $db->prepare("
-            SELECT * FROM customer_payment 
-            WHERE appointment_id = ? 
-            AND user_id = ? 
-            AND status = 'pending'
-            LIMIT 1
-        ");
-        $stmt->execute([$udf1, $udf3]);
-        $pendingRecord = $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-    
-    if (!$pendingRecord) {
         error_log("PayU Success: No pending record found for txnid: $txnid, user_id: $udf3");
         echo "<script>
             alert('Payment record not found! Please contact support.');
@@ -77,8 +46,7 @@ if ($status == "success") {
         exit;
     }
     
-    // ⭐ USE VALUES FROM PENDING RECORD INSTEAD OF POST DATA
-    // These are the values that were stored when the order was created
+    // Use values from pending record (including service_name JSON)
     $slot_from = $pendingRecord['slot_from'] ?? null;
     $slot_to = $pendingRecord['slot_to'] ?? null;
     $token_count = $pendingRecord['token_count'] ?? 1;
@@ -90,29 +58,18 @@ if ($status == "success") {
     $gst_amount = $pendingRecord['gst_amount'] ?? 0;
     $sub_total = $pendingRecord['amount'] ?? $amount;
     
-    // Get existing service name from pending record
-    $existing_service_name = $pendingRecord['service_name'] ?? null;
+    // ⭐ GET EXISTING SERVICE JSON FROM PENDING RECORD
+    $existing_service_json = $pendingRecord['service_name'] ?? null;
     
-    // Log what we found
-    error_log("PayU Success - Found pending record: slot_from=$slot_from, slot_to=$slot_to, batch_id=$batch_id, category_id=$category_id");
-    
-    // Decode UDF5 only if available and needed
+    // Decode UDF5 if available
     $details = [];
     if (!empty($udf5)) {
         $details = json_decode($udf5, true);
-        // If UDF5 has data, use it as fallback
-        if (!empty($details['slot_from'])) $slot_from = $details['slot_from'];
-        if (!empty($details['slot_to'])) $slot_to = $details['slot_to'];
-        if (!empty($details['batch_id'])) $batch_id = $details['batch_id'];
-        if (!empty($details['category_id'])) $category_id = $details['category_id'];
-        if (!empty($details['token_count'])) $token_count = $details['token_count'];
-        if (!empty($details['receipt'])) $receipt = $details['receipt'];
     }
     
     $signature = $_POST['hash'] ?? '';
     
-    // ⭐ FIXED UPDATE: ONLY UPDATE STATUS AND SIGNATURE, DON'T OVERWRITE OTHER FIELDS
-    // We already have all the appointment details from the pending record
+    // ⭐ UPDATE WITH SIGNATURE AND STATUS - KEEP SERVICE JSON
     $updateStmt = $db->prepare("
         UPDATE customer_payment 
         SET status = 'paid',
@@ -132,14 +89,13 @@ if ($status == "success") {
     
     // If no rows updated, check if already paid
     if ($rowsUpdated === 0) {
-        $checkStmt = $db->prepare("SELECT status FROM customer_payment WHERE payment_id = ? AND user_id = ?");
+        $checkStmt = $db->prepare("SELECT status, service_name FROM customer_payment WHERE payment_id = ? AND user_id = ?");
         $checkStmt->execute([$txnid, $udf3]);
         $checkResult = $checkStmt->fetch(PDO::FETCH_ASSOC);
         
         if ($checkResult && $checkResult['status'] === 'paid') {
             error_log("PayU: Payment already marked as paid");
-        } else {
-            error_log("PayU: No rows updated, but status is not 'paid'");
+            // Still redirect to success with existing data
         }
     }
     
@@ -189,8 +145,7 @@ if ($status == "success") {
                             $udf3
                         ]);
                         
-                        $tokenUpdateMessage = "Token availability updated for batch $batch_id: $currentTokens -> $newTokens";
-                        error_log("PayU Token Update: $tokenUpdateMessage");
+                        $tokenUpdateMessage = "Token availability updated";
                     }
                 }
             }
@@ -199,20 +154,19 @@ if ($status == "success") {
         }
     }
 
-    // Get service name for display
+    // ⭐ GET SERVICE DISPLAY NAME FROM JSON
     $serviceDisplay = "Service";
     
-    // First try to get from pending record
-    if ($existing_service_name) {
+    if ($existing_service_json) {
         try {
-            $serviceData = json_decode($existing_service_name, true);
-            if (isset($serviceData['doctor_name'])) {
+            $serviceData = json_decode($existing_service_json, true);
+            if (isset($serviceData['department_name'])) {
+                $serviceDisplay = $serviceData['department_name'];
+            } elseif (isset($serviceData['doctor_name'])) {
                 $serviceDisplay = $serviceData['doctor_name'];
                 if (!empty($serviceData['specialization'])) {
                     $serviceDisplay .= " - " . $serviceData['specialization'];
                 }
-            } elseif (isset($serviceData['department_name'])) {
-                $serviceDisplay = $serviceData['department_name'];
             } elseif (isset($serviceData['service_name'])) {
                 $serviceDisplay = $serviceData['service_name'];
             }
@@ -221,34 +175,10 @@ if ($status == "success") {
         }
     }
     
-    // If still not found, try from database
-    if ($serviceDisplay === "Service") {
-        $stmt = $db->prepare("SELECT service_name FROM customer_payment WHERE payment_id = ? AND user_id = ? LIMIT 1");
-        $stmt->execute([$txnid, $udf3]);
-        $paymentRecord = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($paymentRecord && $paymentRecord['service_name']) {
-            try {
-                $serviceData = json_decode($paymentRecord['service_name'], true);
-                if (isset($serviceData['doctor_name'])) {
-                    $serviceDisplay = $serviceData['doctor_name'];
-                    if (!empty($serviceData['specialization'])) {
-                        $serviceDisplay .= " - " . $serviceData['specialization'];
-                    }
-                } elseif (isset($serviceData['department_name'])) {
-                    $serviceDisplay = $serviceData['department_name'];
-                } elseif (isset($serviceData['service_name'])) {
-                    $serviceDisplay = $serviceData['service_name'];
-                }
-            } catch (Exception $e) {
-                error_log("Error parsing service JSON from DB: " . $e->getMessage());
-            }
-        }
-    }
-
     // Debug log
-    error_log("PayU Success Redirect - appointment_id: $udf1, receipt: $receipt, txnid: $txnid");
-    
+    error_log("PayU Success - Service JSON: " . ($existing_service_json ? "Found" : "Not found"));
+    error_log("PayU Success - Service Display: $serviceDisplay");
+
     // Redirect to success page
     echo "<script>
         alert('Payment Successful!\\\\nService: " . addslashes($serviceDisplay) . "');
@@ -258,7 +188,8 @@ if ($status == "success") {
         "payment_id=" . urlencode($txnid) . "&" .
         "status=paid&" .
         "method=payu&" .
-        "service_name=" . urlencode($serviceDisplay) . "';
+        "service_name=" . urlencode($serviceDisplay) . "&" .
+        "has_json=" . ($existing_service_json ? 'yes' : 'no') . "';
     </script>";
     
 } else {

@@ -43,6 +43,9 @@ try {
     $category_id      = $data['category_id'] ?? null;
     $service_name     = $data['service_name'] ?? '';
     
+    // ⭐ CRITICAL: Get services_json from input (for department bookings)
+    $services_json    = $data['services_json'] ?? null;
+    
     // Extract batch_id
     $batch_id         = $data['batch_id'] ?? null;
     
@@ -50,18 +53,60 @@ try {
     $gst_type        = $data['gst_type'] ?? '';
     $gst_percent     = floatval($data['gst_percent'] ?? 0);
     $gst_amount      = floatval($data['gst_amount'] ?? 0);
-    $sub_total       = floatval($data['amount'] ?? $amount); // Subtotal without GST
+    $sub_total       = floatval($data['amount'] ?? $amount);
 
     $appointment_id = generateAppointmentId($user_id, $pdo);
-    
-    // Generate receipt
     $receipt = "receipt_" . $customer_id . "_" . time();
     
-    // ⭐ GET SERVICE INFORMATION FOR JSON STORAGE
-    $serviceInfo = getServiceInformation($pdo, $user_id, $service_type, $category_id, $service_name);
+    // ⭐ GET SERVICE INFORMATION FOR JSON STORAGE - SIMILAR TO RAZORPAY
+    $serviceInfo = [];
     
+    // ⭐ If services_json is provided, use it to create service_name_json
+    if ($services_json) {
+        // Prepare service_name_json based on services_json
+        if (is_string($services_json)) {
+            $servicesData = json_decode($services_json, true);
+        } else {
+            $servicesData = $services_json;
+        }
+
+        // Create proper service_name_json
+        $service_name_json = json_encode($servicesData);
+
+        // Determine reference_id based on service type
+        if ($service_type === 'department') {
+            $reference_id = $data['department_id'] ?? $category_id;
+            $reference_type = 'department_id';
+
+            // If it's a primary ID, try to get department_id from database
+            if ($reference_id && !strpos($reference_id, 'DEPT_') === 0) {
+                $stmt = $pdo->prepare("SELECT department_id FROM departments WHERE id = ? AND user_id = ?");
+                $stmt->execute([$reference_id, $user_id]);
+                $dept = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($dept && $dept['department_id']) {
+                    $reference_id = $dept['department_id'];
+                }
+            }
+        } else {
+            $reference_id = $category_id;
+            $reference_type = 'category_id';
+        }
+
+        $serviceInfo = [
+            "success" => true,
+            "reference_id" => $reference_id,
+            "reference_type" => $reference_type,
+            "service_name_json" => $service_name_json,
+            "service_name_display" => $servicesData['department_name'] ?? $servicesData['service_name'] ?? $service_name
+        ];
+    } else {
+        // Fallback to original function if no services_json
+        $serviceInfo = getServiceInformation($pdo, $user_id, $service_type, $category_id, $service_name);
+    }
+
     // Debug log
     error_log("PayU Create - Service Info: " . json_encode($serviceInfo));
+    error_log("PayU Create - Received services_json: " . ($services_json ? "YES" : "NO"));
     
     if (!$serviceInfo || !isset($serviceInfo['success']) || !$serviceInfo['success']) {
         error_log("Service info error: " . ($serviceInfo['message'] ?? 'Unknown error'));
@@ -79,7 +124,7 @@ try {
         ];
     }
     
-    // ⭐ FIX: INSERT WITH ALL APPOINTMENT DETAILS
+    // ⭐ INSERT WITH SERVICE JSON DATA - SIMILAR TO RAZORPAY
     $stmt = $pdo->prepare("
         INSERT INTO customer_payment 
         (user_id, customer_id, appointment_id, receipt, amount, total_amount, currency, 
@@ -90,7 +135,7 @@ try {
     ");
     
     // Debug: Log what we're inserting
-    error_log("PayU Inserting with slot_from: $slot_from, slot_to: $slot_to, batch_id: $batch_id");
+    error_log("PayU Inserting service_name_json: " . substr($serviceInfo['service_name_json'], 0, 200) . "...");
     
     $success = $stmt->execute([
         $user_id,
@@ -99,17 +144,17 @@ try {
         $receipt,
         $sub_total,       // amount (without GST)
         $amount,          // total_amount (with GST)
-        $appointment_date, // ⭐ FIXED: This was missing in execute array
-        $slot_from,       // ⭐ FIXED: This was missing in execute array
-        $slot_to,         // ⭐ FIXED: This was missing in execute array
-        $token_count,     // ⭐ FIXED: This was missing in execute array
-        $serviceInfo['reference_id'],       // CAT_xxx or department_id
-        $serviceInfo['reference_type'],     // category_id or department_id
+        $appointment_date,
+        $slot_from,
+        $slot_to,
+        $token_count,
+        $serviceInfo['reference_id'],       // DEPT_xxx or CAT_xxx
+        $serviceInfo['reference_type'],     // department_id or category_id
         $serviceInfo['service_name_json'],  // ⭐ JSON format
         $gst_type,
         $gst_percent,
         $gst_amount,
-        $batch_id         // ⭐ FIXED: This was at wrong position
+        $batch_id
     ]);
 
     if (!$success) {
@@ -119,16 +164,6 @@ try {
     }
 
     $payment_id = $pdo->lastInsertId();
-
-    // Verify the record was created
-    $checkStmt = $pdo->prepare("SELECT id, appointment_date, slot_from, slot_to, batch_id, service_name FROM customer_payment WHERE id = ?");
-    $checkStmt->execute([$payment_id]);
-    $checkResult = $checkStmt->fetch(PDO::FETCH_ASSOC);
-    
-    error_log("PayU Record created - ID: " . $payment_id . 
-              ", slot_from: " . ($checkResult['slot_from'] ?? 'NULL') . 
-              ", slot_to: " . ($checkResult['slot_to'] ?? 'NULL') . 
-              ", batch_id: " . ($checkResult['batch_id'] ?? 'NULL'));
 
     // Fetch PayU credentials
     $stmt = $pdo->prepare("
@@ -149,17 +184,16 @@ try {
     // Generate transaction ID
     $txnid = "TXN" . time() . rand(1000, 9999);
     $amountFormatted = number_format($amount, 2, '.', '');
-    $productinfo = "Booking Payment";
-
-    // Parse service info for display
+    
+    // Set product info from service
     $serviceDisplay = $serviceInfo['service_name_display'];
     if ($serviceInfo['service_name_json']) {
         try {
             $serviceJson = json_decode($serviceInfo['service_name_json'], true);
-            if (isset($serviceJson['doctor_name'])) {
-                $serviceDisplay = $serviceJson['doctor_name'];
-            } elseif (isset($serviceJson['department_name'])) {
+            if (isset($serviceJson['department_name'])) {
                 $serviceDisplay = $serviceJson['department_name'];
+            } elseif (isset($serviceJson['doctor_name'])) {
+                $serviceDisplay = $serviceJson['doctor_name'];
             } elseif (isset($serviceJson['service_name'])) {
                 $serviceDisplay = $serviceJson['service_name'];
             }
@@ -167,6 +201,8 @@ try {
             error_log("Error parsing service JSON: " . $e->getMessage());
         }
     }
+    
+    $productinfo = $serviceDisplay ?: "Booking Payment";
 
     // UDF fields - include ALL appointment details in JSON
     $udf1 = $appointment_id;      // appointment ID
@@ -178,6 +214,7 @@ try {
         'slot_to' => $slot_to,
         'token_count' => $token_count,
         'category_id' => $category_id,
+        'department_id' => $data['department_id'] ?? null,
         'batch_id' => $batch_id,
         'receipt' => $receipt,
         'gst_type' => $gst_type,
@@ -189,7 +226,8 @@ try {
             'reference_id' => $serviceInfo['reference_id'],
             'reference_type' => $serviceInfo['reference_type'],
             'display_name' => $serviceDisplay,
-            'service_type' => $service_type
+            'service_type' => $service_type,
+            'services_json' => $services_json ? 'yes' : 'no'
         ]
     ]);
 
@@ -215,9 +253,9 @@ try {
     $updateStmt = $pdo->prepare("
         UPDATE customer_payment 
         SET payment_id = ?
-        WHERE appointment_id = ? AND user_id = ?
+        WHERE id = ? AND user_id = ?
     ");
-    $updateStmt->execute([$txnid, $appointment_id, $user_id]);
+    $updateStmt->execute([$txnid, $payment_id, $user_id]);
 
     // Browser-based redirect
     $surl = "http://localhost/managerbp/public/customers/payment/payu-success.php";
@@ -250,16 +288,14 @@ try {
             "reference_id" => $serviceInfo['reference_id'],
             "reference_type" => $serviceInfo['reference_type'],
             "display_name" => $serviceDisplay,
-            "service_type" => $service_type
+            "service_type" => $service_type,
+            "has_services_json" => $services_json ? true : false
         ],
         
-        // Debug info
-        "debug" => [
-            "slot_from" => $slot_from,
-            "slot_to" => $slot_to,
-            "batch_id" => $batch_id,
-            "appointment_date" => $appointment_date
-        ]
+        // Return for confirmation
+        "appointment_id" => $appointment_id,
+        "receipt" => $receipt,
+        "payment_id" => $payment_id
     ]);
 
 } catch (Exception $e) {
