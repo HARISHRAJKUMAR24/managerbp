@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
 
 require_once "../../../config/config.php";
 require_once "../../../src/database.php";
-require_once "../../../src/functions.php"; // ✅ ADD THIS LINE
+require_once "../../../src/functions.php";
 
 $user_id = $_GET["user_id"] ?? null;
 
@@ -59,8 +59,9 @@ try {
     // Convert database types
     $settings["cash_in_hand"] = intval($settings["cash_in_hand"] ?? 0);
     
-    // ✅ ADD: Check if COH should be shown based on user's plan limit
-    $settings["show_cash_in_hand"] = $settings["cash_in_hand"] && canShowCOH($user_id);
+    // ✅ ADD: Check if payment methods should be shown based on plan limits
+    $settings["show_cash_in_hand"] = ($settings["cash_in_hand"] == 1) && canShowCOH($user_id);
+    $settings["show_upi_payments"] = canShowUPI($user_id); // ✅ NEW: Check UPI limit
     
     foreach ($settings as $k => $v) {
         if ($v === null) $settings[$k] = "";
@@ -72,6 +73,7 @@ try {
     ]);
 
 } catch (Exception $e) {
+    error_log("Site settings error: " . $e->getMessage());
     echo json_encode([
         "success" => false,
         "message" => "Database error"

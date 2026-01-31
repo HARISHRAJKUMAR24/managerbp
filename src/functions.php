@@ -1362,28 +1362,62 @@ function compareAndLogTokenUpdates($oldSchedule, $newSchedule, $scheduleId, $pdo
 
 
 // ---------------------- Check if COH should be shown to user ---------------------- //
-function canShowCOH($user_id)
-{
+// ---------------------- Check if COH should be shown based on user's plan limit ---------------------- //
+function canShowCOH($user_id) {
     $pdo = getDbConnection();
     
-    // First check if COH is enabled in site settings
+    // Get user's plan
     $stmt = $pdo->prepare("
-        SELECT cash_in_hand 
-        FROM site_settings 
-        WHERE user_id = ?
-        LIMIT 1
+        SELECT u.plan_id, sp.manual_payment_methods_limit 
+        FROM users u 
+        LEFT JOIN subscription_plans sp ON u.plan_id = sp.id 
+        WHERE u.user_id = ?
     ");
     $stmt->execute([$user_id]);
-    $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    // If COH is not enabled in settings, return false
-    if (!$settings || $settings['cash_in_hand'] != 1) {
-        return false;
+    // If no plan or unlimited, show COH
+    if (!$user || $user['manual_payment_methods_limit'] === 'unlimited') {
+        return true;
     }
     
-    // Now check the manual payment methods limit
-    $limitCheck = getUserPlanLimit($user_id, 'manual_payment_methods');
+    // ✅ FIXED: Check current count of CASH payments in customer_payment table
+    $limit = (int)$user['manual_payment_methods_limit'];
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM customer_payment WHERE user_id = ? AND payment_method = 'cash'");
+    $stmt->execute([$user_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $current_count = $result['count'] ?? 0;
     
-    // Return true only if user can add more manual payments
-    return $limitCheck['can_add'];
+    // Show COH only if under limit
+    return $current_count < $limit;
+}
+
+// ---------------------- Check if UPI should be shown based on user's plan limit ---------------------- //
+function canShowUPI($user_id) {
+    $pdo = getDbConnection();
+    
+    // Get user's plan
+    $stmt = $pdo->prepare("
+        SELECT u.plan_id, sp.upi_payment_methods_limit 
+        FROM users u 
+        LEFT JOIN subscription_plans sp ON u.plan_id = sp.id 
+        WHERE u.user_id = ?
+    ");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    // If no plan or unlimited, show UPI
+    if (!$user || $user['upi_payment_methods_limit'] === 'unlimited') {
+        return true;
+    }
+    
+    // ✅ FIXED: Check current count of UPI payments in customer_payment table
+    $limit = (int)$user['upi_payment_methods_limit'];
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM customer_payment WHERE user_id = ? AND payment_method = 'upi'");
+    $stmt->execute([$user_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $current_count = $result['count'] ?? 0;
+    
+    // Show UPI only if under limit
+    return $current_count < $limit;
 }
