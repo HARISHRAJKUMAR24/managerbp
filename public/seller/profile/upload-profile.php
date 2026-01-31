@@ -8,9 +8,6 @@ require_once "../../../src/database.php";
 
 $pdo = getDbConnection();
 
-/* ===============================
-   GET USER ID
-================================ */
 $userId = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
 
 if ($userId <= 0) {
@@ -21,9 +18,6 @@ if ($userId <= 0) {
     exit;
 }
 
-/* ===============================
-   CHECK FILE
-================================ */
 if (!isset($_FILES['file'])) {
     echo json_encode([
         "success" => false,
@@ -32,10 +26,6 @@ if (!isset($_FILES['file'])) {
     exit;
 }
 
-/* ===============================
-   DATE-BASED FOLDER
-   /uploads/sellers/52064/profile/2025/12/11/
-================================ */
 $year  = date("Y");
 $month = date("m");
 $day   = date("d");
@@ -46,18 +36,12 @@ if (!is_dir($basePath)) {
     mkdir($basePath, 0777, true);
 }
 
-/* ===============================
-   FILE NAME
-================================ */
 $originalName = basename($_FILES["file"]["name"]);
 $cleanName = preg_replace('/[^A-Za-z0-9.\-_]/', '_', $originalName);
 $filename = "profile_" . uniqid() . "_" . $cleanName;
 
 $targetFile = $basePath . $filename;
 
-/* ===============================
-   MOVE FILE
-================================ */
 if (!move_uploaded_file($_FILES["file"]["tmp_name"], $targetFile)) {
     echo json_encode([
         "success" => false,
@@ -65,11 +49,7 @@ if (!move_uploaded_file($_FILES["file"]["tmp_name"], $targetFile)) {
     ]);
     exit;
 }
-
-/* ===============================
-   SAVE PATH IN DB
-================================ */
-$imagePath = "/uploads/sellers/$userId/profile/$year/$month/$day/$filename";
+$imagePath = "../uploads/sellers/$userId/profile/$year/$month/$day/$filename";
 
 $sql = "UPDATE users SET image = :image WHERE user_id = :user_id";
 $stmt = $pdo->prepare($sql);
@@ -87,9 +67,6 @@ if (!$success) {
     exit;
 }
 
-/* ===============================
-   SUCCESS RESPONSE
-================================ */
 echo json_encode([
     "success"  => true,
     "image"    => $imagePath
